@@ -33,4 +33,4 @@ coverage/
 .cache/
 .eslintcache
 
-pnpm-workspace.yaml
+pnpm-lock.yaml
