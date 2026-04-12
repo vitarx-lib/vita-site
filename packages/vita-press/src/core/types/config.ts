@@ -31,6 +31,12 @@ export interface InjectOptions {
    */
   injectCode?: string[]
 }
+export interface MarkdownItOptions {
+  /**
+   * markdownIt解析器配置
+   */
+  markdownIt?: MarkdownItConfig
+}
 export interface Language {
   /**
    * id 必须对应docDir子目录，
@@ -42,7 +48,7 @@ export interface Language {
    */
   name: string
 }
-export interface ThemeConfig extends InjectOptions {
+export interface ThemeConfig extends InjectOptions, MarkdownItOptions {
   /**
    * 运行时入口组件文件路径，必须是绝对路径
    *
@@ -65,14 +71,16 @@ export interface ThemeConfig extends InjectOptions {
    * 可以在布局组件中通过 `useThemeData` 获取到此对象，必须是可序列化的对象。
    */
   data?: Record<string, any>
-  /**
-   * markdownIt解析器配置
-   */
-  markdownIt?: MarkdownItConfig
 }
-export type NavSort = 'asc' | 'desc'
 
-export interface UserConfig extends InjectOptions {
+/**
+ * 导航排序规则
+ */
+export type NavSort = 'asc' | 'desc'
+/**
+ * 用户配置
+ */
+export interface UserConfig extends InjectOptions, MarkdownItOptions {
   /**
    * 网站标题
    *
@@ -102,7 +110,7 @@ export interface UserConfig extends InjectOptions {
    *
    * 页面目录下仅扫描 `.tsx` | `.jsx` 文件
    */
-  pageDirs?: PageSource | PageSource[]
+  pageDirs?: PageSource[]
   /**
    * 导航排序规则
    *
@@ -117,15 +125,6 @@ export interface UserConfig extends InjectOptions {
    * 多语言配置
    */
   languages?: Language[]
-  /**
-   * markdownIt解析器配置
-   *
-   * 通常来说你无需进行任何配置，已经支持了常用的功能，
-   * 如果你对 `markdown-it` 的解析器有特殊需求，可以传入自定义的配置。
-   *
-   * @default {}
-   */
-  markdownIt?: MarkdownItConfig
   /**
    * 主题配置
    */
