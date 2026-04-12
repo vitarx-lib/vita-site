@@ -7,8 +7,6 @@
     "resolveJsonModule": true,
     "allowJs": false,
     "declaration": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
     "removeComments": true,
     "strict": true,
     "noImplicitAny": true,
