@@ -114,10 +114,13 @@ function validateDocDir(config: UserConfig, root: string): void {
  * @throws {ConfigValidationError} 页面目录配置无效时抛出
  */
 function validatePageDirs(config: UserConfig, root: string): void {
-  if (!config.pageDirs || config.pageDirs.length === 0) return
+  if (!config.pageDirs) return
 
-  for (let i = 0; i < config.pageDirs.length; i++) {
-    const pageDir = config.pageDirs[i]
+  const pageDirsArray = Array.isArray(config.pageDirs) ? config.pageDirs : [config.pageDirs]
+  if (pageDirsArray.length === 0) return
+
+  for (let i = 0; i < pageDirsArray.length; i++) {
+    const pageDir = pageDirsArray[i]
     if (!pageDir) continue
 
     validatePageSource(pageDir, i, root)
