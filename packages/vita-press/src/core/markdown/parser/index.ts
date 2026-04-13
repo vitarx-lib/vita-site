@@ -1,2 +1,2 @@
-export * from './helpers.js'
+export * from './markdownIt.js'
 export * from './parser.js'

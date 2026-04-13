@@ -3,6 +3,7 @@ import type { MarkdownItConfig } from '../../types/index.js'
 import { anchorPoint } from '../plugins/anchorPoint.js'
 import { bracketTranslator } from '../plugins/bracketTranslator.js'
 import { fenceTranslator } from '../plugins/fenceTranslator.js'
+import { jsxComponentParser } from '../plugins/jsxComponentParser.js'
 import { routerLink } from '../plugins/routerLink.js'
 import { createShikiHighlighter } from '../plugins/shik.js'
 import { tocTree } from '../plugins/tocTree.js'
@@ -29,7 +30,8 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
     anchorPoint,
     routerLink,
     bracketTranslator,
-    fenceTranslator
+    fenceTranslator,
+    jsxComponentParser
   ]
   // 挂载内置插件
   builtinPlugins.forEach(plugin => md.use(plugin))
