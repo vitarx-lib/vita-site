@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { CacheManager } from '../../../../src/core/markdown/cache/manager.js'
-import type { MdParseResult } from '../../../../src/core/markdown/parser/index.js'
+import type { MdParseResult } from '../../../../src/core/markdown/parser/parser.js'
 
 describe('CacheManager', () => {
   let tempDir: string
