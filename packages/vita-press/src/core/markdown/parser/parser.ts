@@ -50,7 +50,7 @@ export class MdParser {
   private md: MarkdownIt
   private readonly injectCode: string[] | undefined
   private readonly root: string
-  private readonly cacheManager: CacheManager
+  public readonly cacheManager: CacheManager
 
   /**
    * 创建 Markdown 解析器实例
