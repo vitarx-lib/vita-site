@@ -119,7 +119,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    *
    * 页面目录下仅扫描 `.tsx` | `.jsx` 文件
    */
-  pageDirs?: PageSource[]
+  pageDirs?: PageSource | PageSource[]
   /**
    * 导航排序规则
    *
