@@ -22,7 +22,8 @@ export interface InjectOptions {
    */
   injectBody?: string[]
   /**
-   * md文件解析后注入到文件顶部的语句
+   * md文件解析后注入到模块顶部的语句，
+   * 通常用于注入导入语句。
    *
    * @example
    * ```ts
@@ -36,6 +37,26 @@ export interface MarkdownItOptions {
    * markdownIt解析器配置
    */
   markdownIt?: MarkdownItConfig
+}
+export interface SiteOptions {
+  /**
+   * 网站标题
+   *
+   * @default ''
+   */
+  title?: string
+  /**
+   * 网站描述
+   *
+   * @default ''
+   */
+  description?: string
+  /**
+   * 网站关键字
+   *
+   * @default ''
+   */
+  keywords?: string
 }
 export interface Language {
   /**
@@ -80,25 +101,13 @@ export type NavSort = 'asc' | 'desc'
 /**
  * 用户配置
  */
-export interface UserConfig extends InjectOptions, MarkdownItOptions {
+export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
   /**
-   * 网站标题
+   * 根目录
    *
-   * @default ''
+   * @default process.cwd()
    */
-  title?: string
-  /**
-   * 网站描述
-   *
-   * @default ''
-   */
-  description?: string
-  /**
-   * 网站关键字
-   *
-   * @default ''
-   */
-  keywords?: string
+  root?: string
   /**
    * 文档目录
    *
