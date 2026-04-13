@@ -1,4 +1,4 @@
-import type { PageSource } from 'vitarx-router/file-router'
+import type { FileRouterOptions, PageSource } from 'vitarx-router/file-router'
 import type { MarkdownItConfig } from './markdown.js'
 
 export interface InjectOptions {
@@ -138,4 +138,10 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    * 主题配置
    */
   theme?: ThemeConfig
+  /**
+   * 是否生成路由类型定义文件
+   *
+   * @default false
+   */
+  dts?: FileRouterOptions['dts']
 }
