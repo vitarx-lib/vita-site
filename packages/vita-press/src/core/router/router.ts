@@ -1,6 +1,7 @@
 import path from 'node:path'
 import type { FileRouterOptions, PageSource } from 'vitarx-router/file-router'
 import { FileRouter } from 'vitarx-router/file-router'
+import type { MdParser } from '../markdown/index.js'
 import type { Language } from '../types/config.js'
 
 /**
@@ -27,6 +28,10 @@ export interface RouterOptions {
    * 是否生成类型定义文件
    */
   dts?: FileRouterOptions['dts']
+  /**
+   * Markdown 解析器实例
+   */
+  mdParser: MdParser
 }
 
 /**
@@ -43,7 +48,13 @@ export class Router extends FileRouter {
       pages,
       importMode: 'lazy',
       pathStrategy: 'kebab',
-      dts: options.dts || false
+      dts: options.dts || false,
+      transform: (content: string, file: string) => {
+        if (file.endsWith('.md')) {
+          return options.mdParser.parse(file, content).content
+        }
+        return content
+      }
     })
   }
 
@@ -58,13 +69,20 @@ export class Router extends FileRouter {
 
     if (options.languages && options.languages.length > 0) {
       for (const lang of options.languages) {
+        const dir = path.resolve(options.root, options.docDir, lang.id)
         sources.push({
-          dir: path.resolve(options.root, options.docDir),
+          dir,
           prefix: `/${lang.id}`,
           group: true,
           include
         })
       }
+    } else {
+      sources.push({
+        dir: options.docDir,
+        prefix: '/',
+        include
+      })
     }
 
     if (options.pageDirs) {
