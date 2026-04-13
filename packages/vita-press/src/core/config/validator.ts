@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
+import path, { resolve } from 'node:path'
 import type { PageSource } from 'vitarx-router/file-router'
 import type { Language, NavSort, ThemeConfig, UserConfig } from '../types/config.js'
 
@@ -193,7 +193,7 @@ function validateLanguages(config: UserConfig, root: string): void {
 
   validateLanguageFields(config.languages)
   validateLanguageIds(config.languages)
-  validateLanguageDirectories(config, root)
+  validateLanguageDirectories(config.languages, root, config.docDir || 'docs')
 }
 
 /**
@@ -214,17 +214,16 @@ function validateLanguageIds(languages: Language[]): void {
 /**
  * 验证语言目录是否存在
  *
- * @param config - 用户配置对象
+ * @param languages - 语言映射
  * @param root - 项目根目录
+ * @param docDir - 文档目录
  * @throws {ConfigValidationError} 语言目录不存在时抛出
  */
-function validateLanguageDirectories(config: UserConfig, root: string): void {
-  if (!config.docDir || !config.languages) return
-
+function validateLanguageDirectories(languages: Language[], root: string, docDir: string): void {
   const missingDirs: string[] = []
 
-  for (const lang of config.languages) {
-    const langDir = resolve(root, config.docDir, lang.id)
+  for (const lang of languages) {
+    const langDir = path.join(resolve(root, docDir), lang.id)
     if (!existsSync(langDir)) {
       missingDirs.push(lang.id)
     }
@@ -232,7 +231,7 @@ function validateLanguageDirectories(config: UserConfig, root: string): void {
 
   if (missingDirs.length > 0) {
     throw new ConfigValidationError(
-      `语言目录不存在: ${missingDirs.join(', ')} (应在 ${config.docDir} 目录下)`
+      `语言目录不存在: ${missingDirs.join(', ')} (应在 ${docDir} 目录下)`
     )
   }
 }
