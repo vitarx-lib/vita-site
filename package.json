@@ -17,6 +17,7 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@commitlint/types": "^20.5.0",
     "@types/node": "^25.5.2",
+    "@vitest/coverage-v8": "^4.1.4",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "rimraf": "^6.1.3",
