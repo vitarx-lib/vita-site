@@ -1,6 +1,23 @@
 import { execSync } from 'child_process'
 import { statSync } from 'node:fs'
 
+export interface GitCommitInfo {
+  /** 所有提交过该文件的作者（去重） */
+  authors: string[]
+  /**
+   * 创建时间 ISO 8601 格式（中国时区，UTC+8）
+   *
+   * 格式：2025-01-21T15:24:04+08:00
+   */
+  createdAt: string
+  /**
+   * 最后更新时间 ISO 8601 格式（中国时区，UTC+8）
+   *
+   * 格式：2025-01-21T15:24:04+08:00
+   */
+  lastUpdateAt: string
+}
+
 const CHINA_TIMEZONE = 'Asia/Shanghai'
 
 /**
@@ -67,15 +84,6 @@ export function isGitRepositoryPresent(): boolean {
     gitRepositoryCache = false
     return false
   }
-}
-
-export interface GitCommitInfo {
-  /** 所有提交过该文件的作者（去重） */
-  authors: string[]
-  /** 文件首次提交时间（ISO 格式） */
-  createdAt: string
-  /** 文件最后修改时间（ISO 格式） */
-  lastUpdateAt: string
 }
 
 /**
