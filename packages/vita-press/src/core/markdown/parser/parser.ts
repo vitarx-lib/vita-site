@@ -162,9 +162,7 @@ definePage({
  * @description ${meta.description}
  * @source ${filePath}
  */
-export default builder(() => {
-  return <article class="v-doc-content">${html}</article>
-})
+export default builder(() => (<article class="v-doc-content">${html}</article>))
 `
   }
 }
