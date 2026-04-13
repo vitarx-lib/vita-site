@@ -85,9 +85,9 @@ describe('routerLink', () => {
 
     it('应正确处理带路径的外部链接', () => {
       const md = createMarkdownWithPlugin(routerLink)
-      const html = renderMarkdown(md, '[文档](https://vuejs.org/guide)')
+      const html = renderMarkdown(md, '[文档](https://vitarx.cn/guide)')
 
-      expect(html).toContain('to="https://vuejs.org/guide"')
+      expect(html).toContain('to="https://vitarx.cn/guide"')
       expect(html).toContain('target="_blank"')
     })
   })
@@ -102,9 +102,9 @@ describe('routerLink', () => {
 
     it('应处理包含特殊字符的链接文本', () => {
       const md = createMarkdownWithPlugin(routerLink)
-      const html = renderMarkdown(md, '[Vue 3.0 & TypeScript](/guide)')
+      const html = renderMarkdown(md, '[Vitarx 3.0 & TypeScript](/guide)')
 
-      expect(html).toContain('>Vue 3.0 &amp; TypeScript</RouterLink>')
+      expect(html).toContain('>Vitarx 3.0 &amp; TypeScript</RouterLink>')
     })
 
     it('应处理中文链接文本', () => {
