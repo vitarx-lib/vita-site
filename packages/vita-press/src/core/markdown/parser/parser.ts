@@ -12,7 +12,7 @@ import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
  * 包含解析后的组件代码、文件路径和文档元数据
  */
 export interface MdParseResult {
-  /** 生成的 Vue 组件代码 */
+  /** 生成的 Vitarx 组件代码 */
   content: string
   /** 源文件的绝对路径 */
   filePath: string
@@ -33,7 +33,7 @@ export interface ParserOptions {
 /**
  * Markdown 解析器
  *
- * 负责将 Markdown 文件转换为可执行的 Vue 组件代码。
+ * 负责将 Markdown 文件转换为可执行的 Vitarx 组件代码。
  * 内置缓存机制，避免重复解析相同内容，提升构建性能。
  *
  * @example
@@ -98,13 +98,13 @@ export class MdParser {
    * @param filePath
    * @param content
    */
-  async parse(filePath: string, content: string): Promise<MdParseResult> {
+  parse(filePath: string, content: string): MdParseResult {
     const relativePath = path.relative(this.root, filePath)
 
     const cached = this.cacheManager.get(relativePath, content)
     if (cached) return cached
 
-    const result = await this.transform(filePath, content)
+    const result = this.transform(filePath, content)
 
     this.cacheManager.set(relativePath, content, result)
 
@@ -117,7 +117,7 @@ export class MdParser {
    * @param content
    * @private
    */
-  private async transform(filePath: string, content: string): Promise<MdParseResult> {
+  private transform(filePath: string, content: string): MdParseResult {
     const { data: frontmatter, content: markdownContent } = parseFrontMatter(content)
     const gitInfo = getCommitInfo(filePath)
     const env: TocParseEnvContext = {} as TocParseEnvContext
