@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import type { MdParseResult } from '../parser/index.js'
+import type { MdParseResult } from '../parser/parser.js'
 import { pathToCacheFileName } from './utils.js'
 
 interface CacheEntry {
