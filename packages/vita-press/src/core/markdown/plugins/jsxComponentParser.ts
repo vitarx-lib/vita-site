@@ -1,4 +1,6 @@
 import type MarkdownIt from 'markdown-it'
+import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
+import { getLineContent } from '../utils/lineContent.js'
 
 /**
  * JSX 组件 Token 结构定义
@@ -76,25 +78,15 @@ export function jsxComponentParser(md: MarkdownIt): void {
    * @returns 是否成功解析为 JSX 组件
    */
   function parseJsxComponent(
-    state: any,
+    state: StateBlock,
     startLine: number,
     endLine: number,
     silent: boolean
   ): boolean {
-    const pos = state.bMarks[startLine]
-    const tShift = state.tShift[startLine]
-    const max = state.eMarks[startLine]
+    if (startLine >= endLine) return false
 
-    if (pos === undefined || tShift === undefined || max === undefined) {
-      return false
-    }
-
-    if (startLine >= endLine) {
-      return false
-    }
-
-    const lineStart = pos + tShift
-    const lineContent = state.src.slice(lineStart, max).trim()
+    const lineContent = getLineContent(state, startLine)
+    if (lineContent === null) return false
 
     /**
      * 正则匹配规则：

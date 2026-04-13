@@ -1,6 +1,9 @@
+import type MarkdownIt from 'markdown-it'
+import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
-import type MarkdownIt from 'markdown-it'
+import { warn } from 'vitarx-router/file-router'
+import { getLineContent } from '../utils/lineContent.js'
 
 /**
  * 代码导入插件的环境上下文
@@ -76,7 +79,7 @@ const EXT_TO_LANG: Record<string, string> = {
  * - @[code js](../foo.js)       指定语言
  * - @[code{1-10} js](../foo.js) 行范围 + 指定语言
  */
-const CODE_IMPORT_PATTERN = /^@\[code(?:\{(\d+)-(\d+)\})?(?:\s+([^\s\]]+))?\]\((.+)\)$/
+const CODE_IMPORT_PATTERN = /^@\[code(?:\{(\d+)-(\d+)})?(?:\s+([^\s\]]+))?]\((.+)\)$/
 
 /**
  * 解析代码导入语法
@@ -161,21 +164,15 @@ function readCodeContent(
   const end = lineEnd ?? totalLines
 
   if (start < 1 || start > totalLines) {
-    throw new Error(
-      `[codeImport] 起始行号 ${start} 超出范围，文件共 ${totalLines} 行: ${filePath}`
-    )
+    throw new Error(`[codeImport] 起始行号 ${start} 超出范围，文件共 ${totalLines} 行: ${filePath}`)
   }
 
   if (end < start) {
-    throw new Error(
-      `[codeImport] 结束行号 ${end} 不能小于起始行号 ${start}: ${filePath}`
-    )
+    throw new Error(`[codeImport] 结束行号 ${end} 不能小于起始行号 ${start}: ${filePath}`)
   }
 
   if (end > totalLines) {
-    throw new Error(
-      `[codeImport] 结束行号 ${end} 超出范围，文件共 ${totalLines} 行: ${filePath}`
-    )
+    throw new Error(`[codeImport] 结束行号 ${end} 超出范围，文件共 ${totalLines} 行: ${filePath}`)
   }
 
   return lines.slice(start - 1, end).join('\n')
@@ -228,43 +225,31 @@ export function codeImport(md: MarkdownIt): void {
    * 5. 生成 fence token 交给后续插件处理
    */
   function parseCodeImportBlock(
-    state: any,
+    state: StateBlock,
     startLine: number,
     endLine: number,
     silent: boolean
   ): boolean {
-    const pos = state.bMarks[startLine]
-    const tShift = state.tShift[startLine]
-    const max = state.eMarks[startLine]
-
-    if (pos === undefined || tShift === undefined || max === undefined) {
-      return false
-    }
-
     if (startLine >= endLine) return false
 
-    const lineStart = pos + tShift
-    const lineContent = state.src.slice(lineStart, max).trim()
+    const lineContent = getLineContent(state, startLine)
+    if (lineContent === null) return false
 
     const importInfo = parseCodeImportSyntax(lineContent)
     if (!importInfo) return false
 
     if (silent) return true
 
-    const currentFilePath = state.env?.__code_import_filepath
+    const currentFilePath = (state.env as Record<string, string>)?.['__code_import_filepath']
     if (!currentFilePath) {
-      console.warn('[codeImport] 未在 env 中设置 __code_import_filepath，跳过代码导入')
+      warn('[codeImport] 未在 env 中设置 __code_import_filepath，跳过代码导入')
       return false
     }
 
     const resolvedPath = resolveFilePath(importInfo.filePath, currentFilePath)
 
     try {
-      const codeContent = readCodeContent(
-        resolvedPath,
-        importInfo.lineStart,
-        importInfo.lineEnd
-      )
+      const codeContent = readCodeContent(resolvedPath, importInfo.lineStart, importInfo.lineEnd)
 
       const language = importInfo.language || inferLanguageFromPath(importInfo.filePath)
 
@@ -278,7 +263,7 @@ export function codeImport(md: MarkdownIt): void {
       return true
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      console.warn(`${message}，跳过代码导入`)
+      warn(`[codeImport] ${message}，跳过代码导入`)
 
       return false
     }

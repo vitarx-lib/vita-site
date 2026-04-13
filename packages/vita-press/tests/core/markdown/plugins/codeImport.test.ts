@@ -1,7 +1,12 @@
 import MarkdownIt from 'markdown-it'
 import path from 'node:path'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { warn } from 'vitarx-router/file-router'
 import { codeImport } from '../../../../src/core/markdown/plugins/codeImport.js'
+
+vi.mock('vitarx-router/file-router', () => ({
+  warn: vi.fn()
+}))
 
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures')
 const MOCK_MD_PATH = path.join(FIXTURES_DIR, 'index.md')
@@ -21,6 +26,10 @@ function parseWithFilePath(md: MarkdownIt, content: string, filePath: string) {
 }
 
 describe('codeImport', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   describe('基本导入功能', () => {
     it('应完整导入文件内容', () => {
       const md = createMarkdownWithCodeImport()
@@ -160,58 +169,48 @@ describe('codeImport', () => {
 
   describe('错误处理', () => {
     it('文件不存在时应输出警告并跳过', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code](./nonexistent.js)', MOCK_MD_PATH)
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('[codeImport] 文件不存在')
       )
-      warnSpy.mockRestore()
     })
 
     it('起始行号超出范围时应输出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{100-110}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('起始行号')
       )
-      warnSpy.mockRestore()
     })
 
     it('结束行号小于起始行号时应输出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{5-3}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('不能小于起始行号')
       )
-      warnSpy.mockRestore()
     })
 
     it('结束行号超出范围时应输出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{1-100}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('结束行号')
       )
-      warnSpy.mockRestore()
     })
 
     it('未设置 env 文件路径时应输出警告', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const md = createMarkdownWithCodeImport()
       md.render('@[code](./sample.js)')
 
-      expect(warnSpy).toHaveBeenCalledWith(
+      expect(warn).toHaveBeenCalledWith(
         expect.stringContaining('__code_import_filepath')
       )
-      warnSpy.mockRestore()
     })
   })
 
