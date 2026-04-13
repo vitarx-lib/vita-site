@@ -84,7 +84,7 @@ describe('bracketTranslator', () => {
       expect(html).toContain('&gt;')
     })
 
-    it('应正确处理 Vue 模板语法', () => {
+    it('应正确处理 Vitarx 模板语法', () => {
       const md = createMarkdownWithPlugin(bracketTranslator)
       const html = renderMarkdown(md, '{{ message }}')
 
