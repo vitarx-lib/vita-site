@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MdParser } from '../../../../src/core/markdown/parser/index.js'
+import { MdParser } from '../../../../src/core/markdown/parser/parser.js'
 
 vi.mock('../../../../src/core/markdown/utils/index.js', () => ({
   parseFrontMatter: vi.fn((content: string) => {
@@ -158,7 +158,7 @@ describe('MdParser', () => {
 
       await parser.parse(filePath, content)
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       rmSync(filePath)
 
@@ -172,7 +172,7 @@ describe('MdParser', () => {
 
       await parser.parse(filePath, content)
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       const prunedCount = parser.pruneCache()
       expect(prunedCount).toBe(0)
@@ -191,7 +191,7 @@ describe('MdParser', () => {
       await parser.parse(filePath1, '# Test 1')
       await parser.parse(filePath2, '# Test 2')
 
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 100))
 
       parser.clearCache()
 
