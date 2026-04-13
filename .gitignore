@@ -33,4 +33,10 @@ coverage/
 .cache/
 .eslintcache
 
+# Lockfiles
 pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Other
+test.ts
