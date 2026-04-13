@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { MdParser } from '../../../../src/core/markdown/parser/parser.js'
+import { MdParser } from '../../../../src/core/markdown/index.js'
 
 vi.mock('../../../../src/core/markdown/utils/index.js', () => ({
   parseFrontMatter: vi.fn((content: string) => {
@@ -49,11 +49,11 @@ describe('MdParser', () => {
   })
 
   describe('parse', () => {
-    it('应正确转换 Markdown 内容', async () => {
+    it('应正确转换 Markdown 内容', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Hello World')
       const content = '# Hello World'
 
-      const result = await parser.parse(filePath, content)
+      const result = parser.parse(filePath, content)
 
       expect(result.content).toContain('// 此文件由vita-press自动生成')
       expect(result.content).toContain('import { createView, builder }')
@@ -64,16 +64,16 @@ describe('MdParser', () => {
       expect(result.filePath).toBe(filePath)
     })
 
-    it('应正确处理 frontmatter', async () => {
+    it('应正确处理 frontmatter', () => {
       const filePath = createMarkdownFile('docs/test.md', '---\ntitle: Test\n---\n# Content')
       const content = '---\ntitle: Test\n---\n# Content'
 
-      const result = await parser.parse(filePath, content)
+      const result = parser.parse(filePath, content)
 
       expect(result.meta.title).toBe('Test Title')
     })
 
-    it('应注入自定义代码', async () => {
+    it('应注入自定义代码', () => {
       const customParser = new MdParser(md, {
         root: tempDir,
         injectCode: ['import { Button } from "components"', 'import { Card } from "ui"']
@@ -82,20 +82,20 @@ describe('MdParser', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      const result = await customParser.parse(filePath, content)
+      const result = customParser.parse(filePath, content)
 
       expect(result.content).toContain('import { Button } from "components"')
       expect(result.content).toContain('import { Card } from "ui"')
     })
 
-    it('应生成正确的组件结构', async () => {
+    it('应生成正确的组件结构', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      const result = await parser.parse(filePath, content)
+      const result = parser.parse(filePath, content)
 
       expect(result.content).toContain('definePage({')
-      expect(result.content).toContain('export default builder(() => {')
+      expect(result.content).toContain('export default builder(() => (')
       expect(result.content).toContain('@title')
       expect(result.content).toContain('@description')
       expect(result.content).toContain('@source')
@@ -107,29 +107,29 @@ describe('MdParser', () => {
       parser.initCache()
     })
 
-    it('应缓存转换结果', async () => {
+    it('应缓存转换结果', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      const result1 = await parser.parse(filePath, content)
-      const result2 = await parser.parse(filePath, content)
+      const result1 = parser.parse(filePath, content)
+      const result2 = parser.parse(filePath, content)
 
       expect(result1.content).toBe(result2.content)
     })
 
-    it('内容变化时应重新转换', async () => {
+    it('内容变化时应重新转换', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content1 = '# Test'
       const content2 = '# Updated Test'
 
-      const result1 = await parser.parse(filePath, content1)
-      const result2 = await parser.parse(filePath, content2)
+      const result1 = parser.parse(filePath, content1)
+      const result2 = parser.parse(filePath, content2)
 
       expect(result1.content).not.toBe(result2.content)
       expect(result2.content).toContain('Updated Test')
     })
 
-    it('不同配置应生成不同的缓存', async () => {
+    it('不同配置应生成不同的缓存', () => {
       const parser1 = new MdParser(md, { root: tempDir, injectCode: ['import A from "a"'] })
       const parser2 = new MdParser(md, { root: tempDir, injectCode: ['import B from "b"'] })
 
@@ -139,8 +139,8 @@ describe('MdParser', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      const result1 = await parser1.parse(filePath, content)
-      const result2 = await parser2.parse(filePath, content)
+      const result1 = parser1.parse(filePath, content)
+      const result2 = parser2.parse(filePath, content)
 
       expect(result1.content).toContain('import A from "a"')
       expect(result2.content).toContain('import B from "b"')
@@ -152,13 +152,11 @@ describe('MdParser', () => {
       parser.initCache()
     })
 
-    it('应清理失效缓存', async () => {
+    it('应清理失效缓存', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      await parser.parse(filePath, content)
-
-      await new Promise(resolve => setTimeout(resolve, 100))
+      parser.parse(filePath, content)
 
       rmSync(filePath)
 
@@ -166,13 +164,11 @@ describe('MdParser', () => {
       expect(prunedCount).toBe(1)
     })
 
-    it('应保留有效的缓存', async () => {
+    it('应保留有效的缓存', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
 
-      await parser.parse(filePath, content)
-
-      await new Promise(resolve => setTimeout(resolve, 100))
+      parser.parse(filePath, content)
 
       const prunedCount = parser.pruneCache()
       expect(prunedCount).toBe(0)
@@ -184,14 +180,12 @@ describe('MdParser', () => {
       parser.initCache()
     })
 
-    it('应清除所有缓存', async () => {
+    it('应清除所有缓存', () => {
       const filePath1 = createMarkdownFile('docs/test1.md', '# Test 1')
       const filePath2 = createMarkdownFile('docs/test2.md', '# Test 2')
 
-      await parser.parse(filePath1, '# Test 1')
-      await parser.parse(filePath2, '# Test 2')
-
-      await new Promise(resolve => setTimeout(resolve, 100))
+      parser.parse(filePath1, '# Test 1')
+      parser.parse(filePath2, '# Test 2')
 
       parser.clearCache()
 
