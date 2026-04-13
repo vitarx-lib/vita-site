@@ -3,8 +3,11 @@ import { createHash } from 'node:crypto'
 import path from 'node:path'
 import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
+import { type CodeImportEnvContext } from '../plugins/codeImport.js'
 import { type TocParseEnvContext } from '../plugins/tocTree.js'
 import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
+
+type MdEnvContext = TocParseEnvContext & CodeImportEnvContext
 
 /**
  * Markdown 解析结果
@@ -120,7 +123,8 @@ export class MdParser {
   private transform(filePath: string, content: string): MdParseResult {
     const { data: frontmatter, content: markdownContent } = parseFrontMatter(content)
     const gitInfo = getCommitInfo(filePath)
-    const env: TocParseEnvContext = {} as TocParseEnvContext
+    const env: MdEnvContext = {} as MdEnvContext
+    env.__code_import_filepath = filePath
     const html = this.md.render(markdownContent, env)
     const toc = env.__toc_tree_list || []
     const docPageMetaData: DocPageMetaData = {

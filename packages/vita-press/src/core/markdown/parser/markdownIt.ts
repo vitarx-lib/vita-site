@@ -2,6 +2,7 @@ import MarkdownIt from 'markdown-it'
 import type { MarkdownItConfig } from '../../types/index.js'
 import { anchorPoint } from '../plugins/anchorPoint.js'
 import { bracketTranslator } from '../plugins/bracketTranslator.js'
+import { codeImport } from '../plugins/codeImport.js'
 import { fenceTranslator } from '../plugins/fenceTranslator.js'
 import { jsxComponentParser } from '../plugins/jsxComponentParser.js'
 import { routerLink } from '../plugins/routerLink.js'
@@ -26,6 +27,7 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
   const shikiPlugin = await createShikiHighlighter(shikiConfig)
   const builtinPlugins = [
     shikiPlugin,
+    codeImport,
     tocTree,
     anchorPoint,
     routerLink,
