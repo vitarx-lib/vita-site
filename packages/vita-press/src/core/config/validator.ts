@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs'
-import path, { resolve } from 'node:path'
-import type { PageSource } from 'vitarx-router/file-router'
-import type { Language, NavSort, ThemeConfig, UserConfig } from '../types/config.js'
+import { resolve } from 'node:path'
+import type { DirConfig, ThemeConfig, UserConfig } from '../types/config.js'
 
 /**
  * 配置验证错误
@@ -23,12 +22,13 @@ export class ConfigValidationError extends Error {
 export function validateConfig(config: UserConfig, root: string): void {
   validateBasicFields(config)
   validateInjectOptions(config)
-  validateDocDir(config, root)
-  validatePageDirs(config, root)
-  validateSort(config)
-  validateLanguages(config, root)
+  validateDocsDir(config, root)
+  validatePagesDir(config, root)
+  validateLang(config)
   validateTheme(config, root)
   validateMarkdownIt(config)
+  validateDts(config)
+  validateBase(config)
 }
 
 /**
@@ -95,15 +95,12 @@ function validateStringArray(value: unknown, fieldName: string): void {
  *
  * @param config - 用户配置对象
  * @param root - 项目根目录
- * @throws {ConfigValidationError} 文档目录不存在时抛出
+ * @throws {ConfigValidationError} 文档目录配置无效时抛出
  */
-function validateDocDir(config: UserConfig, root: string): void {
-  if (!config.docDir) return
+function validateDocsDir(config: UserConfig, root: string): void {
+  if (!config.docsDir) return
 
-  const docDirPath = resolve(root, config.docDir)
-  if (!existsSync(docDirPath)) {
-    throw new ConfigValidationError(`文档目录不存在: ${config.docDir} (解析路径: ${docDirPath})`)
-  }
+  validateDirConfig(config.docsDir, 'docsDir', root)
 }
 
 /**
@@ -113,130 +110,88 @@ function validateDocDir(config: UserConfig, root: string): void {
  * @param root - 项目根目录
  * @throws {ConfigValidationError} 页面目录配置无效时抛出
  */
-function validatePageDirs(config: UserConfig, root: string): void {
-  if (!config.pageDirs) return
+function validatePagesDir(config: UserConfig, root: string): void {
+  if (!config.pagesDir) return
 
-  const pageDirsArray = Array.isArray(config.pageDirs) ? config.pageDirs : [config.pageDirs]
-  if (pageDirsArray.length === 0) return
+  validateDirConfig(config.pagesDir, 'pagesDir', root)
+}
 
-  for (let i = 0; i < pageDirsArray.length; i++) {
-    const pageDir = pageDirsArray[i]
-    if (!pageDir) continue
+/**
+ * 验证目录配置对象
+ *
+ * @param dirConfig - 目录配置
+ * @param fieldName - 字段名称
+ * @param root - 项目根目录
+ * @throws {ConfigValidationError} 目录配置无效时抛出
+ */
+function validateDirConfig(dirConfig: DirConfig, fieldName: string, root: string): void {
+  if (typeof dirConfig !== 'object' || Array.isArray(dirConfig)) {
+    throw new ConfigValidationError(
+      `${fieldName} 必须是对象类型，当前类型: ${typeof dirConfig}`
+    )
+  }
 
-    validatePageSource(pageDir, i, root)
+  if (!dirConfig.dir || typeof dirConfig.dir !== 'string') {
+    throw new ConfigValidationError(`${fieldName}.dir 必须是非空字符串`)
+  }
+
+  const dirPath = resolve(root, dirConfig.dir)
+  if (!existsSync(dirPath)) {
+    throw new ConfigValidationError(
+      `${fieldName} 目录不存在: ${dirConfig.dir} (解析路径: ${dirPath})`
+    )
+  }
+
+  if (dirConfig.patterns !== undefined) {
+    if (!Array.isArray(dirConfig.patterns)) {
+      throw new ConfigValidationError(
+        `${fieldName}.patterns 必须是数组类型，当前类型: ${typeof dirConfig.patterns}`
+      )
+    }
+
+    for (let i = 0; i < dirConfig.patterns.length; i++) {
+      if (typeof dirConfig.patterns[i] !== 'string') {
+        throw new ConfigValidationError(
+          `${fieldName}.patterns[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.patterns[i]}`
+        )
+      }
+    }
+  }
+
+  if (dirConfig.group !== undefined && typeof dirConfig.group !== 'string') {
+    throw new ConfigValidationError(
+      `${fieldName}.group 必须是字符串类型，当前类型: ${typeof dirConfig.group}`
+    )
   }
 }
 
 /**
- * 验证单个页面目录配置
+ * 验证语言配置
  *
- * @param pageSource - 页面目录配置
- * @param index - 配置索引
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 页面目录配置无效时抛出
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} 语言配置无效时抛出
  */
-function validatePageSource(pageSource: PageSource, index: number, root: string): void {
-  if (typeof pageSource === 'string') {
-    const dirPath = resolve(root, pageSource)
-    if (!existsSync(dirPath)) {
-      throw new ConfigValidationError(
-        `页面目录不存在: ${pageSource} (pageDirs[${index}], 解析路径: ${dirPath})`
-      )
+function validateLang(config: UserConfig): void {
+  if (config.lang === undefined) return
+
+  if (typeof config.lang === 'string') {
+    return
+  }
+
+  if (Array.isArray(config.lang)) {
+    for (let i = 0; i < config.lang.length; i++) {
+      if (typeof config.lang[i] !== 'string') {
+        throw new ConfigValidationError(
+          `lang[${i}] 必须是字符串类型，当前类型: ${typeof config.lang[i]}`
+        )
+      }
     }
     return
   }
 
-  if (typeof pageSource === 'object') {
-    if (!pageSource.dir) {
-      throw new ConfigValidationError(`pageDirs[${index}].dir 不能为空`)
-    }
-
-    const dirPath = resolve(root, pageSource.dir)
-    if (!existsSync(dirPath)) {
-      throw new ConfigValidationError(
-        `页面目录不存在: ${pageSource.dir} (pageDirs[${index}], 解析路径: ${dirPath})`
-      )
-    }
-
-    if (pageSource.prefix !== undefined && typeof pageSource.prefix !== 'string') {
-      throw new ConfigValidationError(
-        `pageDirs[${index}].prefix 必须是字符串类型，当前类型: ${typeof pageSource.prefix}`
-      )
-    }
-
-    if (pageSource.include !== undefined && !Array.isArray(pageSource.include)) {
-      throw new ConfigValidationError(
-        `pageDirs[${index}].include 必须是数组类型，当前类型: ${typeof pageSource.include}`
-      )
-    }
-
-    if (pageSource.exclude !== undefined && !Array.isArray(pageSource.exclude)) {
-      throw new ConfigValidationError(
-        `pageDirs[${index}].exclude 必须是数组类型，当前类型: ${typeof pageSource.exclude}`
-      )
-    }
-
-    if (pageSource.group !== undefined && typeof pageSource.group !== 'boolean') {
-      throw new ConfigValidationError(
-        `pageDirs[${index}].group 必须是布尔类型，当前类型: ${typeof pageSource.group}`
-      )
-    }
-  }
-}
-
-/**
- * 验证多语言配置
- *
- * @param config - 用户配置对象
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 语言配置无效时抛出
- */
-function validateLanguages(config: UserConfig, root: string): void {
-  if (!config.languages || config.languages.length === 0) return
-
-  validateLanguageFields(config.languages)
-  validateLanguageIds(config.languages)
-  validateLanguageDirectories(config.languages, root, config.docDir || 'docs')
-}
-
-/**
- * 验证语言 ID 是否重复
- *
- * @param languages - 语言配置数组
- * @throws {ConfigValidationError} 存在重复 ID 时抛出
- */
-function validateLanguageIds(languages: Language[]): void {
-  const ids = languages.map(lang => lang.id)
-  const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index)
-
-  if (duplicates.length > 0) {
-    throw new ConfigValidationError(`语言 ID 重复: ${duplicates.join(', ')}`)
-  }
-}
-
-/**
- * 验证语言目录是否存在
- *
- * @param languages - 语言映射
- * @param root - 项目根目录
- * @param docDir - 文档目录
- * @throws {ConfigValidationError} 语言目录不存在时抛出
- */
-function validateLanguageDirectories(languages: Language[], root: string, docDir: string): void {
-  const missingDirs: string[] = []
-
-  for (const lang of languages) {
-    const langDir = path.join(resolve(root, docDir), lang.id)
-    if (!existsSync(langDir)) {
-      missingDirs.push(lang.id)
-    }
-  }
-
-  if (missingDirs.length > 0) {
-    throw new ConfigValidationError(
-      `语言目录不存在: ${missingDirs.join(', ')} (应在 ${docDir} 目录下)`
-    )
-  }
+  throw new ConfigValidationError(
+    `lang 必须是字符串或字符串数组类型，当前类型: ${typeof config.lang}`
+  )
 }
 
 /**
@@ -252,8 +207,8 @@ function validateTheme(config: UserConfig, root: string): void {
   validateThemeEntry(config.theme, root)
   validateThemeLayout(config.theme, root)
   validateThemeHome(config.theme, root)
-  validateThemeInjectOptions(config.theme)
-  validateThemeData(config.theme)
+  validateThemeClientData(config.theme)
+  validateThemePlugins(config.theme)
 }
 
 /**
@@ -305,52 +260,41 @@ function validateThemeHome(theme: ThemeConfig, root: string): void {
 }
 
 /**
- * 验证主题注入选项
- *
- * @param theme - 主题配置
- * @throws {ConfigValidationError} 注入选项无效时抛出
- */
-function validateThemeInjectOptions(theme: ThemeConfig): void {
-  validateStringArray(theme.injectHead, 'theme.injectHead')
-  validateStringArray(theme.injectBody, 'theme.injectBody')
-  validateStringArray(theme.injectCode, 'theme.injectCode')
-}
-
-/**
- * 验证主题数据
+ * 验证主题客户端数据
  *
  * @param theme - 主题配置
  * @throws {ConfigValidationError} 主题数据无效时抛出
  */
-function validateThemeData(theme: ThemeConfig): void {
-  if (theme.data === undefined) return
+function validateThemeClientData(theme: ThemeConfig): void {
+  if (theme.clientData === undefined) return
 
-  if (typeof theme.data !== 'object' || Array.isArray(theme.data)) {
-    throw new ConfigValidationError(`theme.data 必须是对象类型，当前类型: ${typeof theme.data}`)
+  if (typeof theme.clientData !== 'object' || Array.isArray(theme.clientData)) {
+    throw new ConfigValidationError(
+      `theme.clientData 必须是对象类型，当前类型: ${typeof theme.clientData}`
+    )
   }
 
   try {
-    JSON.stringify(theme.data)
+    JSON.stringify(theme.clientData)
   } catch (error) {
     throw new ConfigValidationError(
-      `theme.data 必须是可序列化的对象，序列化失败: ${error instanceof Error ? error.message : String(error)}`
+      `theme.clientData 必须是可序列化的对象，序列化失败: ${error instanceof Error ? error.message : String(error)}`
     )
   }
 }
 
 /**
- * 验证排序配置
+ * 验证主题插件列表
  *
- * @param config - 用户配置对象
- * @throws {ConfigValidationError} 排序值无效时抛出
+ * @param theme - 主题配置
+ * @throws {ConfigValidationError} 插件列表无效时抛出
  */
-function validateSort(config: UserConfig): void {
-  if (!config.sort) return
+function validateThemePlugins(theme: ThemeConfig): void {
+  if (theme.plugins === undefined) return
 
-  const validSortValues: NavSort[] = ['asc', 'desc']
-  if (!validSortValues.includes(config.sort)) {
+  if (!Array.isArray(theme.plugins)) {
     throw new ConfigValidationError(
-      `排序值无效: ${config.sort} (有效值: ${validSortValues.join(', ')})`
+      `theme.plugins 必须是数组类型，当前类型: ${typeof theme.plugins}`
     )
   }
 }
@@ -399,22 +343,39 @@ function validateMarkdownIt(config: UserConfig): void {
 }
 
 /**
- * 验证语言配置字段
+ * 验证 dts 配置
  *
- * @param languages - 语言配置数组
- * @throws {ConfigValidationError} 语言字段无效时抛出
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} dts 配置无效时抛出
  */
-function validateLanguageFields(languages: Language[]): void {
-  for (let i = 0; i < languages.length; i++) {
-    const lang = languages[i]
-    if (!lang) continue
+function validateDts(config: UserConfig): void {
+  if (config.dts === undefined) return
 
-    if (!lang.id || typeof lang.id !== 'string') {
-      throw new ConfigValidationError(`languages[${i}].id 必须是非空字符串`)
-    }
+  if (typeof config.dts !== 'boolean' && typeof config.dts !== 'string') {
+    throw new ConfigValidationError(
+      `dts 必须是布尔值或字符串类型，当前类型: ${typeof config.dts}`
+    )
+  }
+}
 
-    if (!lang.name || typeof lang.name !== 'string') {
-      throw new ConfigValidationError(`languages[${i}].name 必须是非空字符串`)
-    }
+/**
+ * 验证 base 配置
+ *
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} base 配置无效时抛出
+ */
+function validateBase(config: UserConfig): void {
+  if (config.base === undefined) return
+
+  if (typeof config.base !== 'string') {
+    throw new ConfigValidationError(`base 必须是字符串类型，当前类型: ${typeof config.base}`)
+  }
+
+  if (!config.base.startsWith('/')) {
+    throw new ConfigValidationError(`base 必须以 "/" 开头，当前值: ${config.base}`)
+  }
+
+  if (!config.base.endsWith('/')) {
+    throw new ConfigValidationError(`base 必须以 "/" 结尾，当前值: ${config.base}`)
   }
 }
