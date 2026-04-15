@@ -1,8 +1,6 @@
-import path from 'node:path'
-import type { FileRouterOptions, PageSource } from 'vitarx-router/file-router'
-import { FileRouter } from 'vitarx-router/file-router'
+import { existsSync } from 'node:fs'
+import { debug, FileRouter, type PageDirOptions, warn } from 'vitarx-router/file-router'
 import type { MdParser } from '../markdown/index.js'
-import type { Language } from '../types/config.js'
 
 /**
  * 路由器配置选项
@@ -15,19 +13,19 @@ export interface RouterOptions {
   /**
    * 文档目录
    */
-  docDir: string
+  docDir: PageDirOptions
   /**
-   * 语言配置
+   * 布局文件绝对路径
    */
-  languages?: Language[]
+  layout?: string
   /**
    * 页面目录配置
    */
-  pageDirs?: PageSource | PageSource[]
+  pageDirs: PageDirOptions[]
   /**
    * 是否生成类型定义文件
    */
-  dts?: FileRouterOptions['dts']
+  dts?: string | boolean
   /**
    * Markdown 解析器实例
    */
@@ -39,13 +37,11 @@ export interface RouterOptions {
  *
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
-export class Router extends FileRouter {
+export class VitaPressServerRouter extends FileRouter {
   constructor(options: RouterOptions) {
-    const pages = Router.resolvePageSources(options)
-
     super({
       root: options.root,
-      pages,
+      pages: [options.docDir, ...options.pageDirs],
       importMode: 'lazy',
       pathStrategy: 'kebab',
       dts: options.dts || false,
@@ -56,43 +52,19 @@ export class Router extends FileRouter {
         return content
       }
     })
-  }
-
-  /**
-   * 解析页面源配置
-   *
-   * 根据是否配置多语言，生成不同的 PageSource 配置
-   */
-  private static resolvePageSources(options: RouterOptions): PageSource[] {
-    const sources: PageSource[] = []
-    const include = ['**/*.{jsx,tsx,md}']
-
-    if (options.languages && options.languages.length > 0) {
-      for (const lang of options.languages) {
-        const dir = path.resolve(options.root, options.docDir, lang.id)
-        sources.push({
-          dir,
-          prefix: `/${lang.id}`,
-          group: true,
-          include
-        })
+    try {
+      if (options.layout && existsSync(options.layout)) {
+        const docsNode = this.fileMap.get(options.docDir.dir)
+        if (docsNode) {
+          if (!docsNode.components) {
+            docsNode.components = { default: options.layout }
+          } else {
+            debug('文档目录下已经存在布局文件，将覆盖主题布局')
+          }
+        }
       }
-    } else {
-      sources.push({
-        dir: options.docDir,
-        prefix: '/',
-        include
-      })
+    } catch (e) {
+      warn('应用文档布局失败', String(e))
     }
-
-    if (options.pageDirs) {
-      if (Array.isArray(options.pageDirs)) {
-        sources.push(...options.pageDirs)
-      } else {
-        sources.push(options.pageDirs)
-      }
-    }
-
-    return sources
   }
 }
