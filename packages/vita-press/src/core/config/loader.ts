@@ -23,14 +23,14 @@ const CONFIG_FILES = [
 ]
 
 /**
- * 解析并加载配置
+ * 加载配置
  *
  * @param configFile - 指定的配置文件路径（可选）
  * @returns 加载后的配置结果
  */
-export async function resolveConfig(configFile?: string): Promise<LoadConfigResult> {
+export async function loadUserConfig(configFile?: string): Promise<LoadConfigResult> {
   const configFilePath = await findConfigFile(process.cwd(), configFile)
-  const userConfig = await loadUserConfig(configFilePath)
+  const userConfig = await readUserConfig(configFilePath)
   validateConfig(userConfig, process.cwd())
   return {
     config: userConfig,
@@ -70,7 +70,7 @@ async function findConfigFile(root: string, configFile?: string): Promise<string
  * @param configFile - 配置文件路径
  * @returns 用户配置对象
  */
-async function loadUserConfig(configFile?: string): Promise<UserConfig> {
+async function readUserConfig(configFile?: string): Promise<UserConfig> {
   if (!configFile) return {}
   try {
     const result = await loadConfigFromFile(
