@@ -438,4 +438,55 @@ describe('ConfigValidator', () => {
       expect(() => validateConfig(config, tempDir)).toThrow(/markdownIt.shikiConfig 必须是对象类型/)
     })
   })
+
+  describe('validatePlugins', () => {
+    it('应通过有效的根级别插件列表', () => {
+      const config: UserConfig = {
+        plugins: []
+      }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应通过有效的根级别插件列表（包含插件对象）', () => {
+      const config: UserConfig = {
+        plugins: [
+          { name: 'plugin1', version: '1.0.0' },
+          { name: 'plugin2', description: 'Test plugin' }
+        ]
+      }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应在根级别插件列表类型无效时抛出错误', () => {
+      const config = {
+        plugins: 'invalid'
+      } as any
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins 必须是数组类型/)
+    })
+
+    it('应在根级别插件元素类型无效时抛出错误', () => {
+      const config = {
+        plugins: ['invalid']
+      } as any
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
+    })
+
+    it('应在根级别插件元素为 null 时抛出错误', () => {
+      const config = {
+        plugins: [null]
+      } as any
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
+    })
+
+    it('应在根级别插件元素为数字时抛出错误', () => {
+      const config = {
+        plugins: [123]
+      } as any
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
+    })
+  })
 })
