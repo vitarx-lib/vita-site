@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { UserConfig } from '../../../src/core/config/../../../src/core/types/config.js'
+import type { UserConfig } from '../../../src/core/types/config.js'
 import { ConfigValidationError, validateConfig } from '../../../src/core/config/validator.js'
 
 describe('ConfigValidator', () => {
@@ -28,14 +28,14 @@ describe('ConfigValidator', () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
 
-      const config: UserConfig = { docDir: 'docs' }
+      const config: UserConfig = { docsDir: { dir: 'docs' } }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
     it('应在文档目录不存在时抛出错误', () => {
-      const config: UserConfig = { docDir: 'non-existent-docs' }
+      const config: UserConfig = { docsDir: { dir: 'non-existent-docs' } }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/文档目录不存在/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/目录不存在/)
     })
   })
 
@@ -103,137 +103,99 @@ describe('ConfigValidator', () => {
     })
   })
 
-  describe('validatePageDirs', () => {
-    it('应通过有效的页面目录（字符串格式）', () => {
+  describe('validatePagesDir', () => {
+    it('应通过有效的页面目录', () => {
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(pagesDir, { recursive: true })
 
       const config: UserConfig = {
-        pageDirs: ['pages']
+        pagesDir: { dir: 'pages' }
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应通过有效的页面目录（对象格式）', () => {
+    it('应通过有效的页面目录（带完整配置）', () => {
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(pagesDir, { recursive: true })
 
       const config: UserConfig = {
-        pageDirs: [
-          {
-            dir: 'pages',
-            prefix: '/app',
-            include: ['**/*.tsx'],
-            exclude: ['**/test/**'],
-            group: true
-          }
-        ]
+        pagesDir: {
+          dir: 'pages',
+          patterns: ['**/*.tsx'],
+          group: '/'
+        }
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
     it('应在页面目录不存在时抛出错误', () => {
       const config: UserConfig = {
-        pageDirs: ['non-existent-pages']
+        pagesDir: { dir: 'non-existent-pages' }
       }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/页面目录不存在/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/目录不存在/)
     })
 
-    it('应在 pageDirs[].dir 为空时抛出错误', () => {
+    it('应在 pagesDir.dir 为空时抛出错误', () => {
       const config = {
-        pageDirs: [{ dir: '' }] as any
-      }
+        pagesDir: { dir: '' }
+      } as any
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pageDirs\[0].dir 不能为空/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.dir 必须是非空字符串/)
     })
 
-    it('应在 pageDirs[].prefix 类型无效时抛出错误', () => {
+    it('应在 pagesDir.patterns 类型无效时抛出错误', () => {
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(pagesDir, { recursive: true })
 
       const config = {
-        pageDirs: [{ dir: 'pages', prefix: 123 }] as any
-      }
+        pagesDir: { dir: 'pages', patterns: 'invalid' }
+      } as any
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pageDirs\[0].prefix 必须是字符串类型/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.patterns 必须是数组类型/)
     })
 
-    it('应在 pageDirs[].include 类型无效时抛出错误', () => {
+    it('应在 pagesDir.group 类型无效时抛出错误', () => {
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(pagesDir, { recursive: true })
 
       const config = {
-        pageDirs: [{ dir: 'pages', include: 'invalid' }] as any
-      }
+        pagesDir: { dir: 'pages', group: 123 }
+      } as any
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pageDirs\[0].include 必须是数组类型/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.group 必须是字符串类型/)
     })
   })
 
-  describe('validateLanguages', () => {
-    it('应通过有效的多语言配置', () => {
-      const docsDir = join(tempDir, 'docs')
-      const zhDir = join(docsDir, 'zh')
-      const enDir = join(docsDir, 'en')
-      mkdirSync(zhDir, { recursive: true })
-      mkdirSync(enDir, { recursive: true })
-
+  describe('validateLang', () => {
+    it('应通过有效的单语言配置', () => {
       const config: UserConfig = {
-        docDir: 'docs',
-        languages: [
-          { id: 'zh', name: '中文' },
-          { id: 'en', name: 'English' }
-        ]
+        lang: 'zh-CN'
       }
 
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在语言 ID 为空时抛出错误', () => {
+    it('应通过有效的多语言配置', () => {
       const config: UserConfig = {
-        languages: [{ id: '', name: '中文' }]
+        lang: ['zh-CN', 'en-US']
       }
 
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/languages\[0].id 必须是非空字符串/)
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在语言 name 为空时抛出错误', () => {
-      const config: UserConfig = {
-        languages: [{ id: 'zh', name: '' }]
-      }
+    it('应在 lang 类型无效时抛出错误', () => {
+      const config = { lang: 123 as any }
 
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/languages\[0].name 必须是非空字符串/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/lang 必须是字符串或字符串数组类型/)
     })
 
-    it('应在语言 ID 重复时抛出错误', () => {
-      const config: UserConfig = {
-        languages: [
-          { id: 'zh', name: '中文' },
-          { id: 'zh', name: '中文' }
-        ]
-      }
+    it('应在 lang 数组元素类型无效时抛出错误', () => {
+      const config = { lang: ['zh-CN', 123] as any }
 
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/语言 ID 重复/)
-    })
-
-    it('应在语言目录不存在时抛出错误', () => {
-      const docsDir = join(tempDir, 'docs')
-      mkdirSync(docsDir, { recursive: true })
-
-      const config: UserConfig = {
-        docDir: 'docs',
-        languages: [
-          { id: 'zh', name: '中文' },
-          { id: 'en', name: 'English' }
-        ]
-      }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/语言目录不存在/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/lang\[1] 必须是字符串类型/)
     })
   })
 
@@ -310,31 +272,10 @@ describe('ConfigValidator', () => {
       expect(() => validateConfig(config, tempDir)).toThrow(/主题首页文件不存在/)
     })
 
-    it('应通过有效的主题注入选项', () => {
+    it('应通过有效的主题客户端数据', () => {
       const config: UserConfig = {
         theme: {
-          injectHead: ['<link rel="stylesheet">'],
-          injectBody: ['<script>test</script>'],
-          injectCode: ['import Test from "test"']
-        }
-      }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题注入选项类型无效时抛出错误', () => {
-      const config = {
-        theme: {
-          injectHead: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.injectHead 必须是数组类型/)
-    })
-
-    it('应通过有效的主题数据', () => {
-      const config: UserConfig = {
-        theme: {
-          data: {
+          clientData: {
             nav: ['home', 'about'],
             footer: { text: 'Copyright' }
           }
@@ -343,43 +284,98 @@ describe('ConfigValidator', () => {
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在主题数据类型无效时抛出错误', () => {
+    it('应在主题客户端数据类型无效时抛出错误', () => {
       const config = {
         theme: {
-          data: 'invalid'
+          clientData: 'invalid'
         }
       } as any
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.data 必须是对象类型/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/theme.clientData 必须是对象类型/)
     })
 
-    it('应在主题数据不可序列化时抛出错误', () => {
+    it('应在主题客户端数据不可序列化时抛出错误', () => {
       const circular: any = { name: 'test' }
       circular.self = circular
 
       const config = {
         theme: {
-          data: circular
+          clientData: circular
         }
       } as any
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.data 必须是可序列化的对象/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/theme.clientData 必须是可序列化的对象/)
+    })
+
+    it('应通过有效的主题插件列表', () => {
+      const config: UserConfig = {
+        theme: {
+          plugins: []
+        }
+      }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应在主题插件列表类型无效时抛出错误', () => {
+      const config = {
+        theme: {
+          plugins: 'invalid'
+        }
+      } as any
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/theme.plugins 必须是数组类型/)
     })
   })
 
-  describe('validateSort', () => {
-    it('应通过有效的排序值', () => {
-      const configAsc: UserConfig = { sort: 'asc' }
-      const configDesc: UserConfig = { sort: 'desc' }
+  describe('validateDts', () => {
+    it('应通过有效的 dts 布尔值配置', () => {
+      const configTrue: UserConfig = { dts: true }
+      const configFalse: UserConfig = { dts: false }
 
-      expect(() => validateConfig(configAsc, tempDir)).not.toThrow()
-      expect(() => validateConfig(configDesc, tempDir)).not.toThrow()
+      expect(() => validateConfig(configTrue, tempDir)).not.toThrow()
+      expect(() => validateConfig(configFalse, tempDir)).not.toThrow()
     })
 
-    it('应在排序值无效时抛出错误', () => {
-      const config = { sort: 'invalid' as any }
+    it('应通过有效的 dts 字符串配置', () => {
+      const config: UserConfig = { dts: 'typed-router.d.ts' }
+
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应在 dts 类型无效时抛出错误', () => {
+      const config = { dts: 123 as any }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/排序值无效/)
+      expect(() => validateConfig(config, tempDir)).toThrow(/dts 必须是布尔值或字符串类型/)
+    })
+  })
+
+  describe('validateBase', () => {
+    it('应通过有效的 base 配置', () => {
+      const config: UserConfig = { base: '/' }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应通过有效的 base 子路径配置', () => {
+      const config: UserConfig = { base: '/docs/' }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应在 base 不以 / 开头时抛出错误', () => {
+      const config = { base: 'docs/' as any }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须以 "\/" 开头/)
+    })
+
+    it('应在 base 不以 / 结尾时抛出错误', () => {
+      const config = { base: '/docs' as any }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须以 "\/" 结尾/)
+    })
+
+    it('应在 base 类型无效时抛出错误', () => {
+      const config = { base: 123 as any }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须是字符串类型/)
     })
   })
 
