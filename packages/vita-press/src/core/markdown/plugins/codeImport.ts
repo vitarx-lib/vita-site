@@ -3,18 +3,8 @@ import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
-import { getLineContent } from '../utils/lineContent.js'
-
-/**
- * 代码导入插件的环境上下文
- *
- * 通过 markdown-it 的 env 对象传递当前文件路径，
- * 用于解析相对路径的代码导入
- */
-export interface CodeImportEnvContext {
-  /** 当前正在解析的 Markdown 文件绝对路径 */
-  __code_import_filepath?: string
-}
+import type { MarkdownParseEnvContext } from '../../types/index.js'
+import { getLineContent } from '../utils/index.js'
 
 /**
  * 代码导入语法解析结果
@@ -197,7 +187,7 @@ function readCodeContent(
  *
  * 路径解析：
  * - 支持相对路径，基于当前 Markdown 文件所在目录解析
- * - 需要在 env 中传入 `__code_import_filepath`（当前文件绝对路径）
+ * - 需要在 env 中传入 `filePath`（当前文件绝对路径）
  *
  * @param md - MarkdownIt 实例
  *
@@ -210,7 +200,7 @@ function readCodeContent(
  * md.use(codeImport)
  *
  * // 渲染时需要传入文件路径
- * md.render('@[code](./foo.js)', { __code_import_filepath: '/path/to/current.md' })
+ * md.render('@[code](./foo.js)', { filePath: '/path/to/current.md' })
  * ```
  */
 export function codeImport(md: MarkdownIt): void {
@@ -240,9 +230,9 @@ export function codeImport(md: MarkdownIt): void {
 
     if (silent) return true
 
-    const currentFilePath = (state.env as Record<string, string>)?.['__code_import_filepath']
+    const currentFilePath = (state.env as MarkdownParseEnvContext)?.filePath
     if (!currentFilePath) {
-      warn('[codeImport] 未在 env 中设置 __code_import_filepath，跳过代码导入')
+      warn('[codeImport] 未在 env 中设置 filePath，跳过代码导入')
       return false
     }
 
