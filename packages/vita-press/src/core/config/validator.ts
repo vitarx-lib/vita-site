@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { DirConfig, ThemeConfig, UserConfig } from '../types/config.js'
+import type { VitaPressPlugin } from '../types/index.js'
 
 /**
  * 配置验证错误
@@ -29,6 +30,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateMarkdownIt(config)
   validateDts(config)
   validateBase(config)
+  validatePlugins(config, 'plugins')
 }
 
 /**
@@ -126,9 +128,7 @@ function validatePagesDir(config: UserConfig, root: string): void {
  */
 function validateDirConfig(dirConfig: DirConfig, fieldName: string, root: string): void {
   if (typeof dirConfig !== 'object' || Array.isArray(dirConfig)) {
-    throw new ConfigValidationError(
-      `${fieldName} 必须是对象类型，当前类型: ${typeof dirConfig}`
-    )
+    throw new ConfigValidationError(`${fieldName} 必须是对象类型，当前类型: ${typeof dirConfig}`)
   }
 
   if (!dirConfig.dir || typeof dirConfig.dir !== 'string') {
@@ -208,7 +208,7 @@ function validateTheme(config: UserConfig, root: string): void {
   validateThemeLayout(config.theme, root)
   validateThemeHome(config.theme, root)
   validateThemeClientData(config.theme)
-  validateThemePlugins(config.theme)
+  validatePlugins(config.theme, 'theme')
 }
 
 /**
@@ -284,22 +284,6 @@ function validateThemeClientData(theme: ThemeConfig): void {
 }
 
 /**
- * 验证主题插件列表
- *
- * @param theme - 主题配置
- * @throws {ConfigValidationError} 插件列表无效时抛出
- */
-function validateThemePlugins(theme: ThemeConfig): void {
-  if (theme.plugins === undefined) return
-
-  if (!Array.isArray(theme.plugins)) {
-    throw new ConfigValidationError(
-      `theme.plugins 必须是数组类型，当前类型: ${typeof theme.plugins}`
-    )
-  }
-}
-
-/**
  * 验证 MarkdownIt 配置
  *
  * @param config - 用户配置对象
@@ -352,9 +336,7 @@ function validateDts(config: UserConfig): void {
   if (config.dts === undefined) return
 
   if (typeof config.dts !== 'boolean' && typeof config.dts !== 'string') {
-    throw new ConfigValidationError(
-      `dts 必须是布尔值或字符串类型，当前类型: ${typeof config.dts}`
-    )
+    throw new ConfigValidationError(`dts 必须是布尔值或字符串类型，当前类型: ${typeof config.dts}`)
   }
 }
 
@@ -377,5 +359,27 @@ function validateBase(config: UserConfig): void {
 
   if (!config.base.endsWith('/')) {
     throw new ConfigValidationError(`base 必须以 "/" 结尾，当前值: ${config.base}`)
+  }
+}
+
+/**
+ * 验证插件配置
+ * @param config
+ * @param field
+ */
+function validatePlugins(config: { plugins?: VitaPressPlugin[] }, field: 'theme' | 'plugins') {
+  if (config.plugins === undefined) return
+  if (!Array.isArray(config.plugins)) {
+    throw new ConfigValidationError(
+      `${field}.plugins 必须是数组类型，当前类型: ${typeof config.plugins}`
+    )
+  }
+  for (let i = 0; i < config.plugins.length; i++) {
+    const plugin = config.plugins[i]
+    if (!plugin || typeof plugin !== 'object') {
+      throw new ConfigValidationError(
+        `${field}.plugins[${i}] 必须是对象类型，当前类型: ${typeof plugin}`
+      )
+    }
   }
 }
