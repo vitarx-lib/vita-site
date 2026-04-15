@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { resolveConfig } from '../../../src/core/config/loader.js'
+import { loadUserConfig } from '../../../src/core/config/loader.js'
 
 describe('ConfigLoader', () => {
   let tempDir: string
@@ -23,7 +23,7 @@ describe('ConfigLoader', () => {
   describe('resolveConfig', () => {
     it('应在没有配置文件时返回空配置', async () => {
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config).toEqual({})
       expect(result.configFile).toBeUndefined()
@@ -45,7 +45,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig('.vitapress/custom.config.ts')
+      const result = await loadUserConfig('.vitapress/custom.config.ts')
 
       expect(result.config.title).toBe('Test Site')
       expect(result.config.description).toBe('Test Description')
@@ -55,7 +55,7 @@ export default {
     it('应在指定的配置文件不存在时抛出错误', async () => {
       process.chdir(tempDir)
 
-      await expect(resolveConfig('non-existent.config.ts')).rejects.toThrow(/配置文件不存在/)
+      await expect(loadUserConfig('non-existent.config.ts')).rejects.toThrow(/配置文件不存在/)
     })
 
     it('应自动查找 .vitapress/config.ts 配置文件', async () => {
@@ -74,7 +74,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('Auto Found Config')
       expect(result.config.base).toBe('/docs/')
@@ -96,7 +96,7 @@ module.exports = {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('JS Config')
       expect(result.configFile).toBe(configFile)
@@ -117,7 +117,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('MJS Config')
       expect(result.configFile).toBe(configFile)
@@ -138,7 +138,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('MTS Config')
       expect(result.configFile).toBe(configFile)
@@ -180,7 +180,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('Full Config')
       expect(result.config.description).toBe('Full Description')
@@ -234,7 +234,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('Theme Config')
       expect(result.config.theme?.entry).toBe('theme-entry.tsx')
@@ -264,7 +264,7 @@ export default {
 
       process.chdir(tempDir)
 
-      await expect(resolveConfig()).rejects.toThrow()
+      await expect(loadUserConfig()).rejects.toThrow()
     })
 
     it('应在配置文件语法错误时抛出错误', async () => {
@@ -284,7 +284,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      await expect(resolveConfig()).rejects.toThrow(/加载配置文件失败/)
+      await expect(loadUserConfig()).rejects.toThrow(/加载配置文件失败/)
     })
 
     it('应加载包含 MarkdownIt 配置的完整配置', async () => {
@@ -312,7 +312,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('MarkdownIt Config')
       expect(result.config.markdownIt?.options).toEqual({
@@ -347,7 +347,7 @@ export default {
       )
 
       process.chdir(tempDir)
-      const result = await resolveConfig()
+      const result = await loadUserConfig()
 
       expect(result.config.title).toBe('Vite Config')
       expect(result.config.viteConfig?.publicDir).toBe('public')
