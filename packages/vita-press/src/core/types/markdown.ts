@@ -5,6 +5,7 @@ import type {
   PluginWithParams
 } from 'markdown-it'
 import type { ShikiConfig } from '../markdown/plugins/shik.js'
+import type { TocTree } from '../markdown/plugins/tocTree.js'
 
 type PluginWithOptionsType<T> = {
   plugin: PluginWithOptions<T>
@@ -48,4 +49,13 @@ export interface MarkdownItConfig {
    * 此插件用于代码高亮
    */
   shikiConfig?: Partial<ShikiConfig>
+}
+
+/**
+ * markdown解析环境上下文
+ */
+export interface MarkdownParseEnvContext {
+  readonly filePath: string
+  readonly frontmatter: Record<string, any>
+  readonly tocList: TocTree[]
 }
