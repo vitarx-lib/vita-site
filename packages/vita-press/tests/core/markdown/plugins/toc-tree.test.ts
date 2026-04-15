@@ -15,7 +15,7 @@ function createMarkdown(): MarkdownIt {
 function parseAndExtractToc(md: MarkdownIt, content: string): TocTree[] {
   const env: TocParseEnvContext = {} as TocParseEnvContext
   md.parse(content, env)
-  return env.__toc_tree_list || []
+  return env.tocList || []
 }
 
 function extractHeadingIds(md: MarkdownIt, content: string): string[] {
