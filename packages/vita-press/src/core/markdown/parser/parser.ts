@@ -1,13 +1,10 @@
 import MarkdownIt from 'markdown-it'
 import { createHash } from 'node:crypto'
 import path from 'node:path'
+import type { MarkdownParseEnvContext } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
-import { type CodeImportEnvContext } from '../plugins/codeImport.js'
-import { type TocParseEnvContext } from '../plugins/tocTree.js'
 import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
-
-type MdEnvContext = TocParseEnvContext & CodeImportEnvContext
 
 /**
  * Markdown 解析结果
@@ -27,10 +24,24 @@ export interface MdParseResult {
  * Markdown 解析器配置选项
  */
 export interface ParserOptions {
-  /** 需要注入到生成组件顶部的代码片段数组 */
-  injectCode: string[]
   /** 项目根目录路径，用于计算相对路径 */
   root: string
+  /** 需要注入到生成组件顶部的代码片段数组 */
+  injectCode: readonly string[]
+  /** 默认语言 */
+  defaultLang: string
+  /**
+   * 语言映射
+   *
+   * @example
+   * ```ts
+   * {
+   *   '/root/docs/zh-CN': 'zh-CN',
+   *   '/root/docs/en-US': 'en-US'
+   * }
+   * ```
+   */
+  languages: Record<string, string>
 }
 
 /**
@@ -42,19 +53,22 @@ export interface ParserOptions {
  * @example
  * ```ts
  * const parser = new MdParser(markdownIt, {
- *   root: '/project/docs',
+ *   root: process.cwd(),
  *   injectCode: ['import { customDirective } from "./directives"']
  * })
  * parser.initCache()
- * const result = await parser.parse('/project/docs/guide.md', markdownContent)
+ * const result = parser.parse('/project/docs/guide.md', markdownContent)
  * ```
  */
 export class MdParser {
   private md: MarkdownIt
-  private readonly injectCode: string[] | undefined
-  private readonly root: string
   public readonly cacheManager: CacheManager
-
+  private readonly options: ParserOptions
+  /**
+   * 语言目录
+   * @private
+   */
+  private readonly langDirs: string[]
   /**
    * 创建 Markdown 解析器实例
    *
@@ -63,14 +77,15 @@ export class MdParser {
    */
   constructor(md: MarkdownIt, options: ParserOptions) {
     this.md = md
-    this.root = options.root
-    this.injectCode = options.injectCode
+    this.options = options
 
     const configHash = options
       ? createHash('md5').update(JSON.stringify(options)).digest('hex')
       : ''
-    this.cacheManager = new CacheManager(this.root, configHash)
+    this.cacheManager = new CacheManager(this.options.root, configHash)
+    this.langDirs = Object.keys(this.options.languages)
   }
+
   /**
    * 初始化缓存
    */
@@ -102,7 +117,7 @@ export class MdParser {
    * @param content
    */
   parse(filePath: string, content: string): MdParseResult {
-    const relativePath = path.relative(this.root, filePath)
+    const relativePath = path.relative(this.options.root, filePath)
 
     const cached = this.cacheManager.get(relativePath, content)
     if (cached) return cached
@@ -123,25 +138,40 @@ export class MdParser {
   private transform(filePath: string, content: string): MdParseResult {
     const { data: frontmatter, content: markdownContent } = parseFrontMatter(content)
     const gitInfo = getCommitInfo(filePath)
-    const env: MdEnvContext = {} as MdEnvContext
-    env.__code_import_filepath = filePath
+    const env: MarkdownParseEnvContext = {
+      filePath: filePath,
+      frontmatter: frontmatter,
+      tocList: []
+    }
     const html = this.md.render(markdownContent, env)
-    const toc = env.__toc_tree_list || []
+    const toc = env.tocList
     const docPageMetaData: DocPageMetaData = {
-      order: 0,
+      lang: this.options.defaultLang,
       authors: gitInfo.authors,
       createdAt: gitInfo.createdAt,
       lastUpdateAt: gitInfo.lastUpdateAt,
       tocList: toc,
-      relativePath: path.relative(this.root, filePath),
+      relativePath: path.relative(this.options.root, filePath),
       ...frontmatter
     }
+    if (!docPageMetaData.lang) docPageMetaData.lang = this.parseLanguage(filePath)
     const componentCode = this.generateComponent(html, docPageMetaData, filePath)
     return {
       content: componentCode,
       filePath,
       meta: docPageMetaData
     }
+  }
+
+  /**
+   * 解析文件语言
+   *
+   * @param filePath
+   * @private
+   */
+  private parseLanguage(filePath: string): string {
+    const lang = this.langDirs.find(key => filePath.startsWith(key))
+    return lang ? this.options.languages[lang]! : this.options.defaultLang
   }
 
   /**
@@ -152,7 +182,9 @@ export class MdParser {
    * @private
    */
   private generateComponent(html: string, meta: DocPageMetaData, filePath: string): string {
-    const injectCodeBlock = this.injectCode?.length ? this.injectCode.join('\n') + '\n' : ''
+    const injectCodeBlock = this.options.injectCode?.length
+      ? this.options.injectCode.join('\n') + '\n'
+      : ''
 
     return `// 此文件由vita-press自动生成
 import { createView, builder } from 'vitarx'
