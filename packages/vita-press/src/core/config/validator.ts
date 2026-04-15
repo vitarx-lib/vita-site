@@ -381,5 +381,8 @@ function validatePlugins(config: { plugins?: VitaPressPlugin[] }, field: 'theme'
         `${field}.plugins[${i}] 必须是对象类型，当前类型: ${typeof plugin}`
       )
     }
+    if (!plugin.name) {
+      throw new ConfigValidationError(`${field}.plugins[${i}] 必须有 name 属性`)
+    }
   }
 }
