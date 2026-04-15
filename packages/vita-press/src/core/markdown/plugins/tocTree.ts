@@ -3,7 +3,7 @@ import type MarkdownIt from 'markdown-it'
 import type Token from 'markdown-it/lib/token.mjs'
 
 export interface TocParseEnvContext {
-  __toc_tree_list: TocTree[]
+  tocList: TocTree[]
   __toc_slugger: GithubSlugger
 }
 
@@ -62,7 +62,11 @@ function processTokens(tokens: Token[], env: TocParseEnvContext): void {
     })
   }
 
-  env.__toc_tree_list = buildTocTree(rawItems)
+  if (env.tocList) {
+    env.tocList.push(...buildTocTree(rawItems))
+  } else {
+    env.tocList = buildTocTree(rawItems)
+  }
 }
 
 /**
@@ -164,9 +168,8 @@ function buildTocTree(items: TocTree[]): TocTree[] {
  */
 export function tocTree(md: MarkdownIt): void {
   md.core.ruler.push('toc-tree', state => {
-    state.env = state.env || {}
+    state.env ??= {}
     state.env.__toc_slugger = new GithubSlugger()
-    state.env.__toc_tree_list = []
 
     processTokens(state.tokens, state.env)
   })
