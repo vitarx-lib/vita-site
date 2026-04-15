@@ -73,7 +73,12 @@ async function findConfigFile(root: string, configFile?: string): Promise<string
 async function loadUserConfig(configFile?: string): Promise<UserConfig> {
   if (!configFile) return {}
   try {
-    const result = await loadConfigFromFile({ command: 'serve', mode: 'development' }, configFile)
+    const result = await loadConfigFromFile(
+      { command: 'serve', mode: 'development' },
+      configFile,
+      process.cwd(),
+      'silent'
+    )
 
     if (!result) {
       return {}
@@ -82,6 +87,6 @@ async function loadUserConfig(configFile?: string): Promise<UserConfig> {
     return (result.config as UserConfig) || {}
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    throw new Error(`加载配置文件失败: ${configFile}\n${message}`)
+    throw new Error(`加载配置文件失败 in ${configFile}\n${message}`)
   }
 }
