@@ -1,5 +1,6 @@
-import type { FileRouterOptions, PageSource } from 'vitarx-router/file-router'
+import type { UserConfig as ViteUserConfig } from 'vite'
 import type { MarkdownItConfig } from './markdown.js'
+import type { VitaPressPlugin } from './plugin.js'
 
 export interface InjectOptions {
   /**
@@ -58,20 +59,9 @@ export interface SiteOptions {
    */
   keywords?: string
 }
-export interface Language {
+export interface ThemeConfig {
   /**
-   * id 必须对应docDir子目录，
-   * 例如 id 为 zh 的目录为 docDir/zh
-   */
-  id: string
-  /**
-   * 语言名称，展示在语言切换菜单中
-   */
-  name: string
-}
-export interface ThemeConfig extends InjectOptions, MarkdownItOptions {
-  /**
-   * 运行时入口组件文件路径，必须是绝对路径
+   * 运行时应用入口组件文件路径，必须是绝对路径
    *
    * 组件中必须包含 `<RouterView />`，通常用于自定义全局布局。
    */
@@ -83,65 +73,138 @@ export interface ThemeConfig extends InjectOptions, MarkdownItOptions {
   /**
    * 首页文件路径，必须是绝对路径
    *
-   * 仅在未扫描到index首页时生效。
+   * 仅在未扫描到 `/index` 首页时生效。
    */
   home?: string
   /**
-   * 主题的配置元数据
+   * 主题的客户端配置元数据
    *
    * 可以在布局组件中通过 `useThemeData` 获取到此对象，必须是可序列化的对象。
    */
-  data?: Record<string, any>
+  clientData?: Record<string, any>
+  /**
+   * 主题使用的插件列表
+   */
+  plugins?: VitaPressPlugin[]
 }
 
 /**
- * 导航排序规则
+ * 目录配置
  */
-export type NavSort = 'asc' | 'desc'
+export interface DirConfig {
+  /**
+   * 目录路径
+   *
+   * 支持绝对路径和相对路径，相对路径相对于 `process.cwd()`
+   */
+  dir: string
+  /**
+   * 文件匹配模式
+   *
+   * @default ["**\/*.{md,markdown}","!.*"]
+   */
+  patterns?: string[]
+  /**
+   * 分组path
+   *
+   * @default '/'
+   */
+  group?: string
+}
+
 /**
  * 用户配置
  */
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
   /**
-   * 根目录
+   * 是否生成路由 dts 文件
    *
-   * @default process.cwd()
+   * - `true`: 生成 dts 文件，文件名为 `router.d.ts`
+   * - `false`: 不生成 dts 文件
+   * - `string`: 生成 dts 文件，支持绝对路径和相对路径（相对于root）如：`'typed-router.d.ts'`
+   *
+   * @default false
    */
-  root?: string
+  dts?: string | boolean
   /**
-   * 文档目录
+   * 站点基础路径
    *
-   * @default 'docs'
+   * @default '/'
    */
-  docDir?: string
+  base?: string
   /**
-   * 页面目录
+   * 默认语言
    *
-   * 页面目录下仅扫描 `.tsx` | `.jsx` 文件
+   * 如果文档支持多语言，则可以传入数组。
+   *
+   * @example
+   * ```ts
+   * // 多语言配置
+   * // docs/zh-CN/index.md
+   * // docs/en-US/index.md
+   * {
+   *  lang: ['zh-CN', 'en-US']
+   * }
+   * ```
+   *
+   * @default 'zh-CN'
    */
-  pageDirs?: PageSource | PageSource[]
+  lang?: string | string[]
   /**
-   * 导航排序规则
+   * 是否开启调试模式
    *
-   * 可选值：
-   * - asc: 升序，建议使用。
-   * - desc: 降序
+   * 开启调试模式后，会输出更多日志信息。
    *
-   * @default 'asc'
+   * @default false
    */
-  sort?: NavSort
-  /**
-   * 多语言配置
-   */
-  languages?: Language[]
+  debug?: boolean
   /**
    * 主题配置
    */
   theme?: ThemeConfig
   /**
-   * 是否生成路由类型定义文件
+   * 文档目录
    *
-   * @default false
+   * @default { dir: 'docs', patterns: ['**\/*.{tsx,jsx,md}','!.*'], group:'/' }
    */
-  dts?: FileRouterOptions['dts']
+  docsDir?: DirConfig
+  /**
+   * 页面目录
+   *
+   * @default { dir: 'pages', patterns: ['**\/*.{tsx,jsx}','!.*'], group:'/' }
+   */
+  pagesDir?: DirConfig
+  /**
+   * 插件列表
+   */
+  plugins?: VitaPressPlugin[]
+  /**
+   * Vite 配置
+   */
+  viteConfig?: {
+    /**
+     * 静态资源目录
+     *
+     * @default '.vitapress/public'
+     */
+    publicDir?: ViteUserConfig['publicDir']
+    /**
+     * 预定义全局变量
+     */
+    define?: ViteUserConfig['define']
+    /**
+     * 插件列表
+     */
+    plugins?: ViteUserConfig['plugins']
+    /**
+     * 解析配置
+     */
+    resolve?: ViteUserConfig['resolve']
+    /**
+     * 服务器配置
+     */
+    server?: ViteUserConfig['server']
+  }
 }
+
+export type ResolvedConfig = Required<UserConfig>
