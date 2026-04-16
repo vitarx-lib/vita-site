@@ -111,7 +111,7 @@ export class MdParser {
    */
   parse(filePath: string, content?: string): MdParseResult {
     try {
-      if (!content) content = readFileSync(filePath, 'utf-8')
+      if (typeof content !== 'string') content = readFileSync(filePath, 'utf-8')
     } catch (e) {
       throw new Error(`Read file error: ${filePath}\n ${String(e)}`)
     }
