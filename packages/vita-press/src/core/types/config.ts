@@ -61,36 +61,6 @@ export interface SiteOptions {
    */
   keywords?: string
 }
-export interface ViteConfig {
-  /**
-   * 站点基础路径
-   *
-   * @default '/'
-   */
-  base?: ViteUserConfig['base']
-  /**
-   * 静态资源目录
-   *
-   * @default '.vitapress/public'
-   */
-  publicDir?: ViteUserConfig['publicDir']
-  /**
-   * 预定义全局变量
-   */
-  define?: ViteUserConfig['define']
-  /**
-   * 插件列表
-   */
-  plugins?: ViteUserConfig['plugins']
-  /**
-   * 解析配置
-   */
-  resolve?: ViteUserConfig['resolve']
-  /**
-   * 服务器配置
-   */
-  server?: ViteUserConfig['server']
-}
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
   /**
    * 是否生成路由 dts 文件
@@ -139,6 +109,6 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
   /**
    * Vite 配置
    */
-  viteConfig?: ViteConfig
+  viteConfig?: ViteUserConfig
 }
 export type ResolvedConfig = DeepReadonly<Required<UserConfig>>
