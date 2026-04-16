@@ -6,7 +6,7 @@ import { VitaPressApp } from '../app/index.js'
  *
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
-export class VitaPressServerRouter extends FileRouter {
+export class VitaPressRouter extends FileRouter {
   constructor(app: VitaPressApp) {
     super({
       root: app.root,
