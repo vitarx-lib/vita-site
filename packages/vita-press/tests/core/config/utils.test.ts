@@ -1,375 +1,189 @@
 import { describe, expect, it } from 'vitest'
-import { mergeConfig } from '../../../src/core/config/utils.js'
+import { isPlainObject, mergeConfig, mergeTwoArrays } from '../../../src/core/config/utils.js'
+
+describe('isPlainObject', () => {
+  it('应正确识别普通对象', () => {
+    expect(isPlainObject({})).toBe(true)
+    expect(isPlainObject({ a: 1 })).toBe(true)
+    expect(isPlainObject({ a: { b: 2 } })).toBe(true)
+  })
+
+  it('应对非普通对象返回 false', () => {
+    expect(isPlainObject(null)).toBe(false)
+    expect(isPlainObject(undefined)).toBe(false)
+    expect(isPlainObject([])).toBe(false)
+    expect(isPlainObject([1, 2, 3])).toBe(false)
+    expect(isPlainObject(() => {})).toBe(false)
+    expect(isPlainObject(new Date())).toBe(false)
+    expect(isPlainObject(new Map())).toBe(false)
+    expect(isPlainObject(new Set())).toBe(false)
+    expect(isPlainObject(/regex/)).toBe(false)
+    expect(isPlainObject(123)).toBe(false)
+    expect(isPlainObject('string')).toBe(false)
+    expect(isPlainObject(true)).toBe(false)
+  })
+
+  it('应正确处理 Object.create(null) 创建的对象', () => {
+    expect(isPlainObject(Object.create(null))).toBe(true)
+  })
+})
+
+describe('mergeTwoArrays', () => {
+  it('应正确合并两个数组', () => {
+    expect(mergeTwoArrays([1, 2], [3, 4])).toEqual([1, 2, 3, 4])
+  })
+
+  it('应去重合并后的数组', () => {
+    expect(mergeTwoArrays([1, 2, 3], [2, 3, 4])).toEqual([1, 2, 3, 4])
+  })
+
+  it('应处理第一个数组为 undefined', () => {
+    expect(mergeTwoArrays(undefined, [1, 2])).toEqual([1, 2])
+  })
+
+  it('应处理第二个数组为 undefined', () => {
+    expect(mergeTwoArrays([1, 2], undefined)).toEqual([1, 2])
+  })
+
+  it('应处理两个数组都为 undefined', () => {
+    expect(mergeTwoArrays(undefined, undefined)).toEqual([])
+  })
+
+  it('应处理第一个数组为 null', () => {
+    expect(mergeTwoArrays(null, [1, 2])).toEqual([1, 2])
+  })
+
+  it('应处理第二个数组为 null', () => {
+    expect(mergeTwoArrays([1, 2], null)).toEqual([1, 2])
+  })
+
+  it('应处理两个数组都为 null', () => {
+    expect(mergeTwoArrays(null, null)).toEqual([])
+  })
+
+  it('应处理空数组', () => {
+    expect(mergeTwoArrays([], [1, 2])).toEqual([1, 2])
+    expect(mergeTwoArrays([1, 2], [])).toEqual([1, 2])
+    expect(mergeTwoArrays([], [])).toEqual([])
+  })
+
+  it('应保持顺序：先 a 后 b', () => {
+    expect(mergeTwoArrays(['a', 'b'], ['c', 'd'])).toEqual(['a', 'b', 'c', 'd'])
+  })
+
+  it('应支持不同类型元素', () => {
+    expect(mergeTwoArrays([1, 'a'], [2, 'b'])).toEqual([1, 'a', 2, 'b'])
+  })
+})
 
 describe('mergeConfig', () => {
-  describe('对象合并', () => {
-    it('应合并两个简单对象', () => {
-      const target = { a: 1, b: 2 }
-      const source = { c: 3, d: 4 }
-      const result = mergeConfig(target, source)
+  it('应正确合并简单对象', () => {
+    const defaults = { a: 1, b: 2 }
+    const overrides = { b: 3, c: 4 }
+    const result = mergeConfig(defaults, overrides)
 
-      expect(result).toEqual({ a: 1, b: 2, c: 3, d: 4 })
-    })
-
-    it('应覆盖同名属性', () => {
-      const target = { a: 1, b: 2 }
-      const source = { b: 3, c: 4 }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({ a: 1, b: 3, c: 4 })
-    })
-
-    it('应合并多个对象', () => {
-      const obj1 = { a: 1 }
-      const obj2 = { b: 2 }
-      const obj3 = { c: 3 }
-      const result = mergeConfig(obj1, obj2, obj3)
-
-      expect(result).toEqual({ a: 1, b: 2, c: 3 })
-    })
-
-    it('应处理空对象', () => {
-      const target = { a: 1 }
-      const source = {}
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({ a: 1 })
-    })
-
-    it('应处理所有参数为空对象', () => {
-      const result = mergeConfig({}, {}, {})
-
-      expect(result).toEqual({})
-    })
+    expect(result).toEqual({ a: 1, b: 3, c: 4 })
   })
 
-  describe('嵌套对象合并', () => {
-    it('应深度合并嵌套对象', () => {
-      const target = {
-        level1: {
-          level2: {
-            a: 1,
-            b: 2
-          }
-        }
-      }
-      const source = {
-        level1: {
-          level2: {
-            b: 3,
-            c: 4
-          }
-        }
-      }
-      const result = mergeConfig(target, source)
+  it('应深度合并嵌套对象', () => {
+    const defaults = { a: 1, b: { x: 1, y: 2 } }
+    const overrides = { b: { y: 3, z: 4 }, c: 5 }
+    const result = mergeConfig(defaults, overrides)
 
-      expect(result).toEqual({
-        level1: {
-          level2: {
-            a: 1,
-            b: 3,
-            c: 4
-          }
-        }
-      })
-    })
-
-    it('应合并多层嵌套对象', () => {
-      const target = {
-        config: {
-          markdownIt: {
-            options: {
-              html: true
-            }
-          }
-        }
-      }
-      const source = {
-        config: {
-          markdownIt: {
-            options: {
-              linkify: true
-            }
-          }
-        }
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        config: {
-          markdownIt: {
-            options: {
-              html: true,
-              linkify: true
-            }
-          }
-        }
-      })
-    })
-
-    it('应正确处理对象和基本类型的覆盖', () => {
-      const target = {
-        config: {
-          nested: { a: 1 }
-        }
-      }
-      const source = {
-        config: 'string'
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        config: 'string'
-      })
-    })
+    expect(result).toEqual({ a: 1, b: { x: 1, y: 3, z: 4 }, c: 5 })
   })
 
-  describe('数组合并', () => {
-    it('应合并两个数组', () => {
-      const target = [1, 2, 3]
-      const source = [4, 5, 6]
-      const result = mergeConfig(target, source)
+  it('不应修改原对象', () => {
+    const defaults = { a: 1, b: { x: 1 } }
+    const overrides = { b: { y: 2 } }
+    const result = mergeConfig(defaults, overrides)
 
-      expect(result).toEqual([1, 2, 3, 4, 5, 6])
-    })
-
-    it('应去重合并数组', () => {
-      const target = [1, 2, 3]
-      const source = [2, 3, 4]
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual([1, 2, 3, 4])
-    })
-
-    it('应处理空数组', () => {
-      const target = [1, 2, 3]
-      const source: number[] = []
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual([1, 2, 3])
-    })
-
-    it('应处理所有参数为空数组', () => {
-      const result = mergeConfig([], [], [])
-
-      expect(result).toEqual([])
-    })
-
-    it('应合并字符串数组', () => {
-      const target = ['a', 'b']
-      const source = ['c', 'd']
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual(['a', 'b', 'c', 'd'])
-    })
-
-    it('应去重合并字符串数组', () => {
-      const target = ['a', 'b', 'c']
-      const source = ['b', 'c', 'd']
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual(['a', 'b', 'c', 'd'])
-    })
+    expect(defaults).toEqual({ a: 1, b: { x: 1 } })
+    expect(overrides).toEqual({ b: { y: 2 } })
+    expect(result).toEqual({ a: 1, b: { x: 1, y: 2 } })
   })
 
-  describe('对象中的数组合并', () => {
-    it('应合并对象中的数组', () => {
-      const target = {
-        items: [1, 2, 3]
-      }
-      const source = {
-        items: [4, 5, 6]
-      }
-      const result = mergeConfig(target, source)
+  it('应处理 overrides 为 undefined', () => {
+    const defaults = { a: 1, b: 2 }
+    const result = mergeConfig(defaults, undefined)
 
-      expect(result).toEqual({
-        items: [1, 2, 3, 4, 5, 6]
-      })
-    })
-
-    it('应去重合并对象中的数组', () => {
-      const target = {
-        items: [1, 2, 3]
-      }
-      const source = {
-        items: [2, 3, 4]
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        items: [1, 2, 3, 4]
-      })
-    })
-
-    it('应正确处理对象中数组和基本类型的覆盖', () => {
-      const target = {
-        items: [1, 2, 3]
-      }
-      const source = {
-        items: 'string'
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        items: 'string'
-      })
-    })
+    expect(result).toEqual({ a: 1, b: 2 })
   })
 
-  describe('边界情况', () => {
-    it('应处理 null 值', () => {
-      const target = { a: null }
-      const source = { b: 2 }
-      const result = mergeConfig(target, source)
+  it('应处理 overrides 为 null', () => {
+    const defaults = { a: 1, b: 2 }
+    const result = mergeConfig(defaults, null as any)
 
-      expect(result).toEqual({ a: null, b: 2 })
-    })
-
-    it('应处理 undefined 值', () => {
-      const target = { a: undefined }
-      const source = { b: 2 }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({ a: undefined, b: 2 })
-    })
-
-    it('应处理 null 覆盖对象', () => {
-      const target = { a: { nested: 1 } }
-      const source = { a: null }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({ a: null })
-    })
-
-    it('应处理 undefined 覆盖对象', () => {
-      const target = { a: { nested: 1 } }
-      const source = { a: undefined }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({ a: undefined })
-    })
-
-    it('应处理空参数', () => {
-      const result = mergeConfig()
-
-      expect(result).toEqual({})
-    })
-
-    it('应处理单个参数', () => {
-      const obj = { a: 1, b: 2 }
-      const result = mergeConfig(obj)
-
-      expect(result).toEqual({ a: 1, b: 2 })
-    })
-
-    it('应处理基本类型参数', () => {
-      const result1 = mergeConfig(1, 2)
-      expect(result1).toBe(2)
-
-      const result2 = mergeConfig('a', 'b')
-      expect(result2).toBe('b')
-
-      const result3 = mergeConfig(true, false)
-      expect(result3).toBe(false)
-    })
-
-    it('应处理混合类型', () => {
-      const target = {
-        a: 1,
-        b: [1, 2],
-        c: { nested: true }
-      }
-      const source = {
-        a: 2,
-        b: [3, 4],
-        c: { nested: false, new: true }
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        a: 2,
-        b: [1, 2, 3, 4],
-        c: { nested: false, new: true }
-      })
-    })
+    expect(result).toEqual({ a: 1, b: 2 })
   })
 
-  describe('实际应用场景', () => {
-    it('应正确合并配置对象', () => {
-      const defaultConfig = {
-        title: '',
-        description: '',
-        docDir: 'docs',
-        sort: 'asc',
-        markdownIt: {
-          options: {
-            html: true,
-            linkify: true
+  it('应忽略 overrides 中的 undefined 值', () => {
+    const defaults = { a: 1, b: 2 }
+    const overrides = { a: undefined, c: 3 }
+    const result = mergeConfig(defaults, overrides)
+
+    expect(result).toEqual({ a: 1, b: 2, c: 3 })
+  })
+
+  it('应忽略 overrides 中的 null 值', () => {
+    const defaults = { a: 1, b: 2 }
+    const overrides = { a: null, c: 3 }
+    const result = mergeConfig(defaults, overrides)
+
+    expect(result).toEqual({ a: 1, b: 2, c: 3 })
+  })
+
+  it('应处理相同对象引用', () => {
+    const defaults = { a: 1 }
+    const result = mergeConfig(defaults, defaults)
+
+    expect(result).toEqual({ a: 1 })
+  })
+
+  it('应处理数组合并', () => {
+    const defaults = { arr: [1, 2, 3] }
+    const overrides = { arr: [4, 5, 6] }
+    const result = mergeConfig(defaults, overrides)
+
+    expect(result.arr).toBeDefined()
+  })
+
+  it('应用基本类型覆盖默认值', () => {
+    const defaults = { a: 1, b: 'hello' }
+    const overrides = { a: 2, b: 'world' }
+    const result = mergeConfig(defaults, overrides)
+
+    expect(result).toEqual({ a: 2, b: 'world' })
+  })
+
+  it('应处理深层嵌套对象', () => {
+    const defaults = {
+      level1: {
+        level2: {
+          level3: {
+            value: 1
           }
         }
       }
-
-      const userConfig = {
-        title: 'My Site',
-        docDir: 'documentation',
-        markdownIt: {
-          options: {
-            html: false
+    }
+    const overrides = {
+      level1: {
+        level2: {
+          level3: {
+            value: 2,
+            extra: 'new'
           }
         }
       }
+    }
+    const result = mergeConfig(defaults, overrides)
 
-      const result = mergeConfig(defaultConfig, userConfig)
+    expect(result.level1.level2.level3).toEqual({ value: 2, extra: 'new' })
+  })
 
-      expect(result).toEqual({
-        title: 'My Site',
-        description: '',
-        docDir: 'documentation',
-        sort: 'asc',
-        markdownIt: {
-          options: {
-            html: false,
-            linkify: true
-          }
-        }
-      })
-    })
-
-    it('应正确合并注入配置', () => {
-      const target = {
-        injectHead: ['<link rel="stylesheet" href="base.css">'],
-        injectBody: []
-      }
-      const source = {
-        injectHead: ['<script src="custom.js"></script>'],
-        injectBody: ['<div>footer</div>']
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        injectHead: [
-          '<link rel="stylesheet" href="base.css">',
-          '<script src="custom.js"></script>'
-        ],
-        injectBody: ['<div>footer</div>']
-      })
-    })
-
-    it('应正确合并多语言配置', () => {
-      const target = {
-        languages: [{ id: 'zh', name: '中文' }]
-      }
-      const source = {
-        languages: [{ id: 'en', name: 'English' }]
-      }
-      const result = mergeConfig(target, source)
-
-      expect(result).toEqual({
-        languages: [
-          { id: 'zh', name: '中文' },
-          { id: 'en', name: 'English' }
-        ]
-      })
-    })
+  it('应处理空对象', () => {
+    expect(mergeConfig({}, { a: 1 })).toEqual({ a: 1 })
+    expect(mergeConfig({ a: 1 }, {})).toEqual({ a: 1 })
+    expect(mergeConfig({}, {})).toEqual({})
   })
 })

@@ -1,10 +1,20 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { UserConfig } from '../../../src/core/types/config.js'
 import { ConfigValidationError, validateConfig } from '../../../src/core/config/validator.js'
+import type { UserConfig } from '../../../src/core/types/index.js'
 
-describe('ConfigValidator', () => {
+describe('ConfigValidationError', () => {
+  it('应正确创建错误实例', () => {
+    const error = new ConfigValidationError('测试错误消息')
+    expect(error).toBeInstanceOf(Error)
+    expect(error).toBeInstanceOf(ConfigValidationError)
+    expect(error.name).toBe('ConfigValidationError')
+    expect(error.message).toBe('测试错误消息')
+  })
+})
+
+describe('validateConfig', () => {
   let tempDir: string
 
   beforeEach(() => {
@@ -18,475 +28,285 @@ describe('ConfigValidator', () => {
     }
   })
 
-  describe('validateConfig', () => {
-    it('应通过空配置验证', () => {
-      const config: UserConfig = {}
+  describe('基础字段验证', () => {
+    it('应接受有效的 title', () => {
+      const config: UserConfig = { title: 'My Site' }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应通过有效的文档目录', () => {
-      const docsDir = join(tempDir, 'docs')
-      mkdirSync(docsDir, { recursive: true })
+    it('应拒绝非字符串类型的 title', () => {
+      const config = { title: 123 }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('title 必须是字符串类型')
+    })
 
-      const config: UserConfig = { docsDir: { dir: 'docs' } }
+    it('应接受有效的 description', () => {
+      const config: UserConfig = { description: 'My Description' }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在文档目录不存在时抛出错误', () => {
-      const config: UserConfig = { docsDir: { dir: 'non-existent-docs' } }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/目录不存在/)
+    it('应拒绝非字符串类型的 description', () => {
+      const config = { description: {} }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('description 必须是字符串类型')
+    })
+
+    it('应接受有效的 keywords', () => {
+      const config: UserConfig = { keywords: 'vite, vue, docs' }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非字符串类型的 keywords', () => {
+      const config = { keywords: [] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('keywords 必须是字符串类型')
     })
   })
 
-  describe('validateBasicFields', () => {
-    it('应通过有效的字符串字段', () => {
-      const config: UserConfig = {
-        title: 'Test Site',
-        description: 'Test Description',
-        keywords: 'test, keywords'
-      }
+  describe('注入选项验证', () => {
+    it('应接受有效的 injectHead 数组', () => {
+      const config: UserConfig = { injectHead: ['<link rel="stylesheet">'] }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在 title 类型无效时抛出错误', () => {
-      const config = { title: 123 as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/title 必须是字符串类型/)
+    it('应拒绝非数组类型的 injectHead', () => {
+      const config = { injectHead: 'not-array' }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('injectHead 必须是数组类型')
     })
 
-    it('应在 description 类型无效时抛出错误', () => {
-      const config = { description: [] as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/description 必须是字符串类型/)
+    it('应拒绝 injectHead 中包含非字符串元素', () => {
+      const config = { injectHead: [123] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('injectHead[0] 必须是字符串类型')
     })
 
-    it('应在 keywords 类型无效时抛出错误', () => {
-      const config = { keywords: {} as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/keywords 必须是字符串类型/)
+    it('应接受有效的 injectBody 数组', () => {
+      const config: UserConfig = { injectBody: ['<script>console.log(1)</script>'] }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非数组类型的 injectBody', () => {
+      const config = { injectBody: {} }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('injectBody 必须是数组类型')
+    })
+
+    it('应接受有效的 injectCode 数组', () => {
+      const config: UserConfig = { injectCode: ['import { custom } from "./custom"'] }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非数组类型的 injectCode', () => {
+      const config = { injectCode: true }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('injectCode 必须是数组类型')
     })
   })
 
-  describe('validateInjectOptions', () => {
-    it('应通过有效的注入选项', () => {
+  describe('文档目录验证', () => {
+    it('应接受有效的 docDir 配置', () => {
+      mkdirSync(join(tempDir, 'docs'), { recursive: true })
+      const config: UserConfig = { docDir: { dir: 'docs' } }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝不存在的文档目录', () => {
+      const config: UserConfig = { docDir: { dir: 'non-existent' } }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow('目录不存在')
+    })
+
+    it('应拒绝非对象类型的 docDir', () => {
+      const config = { docDir: 'docs' }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir 必须是对象类型')
+    })
+
+    it('应拒绝空字符串的 dir', () => {
+      const config = { docDir: { dir: '' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.dir 必须是非空字符串')
+    })
+
+    it('应接受有效的 include 配置', () => {
+      mkdirSync(join(tempDir, 'docs'), { recursive: true })
       const config: UserConfig = {
-        injectHead: ['<link rel="stylesheet" href="test.css">'],
-        injectBody: ['<script>console.log("test")</script>'],
-        injectCode: ['import { Button } from "components"']
+        docDir: { dir: 'docs', include: ['**/*.md'] }
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在 injectHead 类型无效时抛出错误', () => {
-      const config = { injectHead: 'invalid' as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/injectHead 必须是数组类型/)
+    it('应拒绝非数组类型的 include', () => {
+      mkdirSync(join(tempDir, 'docs'), { recursive: true })
+      const config = { docDir: { dir: 'docs', include: '*.md' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.patterns 必须是数组类型')
     })
 
-    it('应在 injectHead 元素类型无效时抛出错误', () => {
-      const config = { injectHead: [123] as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/injectHead\[0] 必须是字符串类型/)
-    })
-
-    it('应在 injectBody 类型无效时抛出错误', () => {
-      const config = { injectBody: {} as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/injectBody 必须是数组类型/)
-    })
-
-    it('应在 injectCode 类型无效时抛出错误', () => {
-      const config = { injectCode: 123 as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/injectCode 必须是数组类型/)
+    it('应拒绝 include 中包含非字符串元素', () => {
+      mkdirSync(join(tempDir, 'docs'), { recursive: true })
+      const config = { docDir: { dir: 'docs', include: [123] } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.patterns[0] 必须是字符串类型')
     })
   })
 
-  describe('validatePagesDir', () => {
-    it('应通过有效的页面目录', () => {
-      const pagesDir = join(tempDir, 'pages')
-      mkdirSync(pagesDir, { recursive: true })
-
+  describe('页面目录验证', () => {
+    it('应接受有效的 pageDirs 配置', () => {
+      mkdirSync(join(tempDir, 'pages'), { recursive: true })
       const config: UserConfig = {
-        pagesDir: { dir: 'pages' }
+        pageDirs: [{ dir: 'pages' }]
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应通过有效的页面目录（带完整配置）', () => {
-      const pagesDir = join(tempDir, 'pages')
-      mkdirSync(pagesDir, { recursive: true })
-
-      const config: UserConfig = {
-        pagesDir: {
-          dir: 'pages',
-          patterns: ['**/*.tsx'],
-          group: '/'
-        }
-      }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    it('应拒绝非数组类型的 pageDirs', () => {
+      const config = { pageDirs: { dir: 'pages' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('pageDirs 必须是数组类型')
     })
 
-    it('应在页面目录不存在时抛出错误', () => {
+    it('应拒绝 pageDirs 中包含空元素', () => {
+      const config = { pageDirs: [null] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('pageDirs[0] 不能为空')
+    })
+
+    it('应拒绝不存在的页面目录', () => {
       const config: UserConfig = {
-        pagesDir: { dir: 'non-existent-pages' }
+        pageDirs: [{ dir: 'non-existent' }]
       }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/目录不存在/)
-    })
-
-    it('应在 pagesDir.dir 为空时抛出错误', () => {
-      const config = {
-        pagesDir: { dir: '' }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.dir 必须是非空字符串/)
-    })
-
-    it('应在 pagesDir.patterns 类型无效时抛出错误', () => {
-      const pagesDir = join(tempDir, 'pages')
-      mkdirSync(pagesDir, { recursive: true })
-
-      const config = {
-        pagesDir: { dir: 'pages', patterns: 'invalid' }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.patterns 必须是数组类型/)
-    })
-
-    it('应在 pagesDir.group 类型无效时抛出错误', () => {
-      const pagesDir = join(tempDir, 'pages')
-      mkdirSync(pagesDir, { recursive: true })
-
-      const config = {
-        pagesDir: { dir: 'pages', group: 123 }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/pagesDir.group 必须是字符串类型/)
+      expect(() => validateConfig(config, tempDir)).toThrow('目录不存在')
     })
   })
 
-  describe('validateLang', () => {
-    it('应通过有效的单语言配置', () => {
-      const config: UserConfig = {
-        lang: 'zh-CN'
-      }
-
+  describe('语言配置验证', () => {
+    it('应接受字符串类型的 lang', () => {
+      const config: UserConfig = { lang: 'zh-CN' }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应通过有效的多语言配置', () => {
-      const config: UserConfig = {
-        lang: ['zh-CN', 'en-US']
-      }
-
+    it('应接受数组类型的 lang', () => {
+      const config: UserConfig = { lang: ['zh-CN', 'en-US'] }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在 lang 类型无效时抛出错误', () => {
-      const config = { lang: 123 as any }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/lang 必须是字符串或字符串数组类型/)
+    it('应拒绝非字符串或数组类型的 lang', () => {
+      const config = { lang: 123 }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'lang 必须是字符串或字符串数组类型'
+      )
     })
 
-    it('应在 lang 数组元素类型无效时抛出错误', () => {
-      const config = { lang: ['zh-CN', 123] as any }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/lang\[1] 必须是字符串类型/)
+    it('应拒绝 lang 数组中包含非字符串元素', () => {
+      const config = { lang: ['zh-CN', 123] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('lang[1] 必须是字符串类型')
     })
   })
 
-  describe('validateTheme', () => {
-    it('应通过有效的主题入口文件', () => {
-      const entryFile = join(tempDir, 'theme-entry.tsx')
-      writeFileSync(entryFile, 'export default function Theme() {}')
-
-      const config: UserConfig = {
-        theme: {
-          entry: 'theme-entry.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题入口文件不存在时抛出错误', () => {
-      const config: UserConfig = {
-        theme: {
-          entry: 'non-existent-entry.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/主题入口文件不存在/)
-    })
-
-    it('应通过有效的主题布局文件', () => {
-      const layoutFile = join(tempDir, 'layout.tsx')
-      writeFileSync(layoutFile, 'export default function Layout() {}')
-
-      const config: UserConfig = {
-        theme: {
-          layout: 'layout.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题布局文件不存在时抛出错误', () => {
-      const config: UserConfig = {
-        theme: {
-          layout: 'non-existent-layout.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/主题布局文件不存在/)
-    })
-
-    it('应通过有效的主题首页文件', () => {
-      const homeFile = join(tempDir, 'home.tsx')
-      writeFileSync(homeFile, 'export default function Home() {}')
-
-      const config: UserConfig = {
-        theme: {
-          home: 'home.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题首页文件不存在时抛出错误', () => {
-      const config: UserConfig = {
-        theme: {
-          home: 'non-existent-home.tsx'
-        }
-      }
-
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/主题首页文件不存在/)
-    })
-
-    it('应通过有效的主题客户端数据', () => {
-      const config: UserConfig = {
-        theme: {
-          clientData: {
-            nav: ['home', 'about'],
-            footer: { text: 'Copyright' }
-          }
-        }
-      }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题客户端数据类型无效时抛出错误', () => {
-      const config = {
-        theme: {
-          clientData: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.clientData 必须是对象类型/)
-    })
-
-    it('应在主题客户端数据不可序列化时抛出错误', () => {
-      const circular: any = { name: 'test' }
-      circular.self = circular
-
-      const config = {
-        theme: {
-          clientData: circular
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.clientData 必须是可序列化的对象/)
-    })
-
-    it('应通过有效的主题插件列表', () => {
-      const config: UserConfig = {
-        theme: {
-          plugins: []
-        }
-      }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在主题插件列表类型无效时抛出错误', () => {
-      const config = {
-        theme: {
-          plugins: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/theme.plugins 必须是数组类型/)
-    })
-  })
-
-  describe('validateDts', () => {
-    it('应通过有效的 dts 布尔值配置', () => {
-      const configTrue: UserConfig = { dts: true }
-      const configFalse: UserConfig = { dts: false }
-
-      expect(() => validateConfig(configTrue, tempDir)).not.toThrow()
-      expect(() => validateConfig(configFalse, tempDir)).not.toThrow()
-    })
-
-    it('应通过有效的 dts 字符串配置', () => {
-      const config: UserConfig = { dts: 'typed-router.d.ts' }
-
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在 dts 类型无效时抛出错误', () => {
-      const config = { dts: 123 as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/dts 必须是布尔值或字符串类型/)
-    })
-  })
-
-  describe('validateBase', () => {
-    it('应通过有效的 base 配置', () => {
-      const config: UserConfig = { base: '/' }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应通过有效的 base 子路径配置', () => {
-      const config: UserConfig = { base: '/docs/' }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应在 base 不以 / 开头时抛出错误', () => {
-      const config = { base: 'docs/' as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须以 "\/" 开头/)
-    })
-
-    it('应在 base 不以 / 结尾时抛出错误', () => {
-      const config = { base: '/docs' as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须以 "\/" 结尾/)
-    })
-
-    it('应在 base 类型无效时抛出错误', () => {
-      const config = { base: 123 as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/base 必须是字符串类型/)
-    })
-  })
-
-  describe('validateMarkdownIt', () => {
-    it('应通过有效的 MarkdownIt 配置', () => {
+  describe('MarkdownIt 配置验证', () => {
+    it('应接受有效的 markdownIt 配置', () => {
       const config: UserConfig = {
         markdownIt: {
-          options: {
-            html: true,
-            linkify: true
-          },
-          plugins: [],
-          shikiConfig: {
-            langs: ['javascript', 'typescript'],
-            options: {
-              themes: {
-                dark: 'github-dark',
-                light: 'github-light'
-              }
-            }
-          }
+          options: { html: true }
         }
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应在 markdownIt 类型无效时抛出错误', () => {
-      const config = { markdownIt: 'invalid' as any }
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/markdownIt 必须是对象类型/)
+    it('应拒绝非对象类型的 markdownIt', () => {
+      const config = { markdownIt: 'invalid' }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'markdownIt 必须是对象类型'
+      )
     })
 
-    it('应在 markdownIt.options 类型无效时抛出错误', () => {
-      const config = {
-        markdownIt: {
-          options: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/markdownIt.options 必须是对象类型/)
+    it('应拒绝非对象类型的 markdownIt.options', () => {
+      const config = { markdownIt: { options: 'invalid' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'markdownIt.options 必须是对象类型'
+      )
     })
 
-    it('应在 markdownIt.plugins 类型无效时抛出错误', () => {
-      const config = {
-        markdownIt: {
-          plugins: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/markdownIt.plugins 必须是数组类型/)
+    it('应拒绝非数组类型的 markdownIt.plugins', () => {
+      const config = { markdownIt: { plugins: {} } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'markdownIt.plugins 必须是数组类型'
+      )
     })
 
-    it('应在 markdownIt.shikiConfig 类型无效时抛出错误', () => {
-      const config = {
-        markdownIt: {
-          shikiConfig: 'invalid'
-        }
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/markdownIt.shikiConfig 必须是对象类型/)
+    it('应拒绝非对象类型的 markdownIt.shikiConfig', () => {
+      const config = { markdownIt: { shikiConfig: [] } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'markdownIt.shikiConfig 必须是对象类型'
+      )
     })
   })
 
-  describe('validatePlugins', () => {
-    it('应通过有效的根级别插件列表', () => {
+  describe('DTS 配置验证', () => {
+    it('应接受布尔类型的 dts', () => {
+      const config: UserConfig = { dts: true }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受字符串类型的 dts', () => {
+      const config: UserConfig = { dts: 'router.d.ts' }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非布尔或字符串类型的 dts', () => {
+      const config = { dts: 123 }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'dts 必须是布尔值或字符串类型'
+      )
+    })
+  })
+
+  describe('插件配置验证', () => {
+    it('应接受有效的插件配置', () => {
       const config: UserConfig = {
-        plugins: []
+        plugins: [{ name: 'test-plugin' }]
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应通过有效的根级别插件列表（包含插件对象）', () => {
-      const config: UserConfig = {
-        plugins: [
-          { name: 'plugin1', version: '1.0.0' },
-          { name: 'plugin2', description: 'Test plugin' }
-        ]
-      }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    it('应拒绝非数组类型的 plugins', () => {
+      const config = { plugins: { name: 'test' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'plugins.plugins 必须是数组类型'
+      )
     })
 
-    it('应在根级别插件列表类型无效时抛出错误', () => {
-      const config = {
-        plugins: 'invalid'
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins 必须是数组类型/)
+    it('应拒绝插件缺少 name 属性', () => {
+      const config = { plugins: [{}] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'plugins.plugins[0] 必须有 name 属性'
+      )
     })
 
-    it('应在根级别插件元素类型无效时抛出错误', () => {
-      const config = {
-        plugins: ['invalid']
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
+    it('应拒绝非对象类型的插件', () => {
+      const config = { plugins: ['invalid'] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'plugins.plugins[0] 必须是对象类型'
+      )
     })
+  })
 
-    it('应在根级别插件元素为 null 时抛出错误', () => {
-      const config = {
-        plugins: [null]
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
-    })
-
-    it('应在根级别插件元素为数字时抛出错误', () => {
-      const config = {
-        plugins: [123]
-      } as any
-      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow(/plugins.plugins\[0] 必须是对象类型/)
+  describe('空配置', () => {
+    it('应接受空配置对象', () => {
+      expect(() => validateConfig({}, tempDir)).not.toThrow()
     })
   })
 })
