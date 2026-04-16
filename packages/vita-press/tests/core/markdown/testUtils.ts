@@ -1,5 +1,5 @@
-import MarkdownIt from 'markdown-it'
 import type { PluginSimple } from 'markdown-it'
+import MarkdownIt from 'markdown-it'
 
 /**
  * 创建带有指定插件的 MarkdownIt 实例
