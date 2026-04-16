@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it'
 import path from 'node:path'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { warn } from 'vitarx-router/file-router'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { codeImport } from '../../../../src/core/markdown/plugins/codeImport.js'
 
 vi.mock('vitarx-router/file-router', () => ({
@@ -18,11 +18,11 @@ function createMarkdownWithCodeImport(): MarkdownIt {
 }
 
 function renderWithFilePath(md: MarkdownIt, content: string, filePath: string): string {
-  return md.render(content, { __code_import_filepath: filePath })
+  return md.render(content, { filePath })
 }
 
 function parseWithFilePath(md: MarkdownIt, content: string, filePath: string) {
-  return md.parse(content, { __code_import_filepath: filePath })
+  return md.parse(content, { filePath })
 }
 
 describe('codeImport', () => {
@@ -34,7 +34,6 @@ describe('codeImport', () => {
     it('应完整导入文件内容', () => {
       const md = createMarkdownWithCodeImport()
       const html = renderWithFilePath(md, '@[code](./sample.js)', MOCK_MD_PATH)
-
       expect(html).toContain("const greeting = 'Hello, World!'")
       expect(html).toContain('console.log(greeting)')
       expect(html).toContain('function add(a, b)')
@@ -172,56 +171,42 @@ describe('codeImport', () => {
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code](./nonexistent.js)', MOCK_MD_PATH)
 
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('[codeImport] 文件不存在')
-      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('[codeImport] 文件不存在'))
     })
 
     it('起始行号超出范围时应输出警告', () => {
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{100-110}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('起始行号')
-      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('起始行号'))
     })
 
     it('结束行号小于起始行号时应输出警告', () => {
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{5-3}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('不能小于起始行号')
-      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('不能小于起始行号'))
     })
 
     it('结束行号超出范围时应输出警告', () => {
       const md = createMarkdownWithCodeImport()
       renderWithFilePath(md, '@[code{1-100}](./multiline.txt)', MOCK_MD_PATH)
 
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('结束行号')
-      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('结束行号'))
     })
 
     it('未设置 env 文件路径时应输出警告', () => {
       const md = createMarkdownWithCodeImport()
       md.render('@[code](./sample.js)')
 
-      expect(warn).toHaveBeenCalledWith(
-        expect.stringContaining('__code_import_filepath')
-      )
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('filePath'))
     })
   })
 
   describe('与其他 Markdown 语法共存', () => {
     it('应与标题共存', () => {
       const md = createMarkdownWithCodeImport()
-      const html = renderWithFilePath(
-        md,
-        `# Title\n\n@[code](./sample.js)`,
-        MOCK_MD_PATH
-      )
+      const html = renderWithFilePath(md, `# Title\n\n@[code](./sample.js)`, MOCK_MD_PATH)
 
       expect(html).toContain('<h1')
       expect(html).toContain("const greeting = 'Hello, World!'")
@@ -241,22 +226,14 @@ describe('codeImport', () => {
 
     it('不应处理代码块内的 @[code] 语法', () => {
       const md = createMarkdownWithCodeImport()
-      const html = renderWithFilePath(
-        md,
-        `\`\`\`\n@[code](./sample.js)\n\`\`\``,
-        MOCK_MD_PATH
-      )
+      const html = renderWithFilePath(md, `\`\`\`\n@[code](./sample.js)\n\`\`\``, MOCK_MD_PATH)
 
       expect(html).toContain('@[code]')
     })
 
     it('应与列表共存', () => {
       const md = createMarkdownWithCodeImport()
-      const html = renderWithFilePath(
-        md,
-        `- Item 1\n\n@[code](./sample.js)`,
-        MOCK_MD_PATH
-      )
+      const html = renderWithFilePath(md, `- Item 1\n\n@[code](./sample.js)`, MOCK_MD_PATH)
 
       expect(html).toContain('<li')
       expect(html).toContain("const greeting = 'Hello, World!'")
