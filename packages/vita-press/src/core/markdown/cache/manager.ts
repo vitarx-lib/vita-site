@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from 'node:fs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { debug } from 'vitarx-router/file-router'
 import type { MdParseResult } from '../parser/parser.js'
 import { pathToCacheFileName } from './utils.js'
 
@@ -11,7 +12,7 @@ interface CacheEntry {
   result: MdParseResult
 }
 
-const DEFAULT_CACHE_DIR = '.vitapress/.cache/markdown'
+const DEFAULT_CACHE_DIR = '.vitapress/.cache/docs'
 
 /**
  * 缓存管理器
@@ -35,18 +36,11 @@ export class CacheManager {
   constructor(root: string, hash: string = '') {
     this.root = root
     this.cacheDir = path.resolve(root, DEFAULT_CACHE_DIR)
-    this.hash = hash
-  }
-
-  /**
-   * 初始化缓存目录
-   */
-  init(): void {
-    try {
+    // 创建缓存目录
+    if (!existsSync(this.cacheDir)) {
       mkdirSync(this.cacheDir, { recursive: true })
-    } catch {
-      // 目录已存在，忽略错误
     }
+    this.hash = hash
   }
 
   /**
@@ -108,7 +102,9 @@ export class CacheManager {
     this.memoryCache.set(filePath, entry)
 
     const cacheFile = this.getCacheFilePath(filePath)
-    fs.writeFile(cacheFile, JSON.stringify(entry)).catch(() => {})
+    fs.writeFile(cacheFile, JSON.stringify(entry)).catch(e => {
+      debug('[CacheManager] Error writing cache file:', e instanceof Error ? e.message : String(e))
+    })
   }
 
   /**
