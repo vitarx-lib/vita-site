@@ -143,7 +143,7 @@ export class MdParser {
     const html = this.md.render(markdownContent, env)
     const toc = env.tocList
     const docPageMetaData: DocPageMetaData = {
-      lang: this.defaultLang,
+      lang: '',
       authors: gitInfo.authors,
       createdAt: gitInfo.createdAt,
       lastUpdateAt: gitInfo.lastUpdateAt,
@@ -211,7 +211,7 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
           const result = plugin.beforeParse(filePath, content)
           if (result) content = result
         } catch (e) {
-          warn(`Plugin ${plugin.name} beforeParse error: ${String(e)}`)
+          warn(`Plugin ${plugin.name} beforeParse error:`, e)
         }
       }
     }
@@ -231,7 +231,7 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
           const _result = plugin.afterParse(result)
           if (isPlainObject(_result)) result = mergeConfig(result, _result)
         } catch (e) {
-          warn(`Plugin ${plugin.name} afterParse error: ${String(e)}`)
+          warn(`Plugin ${plugin.name} afterParse error:`, e)
         }
       }
     }
