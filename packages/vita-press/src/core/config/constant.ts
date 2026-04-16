@@ -20,6 +20,9 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   pageDirs: [],
   plugins: [],
   viteConfig: {
-    publicDir: '.vitapress/public'
+    publicDir: '.vitapress/public',
+    build: {
+      outDir: '.vitapress/dist'
+    }
   }
 }
