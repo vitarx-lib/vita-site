@@ -1,10 +1,9 @@
+// noinspection ES6UnusedImports
+
 import { execSync } from 'child_process'
 import { statSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import {
-  getCommitInfo,
-  isGitRepositoryPresent
-} from '../../../../src/core/markdown/utils/commitInfo.js'
+import { getCommitInfo, isGitRepositoryPresent } from '../../../../src/core/markdown/utils/index.js'
 
 vi.mock('child_process', () => ({
   execSync: vi.fn()
