@@ -12,7 +12,7 @@ interface CacheEntry {
   result: MdParseResult
 }
 
-const DEFAULT_CACHE_DIR = '.vitapress/.cache/docs'
+export const DEFAULT_CACHE_DIR = '.vitapress/.cache/docs'
 
 /**
  * 缓存管理器
