@@ -1,3 +1,5 @@
+import type { UserConfig } from '../types/index.js'
+
 /**
  * 判断是否为普通对象（排除 null / 数组 / 内置对象等）
  */
@@ -25,7 +27,7 @@ export function isPlainObject(value: unknown): value is Record<string, any> {
  * - 属于浅合并（不会深拷贝元素）
  * - 时间复杂度 O(n + m)
  */
-export function mergeTwoArrays<E = any>(a?: readonly any[] | null, b?: any[] | null): E[] {
+function mergeTwoArrays<E = any>(a?: readonly any[] | null, b?: any[] | null): E[] {
   // 使用空数组兜底，确保兼容 undefined / null
   const arrA = a ?? []
   const arrB = b ?? []
@@ -82,4 +84,24 @@ export function mergeConfig<T = any>(
   }
 
   return result as T
+}
+
+/**
+ * 定义VitaPress配置对象 - 用于类型推断辅助
+ *
+ * @param config - VitaPress配置对象
+ * @returns 原样返回的配置对象
+ *
+ * @example
+ * ```ts
+ * // .vitapress/config.ts
+ * export default defineConfig({
+ *   title: 'VitaPress',
+ *   description: 'A framework for building tech docs with Vitarx 4',
+ *   // 其他配置项...
+ * })
+ * ```
+ */
+export function defineConfig(config: UserConfig): UserConfig {
+  return config
 }
