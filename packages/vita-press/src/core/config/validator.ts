@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { DirConfig, ThemeConfig, UserConfig } from '../types/config.js'
+import type { PageDirOptions } from 'vitarx-router/file-router'
+import type { UserConfig } from '../types/config.js'
 import type { VitaPressPlugin } from '../types/index.js'
 
 /**
@@ -26,10 +27,8 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLang(config)
-  validateTheme(config, root)
   validateMarkdownIt(config)
   validateDts(config)
-  validateBase(config)
   validatePlugins(config, 'plugins')
 }
 
@@ -100,9 +99,9 @@ function validateStringArray(value: unknown, fieldName: string): void {
  * @throws {ConfigValidationError} 文档目录配置无效时抛出
  */
 function validateDocsDir(config: UserConfig, root: string): void {
-  if (!config.docsDir) return
+  if (!config.docDir) return
 
-  validateDirConfig(config.docsDir, 'docsDir', root)
+  validateDirConfig(config.docDir, 'docsDir', root)
 }
 
 /**
@@ -113,9 +112,19 @@ function validateDocsDir(config: UserConfig, root: string): void {
  * @throws {ConfigValidationError} 页面目录配置无效时抛出
  */
 function validatePagesDir(config: UserConfig, root: string): void {
-  if (!config.pagesDir) return
+  if (!config.pageDirs) return
 
-  validateDirConfig(config.pagesDir, 'pagesDir', root)
+  if (!Array.isArray(config.pageDirs)) {
+    throw new ConfigValidationError(`pageDirs 必须是数组类型，当前类型: ${typeof config.pageDirs}`)
+  }
+
+  for (let i = 0; i < config.pageDirs.length; i++) {
+    const pageDir = config.pageDirs[i]
+    if (!pageDir) {
+      throw new ConfigValidationError(`pageDirs[${i}] 不能为空`)
+    }
+    validateDirConfig(pageDir, `pageDirs[${i}]`, root)
+  }
 }
 
 /**
@@ -126,7 +135,7 @@ function validatePagesDir(config: UserConfig, root: string): void {
  * @param root - 项目根目录
  * @throws {ConfigValidationError} 目录配置无效时抛出
  */
-function validateDirConfig(dirConfig: DirConfig, fieldName: string, root: string): void {
+function validateDirConfig(dirConfig: PageDirOptions, fieldName: string, root: string): void {
   if (typeof dirConfig !== 'object' || Array.isArray(dirConfig)) {
     throw new ConfigValidationError(`${fieldName} 必须是对象类型，当前类型: ${typeof dirConfig}`)
   }
@@ -142,25 +151,25 @@ function validateDirConfig(dirConfig: DirConfig, fieldName: string, root: string
     )
   }
 
-  if (dirConfig.patterns !== undefined) {
-    if (!Array.isArray(dirConfig.patterns)) {
+  if (dirConfig.include !== undefined) {
+    if (!Array.isArray(dirConfig.include)) {
       throw new ConfigValidationError(
-        `${fieldName}.patterns 必须是数组类型，当前类型: ${typeof dirConfig.patterns}`
+        `${fieldName}.patterns 必须是数组类型，当前类型: ${typeof dirConfig.include}`
       )
     }
 
-    for (let i = 0; i < dirConfig.patterns.length; i++) {
-      if (typeof dirConfig.patterns[i] !== 'string') {
+    for (let i = 0; i < dirConfig.include.length; i++) {
+      if (typeof dirConfig.include[i] !== 'string') {
         throw new ConfigValidationError(
-          `${fieldName}.patterns[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.patterns[i]}`
+          `${fieldName}.patterns[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.include[i]}`
         )
       }
     }
   }
 
-  if (dirConfig.group !== undefined && typeof dirConfig.group !== 'string') {
+  if (dirConfig.prefix !== undefined && typeof dirConfig.prefix !== 'string') {
     throw new ConfigValidationError(
-      `${fieldName}.group 必须是字符串类型，当前类型: ${typeof dirConfig.group}`
+      `${fieldName}.basePath 必须是字符串类型，当前类型: ${typeof dirConfig.prefix}`
     )
   }
 }
@@ -192,95 +201,6 @@ function validateLang(config: UserConfig): void {
   throw new ConfigValidationError(
     `lang 必须是字符串或字符串数组类型，当前类型: ${typeof config.lang}`
   )
-}
-
-/**
- * 验证主题配置
- *
- * @param config - 用户配置对象
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 主题配置无效时抛出
- */
-function validateTheme(config: UserConfig, root: string): void {
-  if (!config.theme) return
-
-  validateThemeEntry(config.theme, root)
-  validateThemeLayout(config.theme, root)
-  validateThemeHome(config.theme, root)
-  validateThemeClientData(config.theme)
-  validatePlugins(config.theme, 'theme')
-}
-
-/**
- * 验证主题入口文件
- *
- * @param theme - 主题配置
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 入口文件不存在时抛出
- */
-function validateThemeEntry(theme: ThemeConfig, root: string): void {
-  if (!theme.entry) return
-
-  const entryPath = resolve(root, theme.entry)
-  if (!existsSync(entryPath)) {
-    throw new ConfigValidationError(`主题入口文件不存在: ${theme.entry} (解析路径: ${entryPath})`)
-  }
-}
-
-/**
- * 验证主题布局文件
- *
- * @param theme - 主题配置
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 布局文件不存在时抛出
- */
-function validateThemeLayout(theme: ThemeConfig, root: string): void {
-  if (!theme.layout) return
-
-  const layoutPath = resolve(root, theme.layout)
-  if (!existsSync(layoutPath)) {
-    throw new ConfigValidationError(`主题布局文件不存在: ${theme.layout} (解析路径: ${layoutPath})`)
-  }
-}
-
-/**
- * 验证主题首页文件
- *
- * @param theme - 主题配置
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 首页文件不存在时抛出
- */
-function validateThemeHome(theme: ThemeConfig, root: string): void {
-  if (!theme.home) return
-
-  const homePath = resolve(root, theme.home)
-  if (!existsSync(homePath)) {
-    throw new ConfigValidationError(`主题首页文件不存在: ${theme.home} (解析路径: ${homePath})`)
-  }
-}
-
-/**
- * 验证主题客户端数据
- *
- * @param theme - 主题配置
- * @throws {ConfigValidationError} 主题数据无效时抛出
- */
-function validateThemeClientData(theme: ThemeConfig): void {
-  if (theme.clientData === undefined) return
-
-  if (typeof theme.clientData !== 'object' || Array.isArray(theme.clientData)) {
-    throw new ConfigValidationError(
-      `theme.clientData 必须是对象类型，当前类型: ${typeof theme.clientData}`
-    )
-  }
-
-  try {
-    JSON.stringify(theme.clientData)
-  } catch (error) {
-    throw new ConfigValidationError(
-      `theme.clientData 必须是可序列化的对象，序列化失败: ${error instanceof Error ? error.message : String(error)}`
-    )
-  }
 }
 
 /**
@@ -337,28 +257,6 @@ function validateDts(config: UserConfig): void {
 
   if (typeof config.dts !== 'boolean' && typeof config.dts !== 'string') {
     throw new ConfigValidationError(`dts 必须是布尔值或字符串类型，当前类型: ${typeof config.dts}`)
-  }
-}
-
-/**
- * 验证 base 配置
- *
- * @param config - 用户配置对象
- * @throws {ConfigValidationError} base 配置无效时抛出
- */
-function validateBase(config: UserConfig): void {
-  if (config.base === undefined) return
-
-  if (typeof config.base !== 'string') {
-    throw new ConfigValidationError(`base 必须是字符串类型，当前类型: ${typeof config.base}`)
-  }
-
-  if (!config.base.startsWith('/')) {
-    throw new ConfigValidationError(`base 必须以 "/" 开头，当前值: ${config.base}`)
-  }
-
-  if (!config.base.endsWith('/')) {
-    throw new ConfigValidationError(`base 必须以 "/" 结尾，当前值: ${config.base}`)
   }
 }
 

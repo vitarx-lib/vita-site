@@ -1,47 +1,85 @@
 /**
- * 深度合并多个对象或数组（支持去重合并数组）
- *
- * @param {...any[]} objects 多个对象或数组
- * @returns {any} 合并后的对象或数组
+ * 判断是否为普通对象（排除 null / 数组 / 内置对象等）
  */
-export function mergeConfig(...objects: any[]): any {
-  const isObject = (obj: any): obj is Record<string, any> =>
-    obj && typeof obj === 'object' && !Array.isArray(obj)
+export function isPlainObject(value: unknown): value is Record<string, any> {
+  return Object.prototype.toString.call(value) === '[object Object]'
+}
 
-  const isArray = (arr: any): arr is any[] => Array.isArray(arr)
+/**
+ * 合并两个数组（支持 a / b 为 undefined），返回一个新数组
+ *
+ * @param a - 第一个数组（可选）
+ * @param b - 第二个数组（可选）
+ *
+ * @returns 返回一个新数组，元素类型为 `E[]`
+ *
+ * @example
+ * mergeArray([1, 2], ['a'])        // => [1, 2, 'a']
+ * mergeArray(undefined, ['a'])     // => ['a']
+ * mergeArray([1, 2], undefined)   // => [1, 2]
+ * mergeArray(undefined, undefined) // => []
+ *
+ * @remarks
+ * - 不会修改原数组
+ * - 保持顺序：先 a 后 b
+ * - 属于浅合并（不会深拷贝元素）
+ * - 时间复杂度 O(n + m)
+ */
+export function mergeTwoArrays<E = any>(a?: readonly any[] | null, b?: any[] | null): E[] {
+  // 使用空数组兜底，确保兼容 undefined / null
+  const arrA = a ?? []
+  const arrB = b ?? []
 
-  const mergeTwoObjects = (
-    target: Record<string, any>,
-    source: Record<string, any>
-  ): Record<string, any> => {
-    Object.keys(source).forEach(key => {
-      const targetValue = target[key]
-      const sourceValue = source[key]
+  return Array.from(new Set([...arrA, ...arrB]))
+}
 
-      if (isObject(targetValue) && isObject(sourceValue)) {
-        target[key] = mergeTwoObjects({ ...targetValue }, sourceValue)
-      } else if (isArray(targetValue) && isArray(sourceValue)) {
-        target[key] = mergeTwoArrays(targetValue, sourceValue)
-      } else {
-        target[key] = sourceValue
-      }
-    })
+/**
+ * 深度合并两个配置对象（不修改原对象）
+ *
+ * @param defaults - 目标对象
+ * @param overrides - 源对象（优先级更高）
+ *
+ * @returns 合并后的新对象
+ *
+ * @example
+ * mergeTwoObjects(
+ *   { a: 1, b: { x: 1 } },
+ *   { b: { y: 2 }, c: 3 }
+ * )
+ * // => { a: 1, b: { x: 1, y: 2 }, c: 3 }
+ *
+ * @remarks
+ * - 不会修改 defaults / overrides（纯函数）
+ * - 仅对“普通对象”做深度合并
+ * - 数组默认直接覆盖（而不是 concat）
+ * - overrides 中的 undefined | null 不会覆盖 defaults（可按需修改策略）
+ * - 时间复杂度：O(n)
+ */
+export function mergeConfig<T = any>(
+  defaults: Record<string, any>,
+  overrides: Record<string, any> | undefined
+): T {
+  const result: Record<string, any> = { ...defaults }
+  if (Object.is(defaults, overrides) || !overrides) return result as T
+  for (const key in overrides) {
+    if (!Object.prototype.hasOwnProperty.call(overrides, key)) continue
 
-    return target
-  }
+    const sourceValue = overrides[key]
+    const targetValue = defaults[key]
 
-  const mergeTwoArrays = (target: any[], source: any[]): any[] => {
-    const mergedArray = [...target, ...source]
-    return Array.from(new Set(mergedArray))
-  }
+    // 忽略 undefined（避免无意义覆盖）
+    if (sourceValue === undefined || sourceValue === null) continue
 
-  return objects.reduce((acc, obj) => {
-    if (isObject(acc) && isObject(obj)) {
-      return mergeTwoObjects(acc, obj)
-    } else if (isArray(acc) && isArray(obj)) {
-      return mergeTwoArrays(acc, obj)
+    // 深度合并：仅处理“普通对象”
+    if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
+      result[key] = mergeConfig(targetValue, sourceValue)
+    } else if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
+      defaults[key] = mergeTwoArrays(targetValue, sourceValue) as any
     } else {
-      return obj
+      // 数组 / 基本类型 / 其他对象：直接覆盖
+      result[key] = sourceValue
     }
-  }, {})
+  }
+
+  return result as T
 }
