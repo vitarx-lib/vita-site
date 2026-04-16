@@ -1,36 +1,5 @@
-import { existsSync } from 'node:fs'
-import { debug, FileRouter, type PageDirOptions, warn } from 'vitarx-router/file-router'
-import type { MdParser } from '../markdown/index.js'
-
-/**
- * 路由器配置选项
- */
-export interface RouterOptions {
-  /**
-   * 项目根目录
-   */
-  root: string
-  /**
-   * 文档目录
-   */
-  docDir: PageDirOptions
-  /**
-   * 布局文件绝对路径
-   */
-  layout?: string
-  /**
-   * 页面目录配置
-   */
-  pageDirs: PageDirOptions[]
-  /**
-   * 是否生成类型定义文件
-   */
-  dts?: string | boolean
-  /**
-   * Markdown 解析器实例
-   */
-  mdParser: MdParser
-}
+import { FileRouter, warn } from 'vitarx-router/file-router'
+import { VitaPressApp } from '../app/index.js'
 
 /**
  * 路由器
@@ -38,33 +7,30 @@ export interface RouterOptions {
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
 export class VitaPressServerRouter extends FileRouter {
-  constructor(options: RouterOptions) {
+  constructor(app: VitaPressApp) {
     super({
-      root: options.root,
-      pages: [options.docDir, ...options.pageDirs],
+      root: app.root,
+      pages: [app.config.docDir, ...app.config.pageDirs],
       importMode: 'lazy',
       pathStrategy: 'kebab',
-      dts: options.dts || false,
+      dts: app.config.dts || false,
       transform: (content: string, file: string) => {
         if (file.endsWith('.md')) {
-          return options.mdParser.parse(file, content).content
+          return app.mdParser.parse(file, content).content
         }
         return content
-      }
-    })
-    try {
-      if (options.layout && existsSync(options.layout)) {
-        const docsNode = this.fileMap.get(options.docDir.dir)
-        if (docsNode) {
-          if (!docsNode.components) {
-            docsNode.components = { default: options.layout }
-          } else {
-            debug('文档目录下已经存在布局文件，将覆盖主题布局')
+      },
+      extendRoute: (route, parsed) => {
+        for (const plugin of app.plugins) {
+          if (typeof plugin.extendRoute === 'function') {
+            try {
+              plugin.extendRoute(route, parsed, app)
+            } catch (e) {
+              warn(`Plugin ${plugin.name} extendRoute error:`, e)
+            }
           }
         }
       }
-    } catch (e) {
-      warn('应用文档布局失败', String(e))
-    }
+    })
   }
 }
