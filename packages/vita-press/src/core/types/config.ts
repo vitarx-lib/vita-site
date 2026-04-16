@@ -1,3 +1,5 @@
+import type { DeepReadonly } from 'vitarx'
+import type { PageDirOptions } from 'vitarx-router/file-router'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { MarkdownItConfig } from './markdown.js'
 import type { VitaPressPlugin } from './plugin.js'
@@ -59,62 +61,36 @@ export interface SiteOptions {
    */
   keywords?: string
 }
-export interface ThemeConfig {
+export interface ViteConfig {
   /**
-   * 运行时应用入口组件文件路径，必须是绝对路径
-   *
-   * 组件中必须包含 `<RouterView />`，通常用于自定义全局布局。
-   */
-  entry?: string
-  /**
-   * 文档布局组件文件路径，必须是绝对路径
-   */
-  layout?: string
-  /**
-   * 首页文件路径，必须是绝对路径
-   *
-   * 仅在未扫描到 `/index` 首页时生效。
-   */
-  home?: string
-  /**
-   * 主题的客户端配置元数据
-   *
-   * 可以在布局组件中通过 `useThemeData` 获取到此对象，必须是可序列化的对象。
-   */
-  clientData?: Record<string, any>
-  /**
-   * 主题使用的插件列表
-   */
-  plugins?: VitaPressPlugin[]
-}
-
-/**
- * 目录配置
- */
-export interface DirConfig {
-  /**
-   * 目录路径
-   *
-   * 支持绝对路径和相对路径，相对路径相对于 `process.cwd()`
-   */
-  dir: string
-  /**
-   * 文件匹配模式
-   *
-   * @default ["**\/*.{md,markdown}","!.*"]
-   */
-  patterns?: string[]
-  /**
-   * 分组path
+   * 站点基础路径
    *
    * @default '/'
    */
-  group?: string
+  base?: ViteUserConfig['base']
+  /**
+   * 静态资源目录
+   *
+   * @default '.vitapress/public'
+   */
+  publicDir?: ViteUserConfig['publicDir']
+  /**
+   * 预定义全局变量
+   */
+  define?: ViteUserConfig['define']
+  /**
+   * 插件列表
+   */
+  plugins?: ViteUserConfig['plugins']
+  /**
+   * 解析配置
+   */
+  resolve?: ViteUserConfig['resolve']
+  /**
+   * 服务器配置
+   */
+  server?: ViteUserConfig['server']
 }
-
-/**
- * 用户配置
- */
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
   /**
    * 是否生成路由 dts 文件
@@ -126,12 +102,6 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    * @default false
    */
   dts?: string | boolean
-  /**
-   * 站点基础路径
-   *
-   * @default '/'
-   */
-  base?: string
   /**
    * 默认语言
    *
@@ -151,29 +121,17 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    */
   lang?: string | string[]
   /**
-   * 是否开启调试模式
-   *
-   * 开启调试模式后，会输出更多日志信息。
-   *
-   * @default false
-   */
-  debug?: boolean
-  /**
-   * 主题配置
-   */
-  theme?: ThemeConfig
-  /**
    * 文档目录
    *
-   * @default { dir: 'docs', patterns: ['**\/*.{tsx,jsx,md}','!.*'], group:'/' }
+   * @default { dir: 'docs', patterns: ['**\/*.{tsx,jsx,md}','!.*'], exclude: ['**\/.*'], prefix:'/', group: true }
    */
-  docsDir?: DirConfig
+  docDir?: PageDirOptions
   /**
    * 页面目录
    *
-   * @default { dir: 'pages', patterns: ['**\/*.{tsx,jsx}','!.*'], group:'/' }
+   * @default []
    */
-  pagesDir?: DirConfig
+  pageDirs?: PageDirOptions[]
   /**
    * 插件列表
    */
@@ -181,30 +139,6 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
   /**
    * Vite 配置
    */
-  viteConfig?: {
-    /**
-     * 静态资源目录
-     *
-     * @default '.vitapress/public'
-     */
-    publicDir?: ViteUserConfig['publicDir']
-    /**
-     * 预定义全局变量
-     */
-    define?: ViteUserConfig['define']
-    /**
-     * 插件列表
-     */
-    plugins?: ViteUserConfig['plugins']
-    /**
-     * 解析配置
-     */
-    resolve?: ViteUserConfig['resolve']
-    /**
-     * 服务器配置
-     */
-    server?: ViteUserConfig['server']
-  }
+  viteConfig?: ViteConfig
 }
-
-export type ResolvedConfig = Required<UserConfig>
+export type ResolvedConfig = DeepReadonly<Required<UserConfig>>
