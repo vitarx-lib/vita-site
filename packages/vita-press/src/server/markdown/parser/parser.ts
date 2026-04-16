@@ -48,7 +48,7 @@ export class MdParser {
    * @private
    */
   private readonly langDirs: string[]
-  private readonly defaultLang: string
+  public readonly defaultLang: string
   private readonly languages: Record<string, string> = {}
   private readonly injectCode: string
   public readonly cacheManager: CacheManager
