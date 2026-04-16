@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../../app/index.js'
+import { isPlainObject, mergeConfig } from '../../config/index.js'
 import type { MarkdownParseEnvContext } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
@@ -21,30 +22,6 @@ export interface MdParseResult {
   filePath: string
   /** 文档页面的元数据信息 */
   meta: DocPageMetaData
-}
-
-/**
- * Markdown 解析器配置选项
- */
-export interface ParserOptions {
-  /** 项目根目录路径，用于计算相对路径 */
-  root: string
-  /** 需要注入到生成组件顶部的代码片段数组 */
-  injectCode: readonly string[]
-  /** 默认语言 */
-  defaultLang: string
-  /**
-   * 语言映射
-   *
-   * @example
-   * ```ts
-   * {
-   *   '/root/docs/zh-CN': 'zh-CN',
-   *   '/root/docs/en-US': 'en-US'
-   * }
-   * ```
-   */
-  languages: Record<string, string>
 }
 
 /**
@@ -110,19 +87,11 @@ export class MdParser {
   }
 
   /**
-   * 初始化缓存
-   */
-  initCache(): void {
-    this.cacheManager.init()
-  }
-
-  /**
    * 清理失效缓存
    *
    * @returns 清理的缓存条目数量
    */
   pruneCache(): number {
-    if (!this.cacheManager) return 0
     return this.cacheManager.prune()
   }
 
@@ -130,7 +99,7 @@ export class MdParser {
    * 清理所有缓存
    */
   clearCache(): void {
-    this.cacheManager?.clear()
+    this.cacheManager.clear()
   }
 
   /**
@@ -239,7 +208,7 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
     for (const plugin of this.app.plugins) {
       if (typeof plugin.beforeParse === 'function') {
         try {
-          const result = plugin.beforeParse(filePath, content, this.app)
+          const result = plugin.beforeParse(filePath, content)
           if (result) content = result
         } catch (e) {
           warn(`Plugin ${plugin.name} beforeParse error: ${String(e)}`)
@@ -259,8 +228,8 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
     for (const plugin of this.app.plugins) {
       if (typeof plugin.afterParse === 'function') {
         try {
-          const _result = plugin.afterParse(result, this.app)
-          if (_result) result = _result
+          const _result = plugin.afterParse(result)
+          if (isPlainObject(_result)) result = mergeConfig(result, _result)
         } catch (e) {
           warn(`Plugin ${plugin.name} afterParse error: ${String(e)}`)
         }
