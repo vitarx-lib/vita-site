@@ -26,7 +26,7 @@ export interface ShikiConfig {
   /**
    * 要加载的语言列表
    *
-   * 默认加载的语言列表：{@linkcode DEFAULT_CONFIG.langs}，默认加载了二十多种常用语言
+   * 默认加载的语言列表：{@linkcode DEFAULT_CONFIG.langs}
    *
    * @default ['javascript', 'typescript', 'bash', 'shell', 'jsx', 'tsx']
    */
