@@ -87,7 +87,7 @@ describe('createMarkdownIt', () => {
       const env: any = {}
       md.render('# Test Heading', env)
 
-      expect(env.__toc_tree_list).toBeDefined()
+      expect(env.tocList).toBeDefined()
       expect(env.__toc_slugger).toBeDefined()
     })
 
@@ -102,11 +102,11 @@ describe('createMarkdownIt', () => {
 `
       md.render(markdown, env)
 
-      expect(env.__toc_tree_list).toHaveLength(2)
-      expect(env.__toc_tree_list[0].name).toBe('二级标题一')
-      expect(env.__toc_tree_list[0].children).toHaveLength(1)
-      expect(env.__toc_tree_list[0].children[0].name).toBe('三级标题')
-      expect(env.__toc_tree_list[1].name).toBe('二级标题二')
+      expect(env.tocList).toHaveLength(2)
+      expect(env.tocList[0].name).toBe('二级标题一')
+      expect(env.tocList[0].children).toHaveLength(1)
+      expect(env.tocList[0].children[0].name).toBe('三级标题')
+      expect(env.tocList[1].name).toBe('二级标题二')
     })
 
     it('anchorPoint 插件应为标题添加锚点链接', async () => {
@@ -330,7 +330,7 @@ console.log(greeting)
       expect(result).toContain('<pre')
       expect(result).toContain('<RouterLink')
       expect(result).toContain('<blockquote>')
-      expect(env.__toc_tree_list).toBeDefined()
+      expect(env.tocList).toBeDefined()
     })
 
     it('应正确处理重复标题的 id 生成', async () => {
@@ -343,7 +343,7 @@ console.log(greeting)
 `
       md.render(markdown, env)
 
-      const hashes = env.__toc_tree_list.map((item: any) => item.hash)
+      const hashes = env.tocList.map((item: any) => item.hash)
       const uniqueHashes = new Set(hashes)
 
       expect(uniqueHashes.size).toBe(3)
@@ -354,7 +354,7 @@ console.log(greeting)
       const env: any = {}
       md.render('## 123标题', env)
 
-      expect(env.__toc_tree_list[0].hash).toMatch(/^_\d/)
+      expect(env.tocList[0].hash).toMatch(/^_\d/)
     })
 
     it('应正确处理嵌套列表', async () => {
