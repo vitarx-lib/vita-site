@@ -2,24 +2,24 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CacheManager } from '../../../../src/core/markdown/cache/manager.js'
-import type { MdParseResult } from '../../../../src/core/markdown/parser/parser.js'
+import { CacheManager, DEFAULT_CACHE_DIR } from '../../../../src/core/markdown/cache/manager.js'
+import type { MdParseResult } from '../../../../src/core/markdown/index.js'
 
 describe('CacheManager', () => {
   let tempDir: string
   let cacheManager: CacheManager
-  const cacheDirPath = '.vitapress/.cache/markdown'
+  const cacheDirPath = DEFAULT_CACHE_DIR
 
   const mockResult: MdParseResult = {
     content: 'export default function() { return "test" }',
     filePath: '/project/docs/test.md',
     meta: {
-      order: 0,
       authors: ['test-author'],
       createdAt: '2024-01-01T00:00:00+08:00',
       lastUpdateAt: '2024-01-01T00:00:00+08:00',
       tocList: [],
-      relativePath: 'docs/test.md'
+      relativePath: 'docs/test.md',
+      lang: 'zh-CN'
     }
   }
 
@@ -31,21 +31,6 @@ describe('CacheManager', () => {
 
   afterEach(() => {
     rmSync(tempDir, { recursive: true, force: true })
-  })
-
-  describe('init', () => {
-    it('应创建缓存目录', () => {
-      cacheManager.init()
-      const cacheDir = join(tempDir, cacheDirPath)
-      expect(existsSync(cacheDir)).toBe(true)
-    })
-
-    it('重复调用不应报错', () => {
-      cacheManager.init()
-      cacheManager.init()
-      const cacheDir = join(tempDir, cacheDirPath)
-      expect(existsSync(cacheDir)).toBe(true)
-    })
   })
 
   describe('computeHash', () => {
@@ -80,10 +65,6 @@ describe('CacheManager', () => {
   })
 
   describe('get and set', () => {
-    beforeEach(() => {
-      cacheManager.init()
-    })
-
     it('应能设置和获取缓存', () => {
       const filePath = 'docs/test.md'
       const content = '# Test Content'
@@ -145,10 +126,6 @@ describe('CacheManager', () => {
   })
 
   describe('prune', () => {
-    beforeEach(() => {
-      cacheManager.init()
-    })
-
     const setupCacheWithSourceFile = async (deleteSource = false) => {
       const sourceFile = join(tempDir, 'docs', 'test.md')
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
@@ -209,10 +186,6 @@ describe('CacheManager', () => {
   })
 
   describe('clear', () => {
-    beforeEach(() => {
-      cacheManager.init()
-    })
-
     it('应清除所有缓存', async () => {
       const filePath1 = 'docs/test1.md'
       const filePath2 = 'docs/test2.md'
