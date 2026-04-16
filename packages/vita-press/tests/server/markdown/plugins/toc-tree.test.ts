@@ -4,7 +4,7 @@ import {
   type TocParseEnvContext,
   tocTree,
   type TocTree
-} from '../../../../src/core/markdown/plugins/tocTree.js'
+} from '../../../../src/server/markdown/plugins/tocTree.js'
 
 function createMarkdown(): MarkdownIt {
   const md = new MarkdownIt()

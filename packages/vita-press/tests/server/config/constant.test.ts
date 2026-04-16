@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DEFAULT_CONFIG } from '../../../src/core/config/constant.js'
+import { DEFAULT_CONFIG } from '../../../src/server/config/constant.js'
 
 describe('DEFAULT_CONFIG', () => {
   it('应定义所有必需的配置项', () => {

@@ -2,7 +2,7 @@ import MarkdownIt from 'markdown-it'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { codeImport } from '../../../../src/core/markdown/plugins/codeImport.js'
+import { codeImport } from '../../../../src/server/markdown/plugins/codeImport.js'
 
 vi.mock('vitarx-router/file-router', () => ({
   warn: vi.fn()

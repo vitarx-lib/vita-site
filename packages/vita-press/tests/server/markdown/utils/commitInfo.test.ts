@@ -3,7 +3,10 @@
 import { execSync } from 'child_process'
 import { statSync } from 'node:fs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCommitInfo, isGitRepositoryPresent } from '../../../../src/core/markdown/utils/index.js'
+import {
+  getCommitInfo,
+  isGitRepositoryPresent
+} from '../../../../src/server/markdown/utils/index.js'
 
 vi.mock('child_process', () => ({
   execSync: vi.fn()

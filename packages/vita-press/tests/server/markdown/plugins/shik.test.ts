@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   createShikiHighlighter,
   type PartialShikiConfig
-} from '../../../../src/core/markdown/plugins/shik.js'
+} from '../../../../src/server/markdown/plugins/shik.js'
 import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
 
 describe('shik', () => {
@@ -17,7 +17,6 @@ describe('shik', () => {
       const highlighter = await createShikiHighlighter({})
       const md = createMarkdownWithPlugin(highlighter)
       const html = renderMarkdown(md, '```js\nconst x = 1\n```')
-      console.log(html)
       expect(html).toContain('<pre')
       expect(html).toContain('<code')
     })

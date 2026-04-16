@@ -2,10 +2,10 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ParsedNode, RouteNode } from 'vitarx-router/file-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { VitaPressApp } from '../../../src/core/app/index.js'
-import type { ResolvedConfig, VitaPressPlugin } from '../../../src/core/index.js'
-import type { MdParser, MdParseResult } from '../../../src/core/markdown/index.js'
-import { VitaPressServerRouter } from '../../../src/core/router/router.js'
+import { VitaPressApp } from '../../../src/server/app/index.js'
+import type { ResolvedConfig, VitaPressPlugin } from '../../../src/server/index.js'
+import type { MdParser, MdParseResult } from '../../../src/server/markdown/index.js'
+import { VitaPressRouter } from '../../../src/server/router/router.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const mod = await importOriginal<typeof import('vitarx-router/file-router')>()
@@ -111,7 +111,7 @@ function createMockApp(options: {
   } as unknown as VitaPressApp
 }
 
-describe('VitaPressServerRouter', () => {
+describe('VitaPressRouter', () => {
   let tempDir: string
 
   beforeEach(() => {
@@ -132,7 +132,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
 
       expect(router).toBeDefined()
     })
@@ -143,7 +143,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('lazy')
@@ -155,7 +155,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'MyPage.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('my-page')
@@ -169,7 +169,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -183,7 +183,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -199,7 +199,7 @@ describe('VitaPressServerRouter', () => {
       )
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "custom"')
@@ -220,7 +220,7 @@ describe('VitaPressServerRouter', () => {
       }
 
       const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       router.generate()
 
       expect(extendRouteMock).toHaveBeenCalled()
@@ -243,7 +243,7 @@ describe('VitaPressServerRouter', () => {
       }
 
       const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       router.generate()
 
       expect(capturedRoute).not.toBeNull()
@@ -265,7 +265,7 @@ describe('VitaPressServerRouter', () => {
       const app = createMockApp({ root: tempDir, plugins: [plugin] })
 
       expect(() => {
-        const router = new VitaPressServerRouter(app)
+        const router = new VitaPressRouter(app)
         router.generate()
       }).not.toThrow()
     })
@@ -292,7 +292,7 @@ describe('VitaPressServerRouter', () => {
       ]
 
       const app = createMockApp({ root: tempDir, plugins })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       router.generate()
 
       expect(callOrder).toContain('plugin-1')
@@ -307,7 +307,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -322,7 +322,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(apiDir, 'intro.tsx'), 'export default function Intro() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/"')
@@ -335,7 +335,7 @@ describe('VitaPressServerRouter', () => {
       mkdirSync(docsDir, { recursive: true })
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -349,7 +349,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(customDocsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir, docDir: 'custom-docs' })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -364,7 +364,7 @@ describe('VitaPressServerRouter', () => {
         root: tempDir,
         docDir: { dir: 'docs', prefix: '/docs', group: false }
       })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/docs"')
@@ -382,7 +382,7 @@ describe('VitaPressServerRouter', () => {
         root: tempDir,
         pageDirs: [{ dir: 'pages', prefix: '/' }]
       })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "admin"')
@@ -400,7 +400,7 @@ describe('VitaPressServerRouter', () => {
         root: tempDir,
         pageDirs: [{ dir: 'pages', prefix: '/app/', group: false }]
       })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/app/dashboard"')
@@ -414,7 +414,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
 
       let { code } = router.generate()
       expect(code).toContain('path: "/"')
@@ -433,7 +433,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
 
       router.generate()
       router.clearGenerateResult()
@@ -450,7 +450,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
 
       expect(router).toBeDefined()
     })
@@ -463,7 +463,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
       const app = createMockApp({ root: tempDir, plugins: [] })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -479,7 +479,7 @@ describe('VitaPressServerRouter', () => {
       }
 
       const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -493,7 +493,7 @@ describe('VitaPressServerRouter', () => {
       writeFileSync(join(docsDir, 'about.jsx'), 'export default function About() {}')
 
       const app = createMockApp({ root: tempDir })
-      const router = new VitaPressServerRouter(app)
+      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('export default')

@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CacheManager, DEFAULT_CACHE_DIR } from '../../../../src/core/markdown/cache/manager.js'
-import type { MdParseResult } from '../../../../src/core/markdown/index.js'
+import { CacheManager, DEFAULT_CACHE_DIR } from '../../../../src/server/markdown/cache/manager.js'
+import type { MdParseResult } from '../../../../src/server/markdown/index.js'
 
 describe('CacheManager', () => {
   let tempDir: string

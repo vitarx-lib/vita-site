@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ResolvedConfig, VitaPressPlugin } from '../../../../src/core/index.js'
-import { MdParser } from '../../../../src/core/markdown/index.js'
+import type { ResolvedConfig, VitaPressPlugin } from '../../../../src/server/index.js'
+import { MdParser } from '../../../../src/server/markdown/index.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const actual = await importOriginal<typeof import('vitarx-router/file-router')>()
@@ -14,7 +14,7 @@ vi.mock('vitarx-router/file-router', async importOriginal => {
   }
 })
 
-vi.mock('../../../../src/core/markdown/utils/index.js', () => ({
+vi.mock('../../../../src/server/markdown/utils/index.js', () => ({
   parseFrontMatter: vi.fn((content: string) => {
     const frontMatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
     if (frontMatterMatch) {

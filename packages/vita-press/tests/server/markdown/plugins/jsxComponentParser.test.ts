@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { jsxComponentParser } from '../../../../src/core/markdown/plugins/jsxComponentParser.js'
+import { jsxComponentParser } from '../../../../src/server/markdown/plugins/jsxComponentParser.js'
 import { createMarkdownWithPlugin, parseMarkdown, renderMarkdown } from '../testUtils.js'
 
 describe('jsxComponentParser', () => {

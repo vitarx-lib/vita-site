@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'vitest'
-import { anchorPoint } from '../../../../src/core/markdown/plugins/anchorPoint.js'
-import { tocTree } from '../../../../src/core/markdown/plugins/tocTree.js'
+import { anchorPoint } from '../../../../src/server/markdown/plugins/anchorPoint.js'
+import { tocTree } from '../../../../src/server/markdown/plugins/tocTree.js'
 import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
 
 function createMarkdownWithAnchorAndToc(): MarkdownIt {

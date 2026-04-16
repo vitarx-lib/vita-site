@@ -1,6 +1,6 @@
 import { warn } from 'vitarx-router/file-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { parseFrontMatter } from '../../../../src/core/markdown/utils/index.js'
+import { parseFrontMatter } from '../../../../src/server/markdown/utils/index.js'
 
 vi.mock('vitarx-router/file-router', () => ({
   warn: vi.fn()

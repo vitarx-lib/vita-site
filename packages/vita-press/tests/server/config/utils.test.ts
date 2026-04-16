@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isPlainObject, mergeConfig, mergeTwoArrays } from '../../../src/core/config/utils.js'
+import { isPlainObject, mergeConfig } from '../../../src/server/config/utils.js'
 
 describe('isPlainObject', () => {
   it('应正确识别普通对象', () => {
@@ -25,54 +25,6 @@ describe('isPlainObject', () => {
 
   it('应正确处理 Object.create(null) 创建的对象', () => {
     expect(isPlainObject(Object.create(null))).toBe(true)
-  })
-})
-
-describe('mergeTwoArrays', () => {
-  it('应正确合并两个数组', () => {
-    expect(mergeTwoArrays([1, 2], [3, 4])).toEqual([1, 2, 3, 4])
-  })
-
-  it('应去重合并后的数组', () => {
-    expect(mergeTwoArrays([1, 2, 3], [2, 3, 4])).toEqual([1, 2, 3, 4])
-  })
-
-  it('应处理第一个数组为 undefined', () => {
-    expect(mergeTwoArrays(undefined, [1, 2])).toEqual([1, 2])
-  })
-
-  it('应处理第二个数组为 undefined', () => {
-    expect(mergeTwoArrays([1, 2], undefined)).toEqual([1, 2])
-  })
-
-  it('应处理两个数组都为 undefined', () => {
-    expect(mergeTwoArrays(undefined, undefined)).toEqual([])
-  })
-
-  it('应处理第一个数组为 null', () => {
-    expect(mergeTwoArrays(null, [1, 2])).toEqual([1, 2])
-  })
-
-  it('应处理第二个数组为 null', () => {
-    expect(mergeTwoArrays([1, 2], null)).toEqual([1, 2])
-  })
-
-  it('应处理两个数组都为 null', () => {
-    expect(mergeTwoArrays(null, null)).toEqual([])
-  })
-
-  it('应处理空数组', () => {
-    expect(mergeTwoArrays([], [1, 2])).toEqual([1, 2])
-    expect(mergeTwoArrays([1, 2], [])).toEqual([1, 2])
-    expect(mergeTwoArrays([], [])).toEqual([])
-  })
-
-  it('应保持顺序：先 a 后 b', () => {
-    expect(mergeTwoArrays(['a', 'b'], ['c', 'd'])).toEqual(['a', 'b', 'c', 'd'])
-  })
-
-  it('应支持不同类型元素', () => {
-    expect(mergeTwoArrays([1, 'a'], [2, 'b'])).toEqual([1, 'a', 2, 'b'])
   })
 })
 

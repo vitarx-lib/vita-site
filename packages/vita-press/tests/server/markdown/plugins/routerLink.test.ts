@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { routerLink } from '../../../../src/core/markdown/plugins/routerLink.js'
+import { routerLink } from '../../../../src/server/markdown/plugins/routerLink.js'
 import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
 
 describe('routerLink', () => {

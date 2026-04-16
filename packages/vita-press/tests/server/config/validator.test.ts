@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { ConfigValidationError, validateConfig } from '../../../src/core/config/validator.js'
-import type { UserConfig } from '../../../src/core/types/index.js'
+import { ConfigValidationError, validateConfig } from '../../../src/server/config/validator.js'
+import type { UserConfig } from '../../../src/server/types/index.js'
 
 describe('ConfigValidationError', () => {
   it('应正确创建错误实例', () => {
@@ -141,14 +141,18 @@ describe('validateConfig', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
       const config = { docDir: { dir: 'docs', include: '*.md' } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.patterns 必须是数组类型')
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'docsDir.patterns 必须是数组类型'
+      )
     })
 
     it('应拒绝 include 中包含非字符串元素', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
       const config = { docDir: { dir: 'docs', include: [123] } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.patterns[0] 必须是字符串类型')
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'docsDir.patterns[0] 必须是字符串类型'
+      )
     })
   })
 
@@ -221,9 +225,7 @@ describe('validateConfig', () => {
     it('应拒绝非对象类型的 markdownIt', () => {
       const config = { markdownIt: 'invalid' }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'markdownIt 必须是对象类型'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('markdownIt 必须是对象类型')
     })
 
     it('应拒绝非对象类型的 markdownIt.options', () => {
@@ -265,9 +267,7 @@ describe('validateConfig', () => {
     it('应拒绝非布尔或字符串类型的 dts', () => {
       const config = { dts: 123 }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'dts 必须是布尔值或字符串类型'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('dts 必须是布尔值或字符串类型')
     })
   })
 
@@ -282,9 +282,7 @@ describe('validateConfig', () => {
     it('应拒绝非数组类型的 plugins', () => {
       const config = { plugins: { name: 'test' } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'plugins.plugins 必须是数组类型'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('plugins.plugins 必须是数组类型')
     })
 
     it('应拒绝插件缺少 name 属性', () => {

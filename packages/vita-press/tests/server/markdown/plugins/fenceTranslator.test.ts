@@ -1,6 +1,6 @@
 import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'vitest'
-import { fenceTranslator } from '../../../../src/core/markdown/plugins/fenceTranslator.js'
+import { fenceTranslator } from '../../../../src/server/markdown/plugins/fenceTranslator.js'
 import { renderMarkdown } from '../testUtils.js'
 
 function createMarkdownWithMockFence(): MarkdownIt {

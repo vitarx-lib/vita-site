@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { loadUserConfig } from '../../../src/core/config/loader.js'
+import { loadUserConfig } from '../../../src/server/config/loader.js'
 
 describe('loadUserConfig', () => {
   let tempDir: string
@@ -27,10 +27,7 @@ describe('loadUserConfig', () => {
     it('应正确加载 .vitapress/config.ts 配置文件', async () => {
       const configDir = join(tempDir, '.vitapress')
       mkdirSync(configDir, { recursive: true })
-      writeFileSync(
-        join(configDir, 'config.ts'),
-        `export default { title: 'Test Site' }`
-      )
+      writeFileSync(join(configDir, 'config.ts'), `export default { title: 'Test Site' }`)
 
       const result = await loadUserConfig(tempDir)
       expect(result.config.title).toBe('Test Site')
@@ -40,10 +37,7 @@ describe('loadUserConfig', () => {
     it('应正确加载 .vitapress/config.js 配置文件', async () => {
       const configDir = join(tempDir, '.vitapress')
       mkdirSync(configDir, { recursive: true })
-      writeFileSync(
-        join(configDir, 'config.js'),
-        `module.exports = { title: 'JS Config' }`
-      )
+      writeFileSync(join(configDir, 'config.js'), `module.exports = { title: 'JS Config' }`)
 
       const result = await loadUserConfig(tempDir)
       expect(result.config.title).toBe('JS Config')
@@ -53,10 +47,7 @@ describe('loadUserConfig', () => {
     it('应正确加载 .vitapress/config.mjs 配置文件', async () => {
       const configDir = join(tempDir, '.vitapress')
       mkdirSync(configDir, { recursive: true })
-      writeFileSync(
-        join(configDir, 'config.mjs'),
-        `export default { title: 'MJS Config' }`
-      )
+      writeFileSync(join(configDir, 'config.mjs'), `export default { title: 'MJS Config' }`)
 
       const result = await loadUserConfig(tempDir)
       expect(result.config.title).toBe('MJS Config')
@@ -66,10 +57,7 @@ describe('loadUserConfig', () => {
     it('应正确加载 .vitapress/config.mts 配置文件', async () => {
       const configDir = join(tempDir, '.vitapress')
       mkdirSync(configDir, { recursive: true })
-      writeFileSync(
-        join(configDir, 'config.mts'),
-        `export default { title: 'MTS Config' }`
-      )
+      writeFileSync(join(configDir, 'config.mts'), `export default { title: 'MTS Config' }`)
 
       const result = await loadUserConfig(tempDir)
       expect(result.config.title).toBe('MTS Config')
@@ -92,18 +80,13 @@ describe('loadUserConfig', () => {
     })
 
     it('当指定的配置文件不存在时应抛出错误', async () => {
-      await expect(loadUserConfig(tempDir, 'non-existent.ts')).rejects.toThrow(
-        '配置文件不存在'
-      )
+      await expect(loadUserConfig(tempDir, 'non-existent.ts')).rejects.toThrow('配置文件不存在')
     })
 
     it('应正确加载嵌套目录中的配置文件', async () => {
       const nestedDir = join(tempDir, 'config', 'nested')
       mkdirSync(nestedDir, { recursive: true })
-      writeFileSync(
-        join(nestedDir, 'config.ts'),
-        `export default { title: 'Nested Config' }`
-      )
+      writeFileSync(join(nestedDir, 'config.ts'), `export default { title: 'Nested Config' }`)
 
       const result = await loadUserConfig(tempDir, 'config/nested/config.ts')
       expect(result.config.title).toBe('Nested Config')
@@ -161,10 +144,7 @@ describe('loadUserConfig', () => {
     it('当配置文件有语法错误时应抛出错误', async () => {
       const configDir = join(tempDir, '.vitapress')
       mkdirSync(configDir, { recursive: true })
-      writeFileSync(
-        join(configDir, 'config.ts'),
-        `export default { title: 'Invalid`
-      )
+      writeFileSync(join(configDir, 'config.ts'), `export default { title: 'Invalid`)
 
       await expect(loadUserConfig(tempDir)).rejects.toThrow()
     })

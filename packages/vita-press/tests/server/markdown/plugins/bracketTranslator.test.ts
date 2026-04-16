@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bracketTranslator } from '../../../../src/core/markdown/plugins/bracketTranslator.js'
+import { bracketTranslator } from '../../../../src/server/markdown/plugins/bracketTranslator.js'
 import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
 
 describe('bracketTranslator', () => {

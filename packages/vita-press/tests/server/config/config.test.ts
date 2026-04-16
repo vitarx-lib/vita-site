@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ConfigManager } from '../../../src/core/config/config.js'
+import { ConfigManager } from '../../../src/server/config/manager.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const mod = await importOriginal<typeof import('vitarx-router/file-router')>()
