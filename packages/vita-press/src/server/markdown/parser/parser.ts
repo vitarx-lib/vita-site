@@ -43,13 +43,6 @@ export interface MdParseResult {
 export class MdParser {
   private md: MarkdownIt
   private readonly app: VitaPressApp
-  /**
-   * 语言目录
-   * @private
-   */
-  private readonly langDirs: string[]
-  public readonly defaultLang: string
-  private readonly languages: Record<string, string> = {}
   private readonly injectCode: string
   public readonly cacheManager: CacheManager
   /**
@@ -61,26 +54,17 @@ export class MdParser {
   constructor(md: MarkdownIt, app: VitaPressApp) {
     this.md = md
     this.app = app
-    const config = app.config
-    const docDir = path.resolve(app.root, config.docDir.dir)
-    this.defaultLang = Array.isArray(config.lang) ? config.lang[0] || 'zh-CN' : config.lang
-    if (Array.isArray(config.lang)) {
-      config.lang.forEach(lang => {
-        this.languages[path.resolve(docDir, lang)] = lang
-      })
-    }
     const configHash = createHash('md5')
       .update(
         JSON.stringify({
           root: app.root,
-          defaultLang: this.defaultLang,
-          languages: this.languages,
+          defaultLang: app.defaultLang,
+          languages: app.langPathMap,
           injectCode: this.app.config.injectCode
         })
       )
       .digest('hex')
     this.cacheManager = new CacheManager(this.app.root, configHash)
-    this.langDirs = Object.keys(this.languages)
     this.injectCode = this.app.config.injectCode.length
       ? this.app.config.injectCode.join('\n') + '\n'
       : ''
@@ -167,8 +151,8 @@ export class MdParser {
    * @private
    */
   private parseLanguage(filePath: string): string {
-    const lang = this.langDirs.find(key => filePath.startsWith(key))
-    return lang ? this.languages[lang]! : this.defaultLang
+    const lang = Object.keys(this.app.langPathMap).find(key => filePath.startsWith(key))
+    return lang ? this.app.langPathMap[lang]! : this.app.defaultLang
   }
 
   /**
