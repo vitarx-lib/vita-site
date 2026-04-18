@@ -1,6 +1,12 @@
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync } from 'node:fs'
-import fs from 'node:fs/promises'
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  unlinkSync,
+  writeFileSync
+} from 'node:fs'
 import path from 'node:path'
 import { debug } from 'vitarx-router/file-router'
 import type { MdParseResult } from '../parser/parser.js'
@@ -74,7 +80,7 @@ export class CacheManager {
     if (!existsSync(cacheFile)) return undefined
 
     try {
-      const fileContent = require('fs').readFileSync(cacheFile, 'utf-8')
+      const fileContent = readFileSync(cacheFile, 'utf-8')
       const entry: CacheEntry = JSON.parse(fileContent)
 
       if (entry.hash !== hash) return undefined
@@ -89,7 +95,7 @@ export class CacheManager {
   /**
    * 设置缓存
    *
-   * 更新内存缓存并异步写入磁盘。
+   * 更新内存缓存并同步写入磁盘。
    *
    * @param filePath - 文件相对路径
    * @param content - 文件内容
@@ -102,9 +108,11 @@ export class CacheManager {
     this.memoryCache.set(filePath, entry)
 
     const cacheFile = this.getCacheFilePath(filePath)
-    fs.writeFile(cacheFile, JSON.stringify(entry)).catch(e => {
-      debug('[CacheManager] Error writing cache file:', e instanceof Error ? e.message : String(e))
-    })
+    try {
+      writeFileSync(cacheFile, JSON.stringify(entry))
+    } catch (e) {
+      debug('[CacheManager] Error writing cache file:', e)
+    }
   }
 
   /**
