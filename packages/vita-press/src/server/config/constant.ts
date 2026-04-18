@@ -6,6 +6,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   title: '',
   description: '',
   keywords: '',
+  langDirs: [],
   docDir: {
     dir: 'docs',
     include: ['**/*.{tsx,jsx,md}'],

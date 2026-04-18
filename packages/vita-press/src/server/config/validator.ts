@@ -27,6 +27,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLang(config)
+  validateLangDirs(config)
   validateMarkdownIt(config)
   validateDts(config)
   validatePlugins(config, 'plugins')
@@ -183,24 +184,31 @@ function validateDirConfig(dirConfig: PageDirOptions, fieldName: string, root: s
 function validateLang(config: UserConfig): void {
   if (config.lang === undefined) return
 
-  if (typeof config.lang === 'string') {
-    return
+  if (typeof config.lang !== 'string') {
+    throw new ConfigValidationError(`lang 必须是字符串类型，当前类型: ${typeof config.lang}`)
+  }
+}
+
+/**
+ * 验证语言目录配置
+ *
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} 语言目录配置无效时抛出
+ */
+function validateLangDirs(config: UserConfig): void {
+  if (config.langDirs === undefined) return
+
+  if (!Array.isArray(config.langDirs)) {
+    throw new ConfigValidationError(`langDirs 必须是数组类型，当前类型: ${typeof config.langDirs}`)
   }
 
-  if (Array.isArray(config.lang)) {
-    for (let i = 0; i < config.lang.length; i++) {
-      if (typeof config.lang[i] !== 'string') {
-        throw new ConfigValidationError(
-          `lang[${i}] 必须是字符串类型，当前类型: ${typeof config.lang[i]}`
-        )
-      }
+  for (let i = 0; i < config.langDirs.length; i++) {
+    if (typeof config.langDirs[i] !== 'string') {
+      throw new ConfigValidationError(
+        `langDirs[${i}] 必须是字符串类型，当前类型: ${typeof config.langDirs[i]}`
+      )
     }
-    return
   }
-
-  throw new ConfigValidationError(
-    `lang 必须是字符串或字符串数组类型，当前类型: ${typeof config.lang}`
-  )
 }
 
 /**

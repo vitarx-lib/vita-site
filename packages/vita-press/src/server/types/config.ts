@@ -43,6 +43,15 @@ export interface MarkdownItOptions {
 }
 export interface SiteOptions {
   /**
+   * 网站默认语言
+   *
+   * 文档或页面中通过配置定义的lang优先级高于此配置，
+   * 其次如果文档处于多语言映射目录下，则优先使用文档语言。
+   *
+   * @default 'zh-CN'
+   */
+  lang?: string
+  /**
    * 网站标题
    *
    * @default ''
@@ -75,7 +84,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
   /**
    * 默认语言
    *
-   * 如果文档支持多语言，则可以传入数组。
+   * 如果文档支持多语言，则将docs目录下的语言目录名称传入。
    *
    * @example
    * ```ts
@@ -83,13 +92,13 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    * // docs/zh-CN/index.md
    * // docs/en-US/index.md
    * {
-   *  lang: ['zh-CN', 'en-US']
+   *  langDirs: ['zh-CN', 'en-US']
    * }
    * ```
    *
-   * @default 'zh-CN'
+   * @default []
    */
-  lang?: string | string[]
+  langDirs?: string[]
   /**
    * 文档目录
    *
