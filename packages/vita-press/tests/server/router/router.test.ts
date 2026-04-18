@@ -75,6 +75,7 @@ function createMockApp(options: {
     description: '',
     keywords: '',
     lang: options.languages || 'zh-CN',
+    langDirs: [],
     docDir: docDirConfig,
     pageDirs:
       options.pageDirs?.map(p => ({

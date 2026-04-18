@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -45,6 +45,8 @@ function createMockApp(
   root: string
   config: ResolvedConfig
   plugins: VitaPressPlugin[]
+  defaultLang: string
+  langPathMap: Record<string, string>
 } {
   const defaultConfig: ResolvedConfig = {
     title: '',
@@ -56,6 +58,7 @@ function createMockApp(
     markdownIt: {},
     dts: false,
     lang: 'zh-CN',
+    langDirs: [],
     debug: false,
     docDir: { dir: 'docs' },
     pageDirs: [],
@@ -64,10 +67,21 @@ function createMockApp(
     ...options
   } as ResolvedConfig
 
+  const defaultLang = defaultConfig.lang || 'zh-CN'
+  const langPathMap: Record<string, string> = {}
+  if (Array.isArray(defaultConfig.langDirs) && defaultConfig.langDirs.length) {
+    const docDirPath = join(root, defaultConfig.docDir.dir)
+    defaultConfig.langDirs.forEach(lang => {
+      langPathMap[join(docDirPath, lang)] = lang
+    })
+  }
+
   return {
     root,
     config: defaultConfig,
-    plugins: []
+    plugins: [],
+    defaultLang,
+    langPathMap
   }
 }
 
@@ -162,7 +176,7 @@ describe('MdParser', () => {
 
     it('应支持多语言配置并根据路径自动推断语言', () => {
       const multiLangApp = createMockApp(tempDir, {
-        lang: ['zh-CN', 'en-US'],
+        langDirs: ['zh-CN', 'en-US'],
         docDir: { dir: 'docs' }
       })
       const multiLangParser = new MdParser(md, multiLangApp as any)
@@ -186,7 +200,7 @@ describe('MdParser', () => {
 
     it('应使用默认语言当路径不匹配任何语言目录时', () => {
       const multiLangApp = createMockApp(tempDir, {
-        lang: ['zh-CN', 'en-US'],
+        langDirs: ['zh-CN', 'en-US'],
         docDir: { dir: 'docs' }
       })
       const multiLangParser = new MdParser(md, multiLangApp as any)
@@ -204,7 +218,7 @@ describe('MdParser', () => {
 
     it('frontmatter 中指定的语言应覆盖自动推断', () => {
       const multiLangApp = createMockApp(tempDir, {
-        lang: ['zh-CN', 'en-US'],
+        langDirs: ['zh-CN', 'en-US'],
         docDir: { dir: 'docs' }
       })
       const multiLangParser = new MdParser(md, multiLangApp as any)
@@ -335,7 +349,7 @@ describe('MdParser', () => {
       parser.clearCache()
 
       const cacheDir = join(tempDir, cacheDirPath)
-      const files = existsSync(cacheDir) ? require('fs').readdirSync(cacheDir) : []
+      const files = existsSync(cacheDir) ? readdirSync(cacheDir) : []
       expect(files.length).toBe(0)
     })
 

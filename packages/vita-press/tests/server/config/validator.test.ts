@@ -192,23 +192,33 @@ describe('validateConfig', () => {
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应接受数组类型的 lang', () => {
-      const config: UserConfig = { lang: ['zh-CN', 'en-US'] }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应拒绝非字符串或数组类型的 lang', () => {
+    it('应拒绝非字符串类型的 lang', () => {
       const config = { lang: 123 }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'lang 必须是字符串或字符串数组类型'
+        'lang 必须是字符串类型'
+      )
+    })
+  })
+
+  describe('langDirs 配置验证', () => {
+    it('应接受数组类型的 langDirs', () => {
+      const config: UserConfig = { langDirs: ['zh-CN', 'en-US'] }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非数组类型的 langDirs', () => {
+      const config = { langDirs: 'zh-CN' }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'langDirs 必须是数组类型'
       )
     })
 
-    it('应拒绝 lang 数组中包含非字符串元素', () => {
-      const config = { lang: ['zh-CN', 123] }
+    it('应拒绝 langDirs 数组中包含非字符串元素', () => {
+      const config = { langDirs: ['zh-CN', 123] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('lang[1] 必须是字符串类型')
+      expect(() => validateConfig(config as any, tempDir)).toThrow('langDirs[1] 必须是字符串类型')
     })
   })
 

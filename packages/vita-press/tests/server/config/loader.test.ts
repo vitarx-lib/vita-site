@@ -102,7 +102,8 @@ describe('loadUserConfig', () => {
         `export default {
           title: 'Full Config',
           description: 'Test Description',
-          lang: ['zh-CN', 'en-US'],
+          lang: 'zh-CN',
+          langDirs: ['zh-CN', 'en-US'],
           injectHead: ['<link rel="stylesheet">'],
           injectBody: ['<script>test</script>']
         }`
@@ -111,7 +112,8 @@ describe('loadUserConfig', () => {
       const result = await loadUserConfig(tempDir)
       expect(result.config.title).toBe('Full Config')
       expect(result.config.description).toBe('Test Description')
-      expect(result.config.lang).toEqual(['zh-CN', 'en-US'])
+      expect(result.config.lang).toBe('zh-CN')
+      expect(result.config.langDirs).toEqual(['zh-CN', 'en-US'])
       expect(result.config.injectHead).toEqual(['<link rel="stylesheet">'])
       expect(result.config.injectBody).toEqual(['<script>test</script>'])
     })

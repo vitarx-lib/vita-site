@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
@@ -93,13 +93,11 @@ describe('CacheManager', () => {
       expect(cached).toBeUndefined()
     })
 
-    it('应持久化缓存到磁盘', async () => {
+    it('应持久化缓存到磁盘', () => {
       const filePath = 'docs/test.md'
       const content = '# Test Content'
 
       cacheManager.set(filePath, content, mockResult)
-
-      await new Promise(resolve => setTimeout(resolve, 100))
 
       const newManager = new CacheManager(tempDir)
       const cached = newManager.get(filePath, content)
@@ -107,20 +105,20 @@ describe('CacheManager', () => {
       expect(cached?.content).toBe(mockResult.content)
     })
 
-    it('缓存条目应包含正确的 filePath', async () => {
+    it('缓存条目应包含正确的 filePath', () => {
       const filePath = 'docs/api_test.md'
       const content = '# Test'
 
       cacheManager.set(filePath, content, mockResult)
 
-      await new Promise(resolve => setTimeout(resolve, 100))
+      //              await new Promise(resolve => setTimeout(resolve, 100))
 
       const cacheDir = join(tempDir, cacheDirPath)
       const files = readdirSync(cacheDir)
       expect(files.length).toBe(1)
 
       const cacheFile = join(cacheDir, files[0]!)
-      const entry = JSON.parse(require('fs').readFileSync(cacheFile, 'utf-8'))
+      const entry = JSON.parse(readFileSync(cacheFile, 'utf-8'))
       expect(entry.filePath).toBe(filePath)
     })
   })
@@ -135,7 +133,7 @@ describe('CacheManager', () => {
       const content = '# Test'
       cacheManager.set(filePath, content, mockResult)
 
-      await new Promise(resolve => setTimeout(resolve, 100))
+      //移除不必要的 setTimeout，因为缓存现在是同步写入的
 
       if (deleteSource) {
         rmSync(sourceFile)
@@ -186,15 +184,13 @@ describe('CacheManager', () => {
   })
 
   describe('clear', () => {
-    it('应清除所有缓存', async () => {
+    it('应清除所有缓存', () => {
       const filePath1 = 'docs/test1.md'
       const filePath2 = 'docs/test2.md'
       const content = '# Test'
 
       cacheManager.set(filePath1, content, mockResult)
       cacheManager.set(filePath2, content, mockResult)
-
-      await new Promise(resolve => setTimeout(resolve, 100))
 
       cacheManager.clear()
 
