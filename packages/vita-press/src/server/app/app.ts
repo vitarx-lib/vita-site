@@ -87,13 +87,11 @@ export class VitaPressApp {
       : existsSync(mainJsPath)
         ? mainJsPath
         : null
-    if (Array.isArray(this.config.lang)) {
-      this.defaultLang = this.config.lang[0] || 'zh-CN'
-      this.config.lang.forEach(lang => {
+    this.defaultLang = this.config.lang || 'zh-CN'
+    if (Array.isArray(this.config.langDirs) && this.config.langDirs.length) {
+      this.config.langDirs.forEach(lang => {
         this.langPathMap[path.resolve(this.docDirPath, lang)] = lang
       })
-    } else {
-      this.defaultLang = this.config.lang
     }
   }
   /**
