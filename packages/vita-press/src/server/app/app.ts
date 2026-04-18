@@ -1,17 +1,19 @@
 import MarkdownIt from 'markdown-it'
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
-import { VitaPressServerRouter } from '../router/index.js'
+import { VitaPressRouter } from '../router/index.js'
 import type { ResolvedConfig } from '../types/index.js'
 import type { VitaPressPlugin } from '../types/plugin.js'
 
-interface VitaPressAppOptions {
+export type CommandName = 'dev' | 'build' | 'preview'
+export interface VitaPressAppOptions {
   /** 根目录 */
   root: string
   /** 命令模式 */
-  command: 'serve' | 'build'
+  command: CommandName
   /**
    * MarkdownIt 实例
    */
@@ -30,11 +32,26 @@ interface VitaPressAppOptions {
  * VitaPress 应用实例
  */
 export class VitaPressApp {
-  public readonly docDirPath: string
   /**
    * 根目录
    */
   public readonly root: string
+  /**
+   * 文档目录路径
+   */
+  public readonly docDirPath: string
+  /**
+   * 客户端入口脚本路径
+   */
+  public readonly clientEntryPath: string | null
+  /**
+   * 默认语言
+   */
+  public readonly defaultLang: string
+  /**
+   * 语言目录映射
+   */
+  public readonly langPathMap: Record<string, string> = {}
   /**
    * 插件列表
    */
@@ -50,11 +67,11 @@ export class VitaPressApp {
   /**
    * 命令模式
    */
-  public readonly command: 'serve' | 'build'
+  public readonly command: CommandName
   /**
    * 路由器实例
    */
-  public readonly router: VitaPressServerRouter
+  public readonly router: VitaPressRouter
   private constructor(options: VitaPressAppOptions) {
     this.root = options.root
     this.command = options.command
@@ -63,12 +80,27 @@ export class VitaPressApp {
     this.mdParser = this.createMdParser(options.markdownIt)
     this.router = this.createRouter()
     this.docDirPath = path.resolve(this.root, options.config.docDir.dir)
+    const mainTsPath = path.resolve(this.root, '.vitapress/main.ts')
+    const mainJsPath = path.resolve(this.root, '.vitapress/main.js')
+    this.clientEntryPath = existsSync(mainTsPath)
+      ? mainTsPath
+      : existsSync(mainJsPath)
+        ? mainJsPath
+        : null
+    if (Array.isArray(this.config.lang)) {
+      this.defaultLang = this.config.lang[0] || 'zh-CN'
+      this.config.lang.forEach(lang => {
+        this.langPathMap[path.resolve(this.docDirPath, lang)] = lang
+      })
+    } else {
+      this.defaultLang = this.config.lang
+    }
   }
   /**
    * 是否为开发模式
    */
   get isDev(): boolean {
-    return this.command === 'serve'
+    return this.command === 'dev'
   }
   /**
    * 创建一个 MdParser 实例
@@ -82,8 +114,8 @@ export class VitaPressApp {
    * 创建一个 VitaPressServerRouter 实例
    * @private
    */
-  private createRouter(): VitaPressServerRouter {
-    return new VitaPressServerRouter(this)
+  private createRouter(): VitaPressRouter {
+    return new VitaPressRouter(this)
   }
   /**
    * 创建一个 VitaPressApp 实例
@@ -94,11 +126,12 @@ export class VitaPressApp {
    */
   static async create(
     root: string,
-    command: 'serve' | 'build',
+    command: CommandName,
     configFile?: string
   ): Promise<VitaPressApp> {
     const configManager = await ConfigManager.create(root, configFile)
     const markdownIt = await createMarkdownIt(configManager.config.markdownIt)
+
     const results: (void | Promise<void>)[] = []
     for (const plugin of configManager.plugins) {
       if (typeof plugin.markdown === 'function') {
