@@ -45,6 +45,10 @@ export class VitaPressApp {
    */
   public readonly clientEntryPath: string | null
   /**
+   * 缓存目录
+   */
+  public readonly cacheDir: string
+  /**
    * 默认语言
    */
   public readonly defaultLang: string
@@ -74,6 +78,7 @@ export class VitaPressApp {
   public readonly router: VitaPressRouter
   private constructor(options: VitaPressAppOptions) {
     this.root = options.root
+    this.cacheDir = path.resolve(this.root, '.vitapress/.cache')
     this.command = options.command
     this.config = Object.freeze(options.config)
     this.plugins = Object.freeze(options.plugins)
