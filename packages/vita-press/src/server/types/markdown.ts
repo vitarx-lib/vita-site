@@ -4,8 +4,8 @@ import type {
   PluginWithOptions,
   PluginWithParams
 } from 'markdown-it'
-import type { ShikiConfig } from '../markdown/plugins/shik.js'
 import type { TocTree } from '../markdown/plugins/tocTree.js'
+import type { ShikiConfig } from './shik.js'
 
 type PluginWithOptionsType<T> = {
   plugin: PluginWithOptions<T>

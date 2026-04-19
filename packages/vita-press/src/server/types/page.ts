@@ -6,7 +6,6 @@ import type { SiteOptions } from './config.js'
  * 页面元数据
  */
 export interface PageMetaData extends SiteOptions {
-  lang: string
   [key: string]: any
 }
 
