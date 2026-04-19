@@ -45,7 +45,7 @@ export class MdParser {
     this.md = md
     this.app = app
     this.injectCode = this.app.config.injectCode.length
-      ? this.app.config.injectCode.join('\n') + '\n'
+      ? Array.from(new Set(this.app.config.injectCode)).join('\n') + '\n'
       : ''
     const configHash = createHash('md5')
       .update(
@@ -128,7 +128,6 @@ export class MdParser {
     const injectCodeBlock = this.injectCode
 
     return `// 此文件由vita-press自动生成
-import { createView, builder } from 'vitarx'
 import { RouterLink } from 'vitarx-router'
 ${injectCodeBlock}
 definePage({
@@ -139,7 +138,7 @@ definePage({
  * @description ${meta.description}
  * @source ${filePath}
  */
-export default builder(() => (<article class="v-doc-content">${html}</article>))
+export default () => (<article class="v-doc-content">${html}</article>)
 `
   }
 
