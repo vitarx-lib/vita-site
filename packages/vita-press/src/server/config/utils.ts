@@ -76,7 +76,7 @@ export function mergeConfig<T = any>(
     if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
       result[key] = mergeConfig(targetValue, sourceValue)
     } else if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
-      defaults[key] = mergeTwoArrays(targetValue, sourceValue) as any
+      result[key] = mergeTwoArrays(targetValue, sourceValue) as any
     } else {
       // 数组 / 基本类型 / 其他对象：直接覆盖
       result[key] = sourceValue
