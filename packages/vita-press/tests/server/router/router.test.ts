@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ParsedNode, RouteNode } from 'vitarx-router/file-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { VitaPressApp } from '../../../src/server/app/index.js'
 import type { ResolvedConfig, VitaPressPlugin } from '../../../src/server/index.js'
-import type { MdParser, MdParseResult } from '../../../src/server/markdown/index.js'
+import { VitaPressApp } from '../../../src/server/index.js'
+import type { MdParser } from '../../../src/server/markdown/index.js'
 import { VitaPressRouter } from '../../../src/server/router/router.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
@@ -16,10 +16,7 @@ vi.mock('vitarx-router/file-router', async importOriginal => {
 })
 
 function createMockMdParser(): MdParser {
-  return {
-    parse: vi.fn().mockImplementation((filePath: string): MdParseResult => {
-      return {
-        content: `// 此文件由vita-press自动生成
+  const mockComponentCode = `// 此文件由vita-press自动生成
 import { builder } from 'vitarx'
 definePage({
   meta: {}
@@ -27,21 +24,17 @@ definePage({
 export default builder(() => {
   return <article class="v-doc-content">Mock MD Content</article>
 })
-`,
-        filePath,
-        meta: {
-          title: 'Mock Title',
-          description: 'Mock Description',
-          lang: 'zh-CN',
-          authors: [],
-          createdAt: '',
-          lastUpdateAt: '',
-          tocList: [],
-          relativePath: filePath
-        }
+`
+  return {
+    parse: vi.fn().mockImplementation((_filePath: string, _content?: string): string => {
+      return mockComponentCode
+    }),
+    cache: {
+      getCacheFilePath: (mdPath: string, ext: 'json' | 'jsx'): string => {
+        return `/mock/cache/${mdPath}.${ext}`
       }
-    })
-  } as any
+    }
+  } as unknown as MdParser
 }
 
 function createMockApp(options: {

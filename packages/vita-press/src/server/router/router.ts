@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { FileRouter, warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../app/index.js'
 
@@ -11,12 +12,22 @@ export class VitaPressRouter extends FileRouter {
     super({
       root: app.root,
       pages: [app.config.docDir, ...app.config.pageDirs],
-      importMode: 'lazy',
+      injectImports: [`import { lazy } from "vitarx"`],
+      importMode: ({ importPath, filePath }) => {
+        if (filePath.endsWith('.md')) {
+          const cachePath = app.mdParser.cache.getCacheFilePath(
+            path.relative(app.root, filePath),
+            'jsx'
+          )
+          return `lazy(() => import("${cachePath}"))`
+        }
+        return `lazy(() => import(${importPath}))`
+      },
       pathStrategy: 'kebab',
       dts: app.config.dts || false,
       transform: (content: string, file: string) => {
         if (file.endsWith('.md')) {
-          return app.mdParser.parse(file, content).content
+          return app.mdParser.parse(file, content)
         }
         return content
       },
