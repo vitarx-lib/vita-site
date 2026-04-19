@@ -24,16 +24,14 @@ export interface PluginHooks {
   markdown?: (md: MarkdownIt) => void | Promise<void>
   /**
    * 在解析 Markdown 文件之前调用
-   * @param file - 文件路径
    * @param content - 文件内容
-   * @param app - VitaPress 服务端应用实例
+   * @param file - 文件路径
    * @returns {string | void} - 返回修改后的内容或 void
    */
-  beforeParse?: (file: string, content: string) => string | void
+  beforeParse?: (content: string, file: string) => string | void
   /**
    * 在解析 Markdown 文件之后调用
    * @param res - 解析结果
-   * @param app - VitaPress 服务端应用实例
    * @returns {MdParseResult | void} - 返回解析结果（自动合并）或 void
    */
   afterParse?: (res: MdParseResult) => MdParseResult | void
