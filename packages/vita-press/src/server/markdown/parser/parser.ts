@@ -16,8 +16,8 @@ import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
  * 包含解析后的组件代码、文件路径和文档元数据
  */
 export interface MdParseResult {
-  /** 生成的 Vitarx 组件代码 */
-  content: string
+  /** 文档转换后的html内容 */
+  html: string
   /** 源文件的绝对路径 */
   filePath: string
   /** 文档页面的元数据信息 */
@@ -29,22 +29,12 @@ export interface MdParseResult {
  *
  * 负责将 Markdown 文件转换为可执行的 Vitarx 组件代码。
  * 内置缓存机制，避免重复解析相同内容，提升构建性能。
- *
- * @example
- * ```ts
- * const parser = new MdParser(markdownIt, {
- *   root: process.cwd(),
- *   injectCode: ['import { customDirective } from "./directives"']
- * })
- * parser.initCache()
- * const result = parser.parse('/project/docs/guide.md', markdownContent)
- * ```
  */
 export class MdParser {
-  private md: MarkdownIt
   private readonly app: VitaPressApp
   private readonly injectCode: string
-  public readonly cacheManager: CacheManager
+  public readonly md: MarkdownIt
+  public readonly cache: CacheManager
   /**
    * 创建 Markdown 解析器实例
    *
@@ -54,46 +44,29 @@ export class MdParser {
   constructor(md: MarkdownIt, app: VitaPressApp) {
     this.md = md
     this.app = app
+    this.injectCode = this.app.config.injectCode.length
+      ? this.app.config.injectCode.join('\n') + '\n'
+      : ''
     const configHash = createHash('md5')
       .update(
         JSON.stringify({
           root: app.root,
           defaultLang: app.defaultLang,
           languages: app.langPathMap,
-          injectCode: this.app.config.injectCode
+          injectCode: app.config.injectCode
         })
       )
       .digest('hex')
-    this.cacheManager = new CacheManager(this.app.root, configHash)
-    this.injectCode = this.app.config.injectCode.length
-      ? this.app.config.injectCode.join('\n') + '\n'
-      : ''
+    this.cache = new CacheManager(app.cacheDir, configHash)
   }
-
-  /**
-   * 清理失效缓存
-   *
-   * @returns 清理的缓存条目数量
-   */
-  pruneCache(): number {
-    return this.cacheManager.prune()
-  }
-
-  /**
-   * 清理所有缓存
-   */
-  clearCache(): void {
-    this.cacheManager.clear()
-  }
-
   /**
    * 转换markdown内容
    *
    * @param filePath - 文件路径
    * @param [content] - Markdown 内容
-   * @returns 转换后的结果, 包含生成的 Vitarx 组件代码、文件路径和文档元数据
+   * @returns {string} - 生成的 Vitarx 组件代码
    */
-  parse(filePath: string, content?: string): MdParseResult {
+  parse(filePath: string, content?: string): string {
     try {
       if (typeof content !== 'string') content = readFileSync(filePath, 'utf-8')
     } catch (e) {
@@ -101,13 +74,14 @@ export class MdParser {
     }
     const relativePath = path.relative(this.app.root, filePath)
 
-    const cached = this.cacheManager.get(relativePath, content)
+    const cached = this.cache.get(relativePath, content)
     if (cached) return cached
     content = this.beforeParse(filePath, content)
     let result = this.transform(filePath, content)
     result = this.afterParse(result)
-    this.cacheManager.set(relativePath, content, result)
-    return result
+    const componentCode = this.generateComponent(result)
+    this.cache.set(relativePath, content, componentCode)
+    return componentCode
   }
 
   /**
@@ -116,7 +90,7 @@ export class MdParser {
    * @param content
    * @private
    */
-  private transform(filePath: string, content: string): MdParseResult {
+  public transform(filePath: string, content: string): MdParseResult {
     const { data: frontmatter, content: markdownContent } = parseFrontMatter(content)
     const gitInfo = getCommitInfo(filePath)
     const env: MarkdownParseEnvContext = {
@@ -136,33 +110,21 @@ export class MdParser {
       ...frontmatter
     }
     if (!docPageMetaData.lang) docPageMetaData.lang = this.parseLanguage(filePath)
-    const componentCode = this.generateComponent(html, docPageMetaData, filePath)
     return {
-      content: componentCode,
+      html: html,
       filePath,
       meta: docPageMetaData
     }
   }
 
   /**
-   * 解析文件语言
-   *
-   * @param filePath
-   * @private
-   */
-  private parseLanguage(filePath: string): string {
-    const lang = Object.keys(this.app.langPathMap).find(key => filePath.startsWith(key))
-    return lang ? this.app.langPathMap[lang]! : this.app.defaultLang
-  }
-
-  /**
    * 生成组件代码
-   * @param html
-   * @param meta
-   * @param filePath
-   * @private
+   *
+   * @param parseResult - 解析结果
+   * @returns 组件代码
    */
-  private generateComponent(html: string, meta: DocPageMetaData, filePath: string): string {
+  public generateComponent(parseResult: MdParseResult): string {
+    const { html: html, meta, filePath } = parseResult
     const injectCodeBlock = this.injectCode
 
     return `// 此文件由vita-press自动生成
@@ -182,6 +144,17 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
   }
 
   /**
+   * 解析文件语言
+   *
+   * @param filePath
+   * @private
+   */
+  private parseLanguage(filePath: string): string {
+    const lang = Object.keys(this.app.langPathMap).find(key => filePath.startsWith(key))
+    return lang ? this.app.langPathMap[lang]! : this.app.defaultLang
+  }
+
+  /**
    * 内容预处理
    *
    * @param filePath
@@ -192,7 +165,7 @@ export default builder(() => (<article class="v-doc-content">${html}</article>))
     for (const plugin of this.app.plugins) {
       if (typeof plugin.beforeParse === 'function') {
         try {
-          const result = plugin.beforeParse(filePath, content)
+          const result = plugin.beforeParse(content, filePath)
           if (result) content = result
         } catch (e) {
           warn(`Plugin ${plugin.name} beforeParse error:`, e)
