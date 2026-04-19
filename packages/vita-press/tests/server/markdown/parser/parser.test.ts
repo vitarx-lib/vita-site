@@ -124,7 +124,6 @@ describe('MdParser', () => {
       const result = parser.parse(filePath, content)
 
       expect(result).toContain('// 此文件由vita-press自动生成')
-      expect(result).toContain('import { createView, builder }')
       expect(result).toContain('import { RouterLink }')
       expect(result).toContain('<article class="v-doc-content">')
       expect(result).toContain('<h1>Hello World</h1>')
@@ -161,7 +160,7 @@ describe('MdParser', () => {
       const result = parser.parse(filePath, content)
 
       expect(result).toContain('definePage({')
-      expect(result).toContain('export default builder(() => (')
+      expect(result).toContain('export default () => (')
       expect(result).toContain('@title')
       expect(result).toContain('@description')
       expect(result).toContain('@source')
