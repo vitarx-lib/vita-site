@@ -1,27 +1,12 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { CacheManager, DEFAULT_CACHE_DIR } from '../../../../src/server/markdown/cache/manager.js'
-import type { MdParseResult } from '../../../../src/server/markdown/index.js'
+import { CacheManager } from '../../../../src/server/markdown/cache/manager.js'
 
 describe('CacheManager', () => {
   let tempDir: string
   let cacheManager: CacheManager
-  const cacheDirPath = DEFAULT_CACHE_DIR
-
-  const mockResult: MdParseResult = {
-    content: 'export default function() { return "test" }',
-    filePath: '/project/docs/test.md',
-    meta: {
-      authors: ['test-author'],
-      createdAt: '2024-01-01T00:00:00+08:00',
-      lastUpdateAt: '2024-01-01T00:00:00+08:00',
-      tocList: [],
-      relativePath: 'docs/test.md',
-      lang: 'zh-CN'
-    }
-  }
 
   beforeEach(() => {
     tempDir = join(tmpdir(), `cache-test-${Date.now()}`)
@@ -68,21 +53,22 @@ describe('CacheManager', () => {
     it('应能设置和获取缓存', () => {
       const filePath = 'docs/test.md'
       const content = '# Test Content'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, mockResult)
+      cacheManager.set(filePath, content, componentCode)
 
       const cached = cacheManager.get(filePath, content)
       expect(cached).toBeDefined()
-      expect(cached?.content).toBe(mockResult.content)
-      expect(cached?.meta.relativePath).toBe(mockResult.meta.relativePath)
+      expect(cached).toBe(componentCode)
     })
 
     it('内容变化时应返回 undefined', () => {
       const filePath = 'docs/test.md'
       const content1 = '# Test Content 1'
       const content2 = '# Test Content 2'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content1, mockResult)
+      cacheManager.set(filePath, content1, componentCode)
 
       const cached = cacheManager.get(filePath, content2)
       expect(cached).toBeUndefined()
@@ -96,90 +82,45 @@ describe('CacheManager', () => {
     it('应持久化缓存到磁盘', () => {
       const filePath = 'docs/test.md'
       const content = '# Test Content'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, mockResult)
+      cacheManager.set(filePath, content, componentCode)
 
       const newManager = new CacheManager(tempDir)
       const cached = newManager.get(filePath, content)
       expect(cached).toBeDefined()
-      expect(cached?.content).toBe(mockResult.content)
+      expect(cached).toBe(componentCode)
     })
 
-    it('缓存条目应包含正确的 filePath', () => {
+    it('缓存条目应包含正确的 hash 和 componentPath', () => {
       const filePath = 'docs/api_test.md'
       const content = '# Test'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, mockResult)
+      cacheManager.set(filePath, content, componentCode)
 
-      //              await new Promise(resolve => setTimeout(resolve, 100))
+      const jsonFilePath = cacheManager.getCacheFilePath(filePath, 'json')
+      expect(existsSync(jsonFilePath)).toBe(true)
 
-      const cacheDir = join(tempDir, cacheDirPath)
-      const files = readdirSync(cacheDir)
-      expect(files.length).toBe(1)
-
-      const cacheFile = join(cacheDir, files[0]!)
-      const entry = JSON.parse(readFileSync(cacheFile, 'utf-8'))
-      expect(entry.filePath).toBe(filePath)
+      const entry = JSON.parse(readFileSync(jsonFilePath, 'utf-8'))
+      expect(entry.hash).toBe(cacheManager.computeHash(content))
+      expect(entry.mdPath).toBe(filePath)
+      expect(entry.componentPath).toBeDefined()
+      expect(entry.componentPath.endsWith('.jsx')).toBe(true)
     })
-  })
 
-  describe('prune', () => {
-    const setupCacheWithSourceFile = async (deleteSource = false) => {
-      const sourceFile = join(tempDir, 'docs', 'test.md')
-      mkdirSync(join(tempDir, 'docs'), { recursive: true })
-      writeFileSync(sourceFile, '# Test')
-
+    it('应正确读取组件缓存文件', () => {
       const filePath = 'docs/test.md'
       const content = '# Test'
-      cacheManager.set(filePath, content, mockResult)
+      const componentCode = 'export default function() { return "component" }'
 
-      //移除不必要的 setTimeout，因为缓存现在是同步写入的
+      cacheManager.set(filePath, content, componentCode)
 
-      if (deleteSource) {
-        rmSync(sourceFile)
-      }
+      const jsonFilePath = cacheManager.getCacheFilePath(filePath, 'json')
+      const entry = JSON.parse(readFileSync(jsonFilePath, 'utf-8'))
 
-      return { filePath, content }
-    }
-
-    it('应删除源文件不存在的缓存', async () => {
-      const { filePath, content } = await setupCacheWithSourceFile(true)
-
-      expect(cacheManager.prune()).toBe(1)
-      expect(cacheManager.get(filePath, content)).toBeUndefined()
-    })
-
-    it('应保留源文件存在的缓存', async () => {
-      const { filePath, content } = await setupCacheWithSourceFile(false)
-
-      expect(cacheManager.prune()).toBe(0)
-      expect(cacheManager.get(filePath, content)).toBeDefined()
-    })
-
-    it('应删除无法解析的缓存文件', async () => {
-      const cacheDir = join(tempDir, cacheDirPath)
-      const invalidCacheFile = join(cacheDir, 'invalid.json')
-      writeFileSync(invalidCacheFile, 'invalid json content')
-
-      const prunedCount = cacheManager.prune()
-      expect(prunedCount).toBe(1)
-      expect(existsSync(invalidCacheFile)).toBe(false)
-    })
-
-    it('应删除缺少 filePath 的缓存文件', async () => {
-      const cacheDir = join(tempDir, cacheDirPath)
-      const invalidCacheFile = join(cacheDir, 'no-path.json')
-      writeFileSync(invalidCacheFile, JSON.stringify({ hash: 'abc', result: mockResult }))
-
-      const prunedCount = cacheManager.prune()
-      expect(prunedCount).toBe(1)
-      expect(existsSync(invalidCacheFile)).toBe(false)
-    })
-
-    it('缓存目录不存在时应返回 0', () => {
-      rmSync(join(tempDir, cacheDirPath), { recursive: true, force: true })
-      const prunedCount = cacheManager.prune()
-      expect(prunedCount).toBe(0)
+      const componentContent = readFileSync(entry.componentPath, 'utf-8')
+      expect(componentContent).toBe(componentCode)
     })
   })
 
@@ -188,34 +129,89 @@ describe('CacheManager', () => {
       const filePath1 = 'docs/test1.md'
       const filePath2 = 'docs/test2.md'
       const content = '# Test'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath1, content, mockResult)
-      cacheManager.set(filePath2, content, mockResult)
+      cacheManager.set(filePath1, content, componentCode)
+      cacheManager.set(filePath2, content, componentCode)
 
       cacheManager.clear()
 
-      expect(cacheManager.get(filePath1, content)).toBeUndefined()
-      expect(cacheManager.get(filePath2, content)).toBeUndefined()
+      expect(existsSync(cacheManager.getCacheFilePath(filePath1, 'json'))).toBe(false)
+      expect(existsSync(cacheManager.getCacheFilePath(filePath2, 'json'))).toBe(false)
     })
 
     it('应删除磁盘上的缓存文件', async () => {
       const filePath = 'docs/test.md'
       const content = '# Test'
+      const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, mockResult)
+      cacheManager.set(filePath, content, componentCode)
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
       cacheManager.clear()
 
-      const cacheDir = join(tempDir, cacheDirPath)
-      const files = existsSync(cacheDir) ? readdirSync(cacheDir) : []
-      expect(files.length).toBe(0)
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'json'))).toBe(false)
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'jsx'))).toBe(false)
     })
 
     it('缓存目录不存在时不应报错', () => {
-      rmSync(join(tempDir, cacheDirPath), { recursive: true, force: true })
+      rmSync(tempDir, { recursive: true, force: true })
       expect(() => cacheManager.clear()).not.toThrow()
+    })
+  })
+
+  describe('remove', () => {
+    it('应删除指定文件的缓存', () => {
+      const filePath = 'docs/test.md'
+      const content = '# Test'
+      const componentCode = 'export default function() { return "test" }'
+
+      cacheManager.set(filePath, content, componentCode)
+      expect(cacheManager.get(filePath, content)).toBe(componentCode)
+
+      cacheManager.remove(filePath)
+      expect(cacheManager.get(filePath, content)).toBeUndefined()
+    })
+
+    it('删除不存在的缓存时不应报错', () => {
+      expect(() => cacheManager.remove('docs/not-exist.md')).not.toThrow()
+    })
+
+    it('应同时删除 json 和 jsx 缓存文件', () => {
+      const filePath = 'docs/test.md'
+      const content = '# Test'
+      const componentCode = 'export default function() { return "test" }'
+
+      cacheManager.set(filePath, content, componentCode)
+
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'json'))).toBe(true)
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'jsx'))).toBe(true)
+
+      cacheManager.remove(filePath)
+
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'json'))).toBe(false)
+      expect(existsSync(cacheManager.getCacheFilePath(filePath, 'jsx'))).toBe(false)
+    })
+  })
+
+  describe('getCacheFilePath', () => {
+    it('应正确生成 json 缓存文件路径', () => {
+      const filePath = 'docs/test.md'
+      const result = cacheManager.getCacheFilePath(filePath, 'json')
+      expect(result).toBe(join(tempDir, `${filePath}.json`))
+    })
+
+    it('应正确生成 jsx 缓存文件路径', () => {
+      const filePath = 'docs/test.md'
+      const result = cacheManager.getCacheFilePath(filePath, 'jsx')
+      expect(result).toBe(join(tempDir, `${filePath}.jsx`))
+    })
+  })
+
+  describe('cacheDir', () => {
+    it('应暴露 cacheDir 属性', () => {
+      expect(cacheManager.cacheDir).toBe(tempDir)
     })
   })
 })
