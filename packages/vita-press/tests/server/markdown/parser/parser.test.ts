@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it'
-import { existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -47,6 +47,7 @@ function createMockApp(
   plugins: VitaPressPlugin[]
   defaultLang: string
   langPathMap: Record<string, string>
+  cacheDir: string
 } {
   const defaultConfig: ResolvedConfig = {
     title: '',
@@ -76,12 +77,16 @@ function createMockApp(
     })
   }
 
+  const cacheDir = join(root, '.vitapress', '.cache', 'docs')
+  mkdirSync(cacheDir, { recursive: true })
+
   return {
     root,
     config: defaultConfig,
     plugins: [],
     defaultLang,
-    langPathMap
+    langPathMap,
+    cacheDir
   }
 }
 
@@ -90,7 +95,6 @@ describe('MdParser', () => {
   let md: MarkdownIt
   let parser: MdParser
   let mockApp: ReturnType<typeof createMockApp>
-  const cacheDirPath = '.vitapress/.cache/docs'
 
   const createMarkdownFile = (relativePath: string, content: string): string => {
     const fullPath = join(tempDir, relativePath)
@@ -119,13 +123,11 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.content).toContain('// 此文件由vita-press自动生成')
-      expect(result.content).toContain('import { createView, builder }')
-      expect(result.content).toContain('import { RouterLink }')
-      expect(result.content).toContain('<article class="v-doc-content">')
-      expect(result.content).toContain('<h1>Hello World</h1>')
-      expect(result.meta.relativePath).toBe('docs/test.md')
-      expect(result.filePath).toBe(filePath)
+      expect(result).toContain('// 此文件由vita-press自动生成')
+      expect(result).toContain('import { createView, builder }')
+      expect(result).toContain('import { RouterLink }')
+      expect(result).toContain('<article class="v-doc-content">')
+      expect(result).toContain('<h1>Hello World</h1>')
     })
 
     it('应正确处理 frontmatter', () => {
@@ -134,7 +136,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.meta.title).toBe('Test')
+      expect(result).toContain('"title":"Test"')
     })
 
     it('应注入自定义代码', () => {
@@ -148,8 +150,8 @@ describe('MdParser', () => {
 
       const result = customParser.parse(filePath, content)
 
-      expect(result.content).toContain('import { Button } from "components"')
-      expect(result.content).toContain('import { Card } from "ui"')
+      expect(result).toContain('import { Button } from "components"')
+      expect(result).toContain('import { Card } from "ui"')
     })
 
     it('应生成正确的组件结构', () => {
@@ -158,11 +160,11 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.content).toContain('definePage({')
-      expect(result.content).toContain('export default builder(() => (')
-      expect(result.content).toContain('@title')
-      expect(result.content).toContain('@description')
-      expect(result.content).toContain('@source')
+      expect(result).toContain('definePage({')
+      expect(result).toContain('export default builder(() => (')
+      expect(result).toContain('@title')
+      expect(result).toContain('@description')
+      expect(result).toContain('@source')
     })
 
     it('应正确设置默认语言', () => {
@@ -171,7 +173,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.meta.lang).toBe('zh-CN')
+      expect(result).toContain('"lang":"zh-CN"')
     })
 
     it('应支持多语言配置并根据路径自动推断语言', () => {
@@ -194,8 +196,8 @@ describe('MdParser', () => {
       const zhResult = multiLangParser.parse(zhFilePath, '# 中文测试')
       const enResult = multiLangParser.parse(enFilePath, '# English Test')
 
-      expect(zhResult.meta.lang).toBe('zh-CN')
-      expect(enResult.meta.lang).toBe('en-US')
+      expect(zhResult).toContain('"lang":"zh-CN"')
+      expect(enResult).toContain('"lang":"en-US"')
     })
 
     it('应使用默认语言当路径不匹配任何语言目录时', () => {
@@ -213,7 +215,7 @@ describe('MdParser', () => {
 
       const result = multiLangParser.parse(filePath, '# Test')
 
-      expect(result.meta.lang).toBe('zh-CN')
+      expect(result).toContain('"lang":"zh-CN"')
     })
 
     it('frontmatter 中指定的语言应覆盖自动推断', () => {
@@ -231,7 +233,7 @@ describe('MdParser', () => {
 
       const result = multiLangParser.parse(zhFilePath, '---\nlang: en-US\n---\n# Test')
 
-      expect(result.meta.lang).toBe('en-US')
+      expect(result).toContain('"lang":"en-US"')
     })
 
     it('应正确处理不存在的文件路径', () => {
@@ -240,8 +242,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(nonExistentPath, content)
 
-      expect(result.content).toContain('<h1>Test Content</h1>')
-      expect(result.filePath).toBe(nonExistentPath)
+      expect(result).toContain('<h1>Test Content</h1>')
     })
 
     it('应在未提供内容时从文件读取', () => {
@@ -250,7 +251,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath)
 
-      expect(result.content).toContain('<h1>File Content</h1>')
+      expect(result).toContain('<h1>File Content</h1>')
     })
 
     it('应在文件读取失败时抛出错误', () => {
@@ -268,7 +269,7 @@ describe('MdParser', () => {
       const result1 = parser.parse(filePath, content)
       const result2 = parser.parse(filePath, content)
 
-      expect(result1.content).toBe(result2.content)
+      expect(result1).toBe(result2)
     })
 
     it('内容变化时应重新转换', () => {
@@ -279,8 +280,8 @@ describe('MdParser', () => {
       const result1 = parser.parse(filePath, content1)
       const result2 = parser.parse(filePath, content2)
 
-      expect(result1.content).not.toBe(result2.content)
-      expect(result2.content).toContain('Updated Test')
+      expect(result1).not.toBe(result2)
+      expect(result2).toContain('Updated Test')
     })
 
     it('不同配置应生成不同的缓存', () => {
@@ -296,49 +297,12 @@ describe('MdParser', () => {
       const result1 = parser1.parse(filePath, content)
       const result2 = parser2.parse(filePath, content)
 
-      expect(result1.content).toContain('import A from "a"')
-      expect(result2.content).toContain('import B from "b"')
+      expect(result1).toContain('import A from "a"')
+      expect(result2).toContain('import B from "b"')
     })
   })
 
-  describe('pruneCache', () => {
-    it('应清理失效缓存', () => {
-      const filePath = createMarkdownFile('docs/test.md', '# Test')
-      const content = '# Test'
-
-      parser.parse(filePath, content)
-
-      rmSync(filePath)
-
-      const prunedCount = parser.pruneCache()
-      expect(prunedCount).toBe(1)
-    })
-
-    it('应保留有效的缓存', () => {
-      const filePath = createMarkdownFile('docs/test.md', '# Test')
-      const content = '# Test'
-
-      parser.parse(filePath, content)
-
-      const prunedCount = parser.pruneCache()
-      expect(prunedCount).toBe(0)
-    })
-
-    it('应正确处理多个文件的缓存清理', () => {
-      const filePath1 = createMarkdownFile('docs/test1.md', '# Test 1')
-      const filePath2 = createMarkdownFile('docs/test2.md', '# Test 2')
-
-      parser.parse(filePath1, '# Test 1')
-      parser.parse(filePath2, '# Test 2')
-
-      rmSync(filePath1)
-
-      const prunedCount = parser.pruneCache()
-      expect(prunedCount).toBeGreaterThanOrEqual(1)
-    })
-  })
-
-  describe('clearCache', () => {
+  describe('cache.clear', () => {
     it('应清除所有缓存', () => {
       const filePath1 = createMarkdownFile('docs/test1.md', '# Test 1')
       const filePath2 = createMarkdownFile('docs/test2.md', '# Test 2')
@@ -346,30 +310,33 @@ describe('MdParser', () => {
       parser.parse(filePath1, '# Test 1')
       parser.parse(filePath2, '# Test 2')
 
-      parser.clearCache()
+      parser.cache.clear()
 
-      const cacheDir = join(tempDir, cacheDirPath)
-      const files = existsSync(cacheDir) ? readdirSync(cacheDir) : []
-      expect(files.length).toBe(0)
+      expect(existsSync(parser.cache.getCacheFilePath('docs/test1.md', 'json'))).toBe(false)
+      expect(existsSync(parser.cache.getCacheFilePath('docs/test2.md', 'json'))).toBe(false)
     })
 
     it('清除后重新解析应生成新缓存', () => {
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
       parser.parse(filePath, '# Test')
-      parser.clearCache()
+      parser.cache.clear()
 
       const result = parser.parse(filePath, '# Test')
-      expect(result.content).toContain('<h1>Test</h1>')
+      expect(result).toContain('<h1>Test</h1>')
     })
   })
 
-  describe('cacheManager', () => {
-    it('应暴露 cacheManager 实例', () => {
-      expect(parser.cacheManager).toBeDefined()
-      expect(parser.cacheManager.computeHash).toBeDefined()
-      expect(parser.cacheManager.get).toBeDefined()
-      expect(parser.cacheManager.set).toBeDefined()
+  describe('cache 属性', () => {
+    it('应暴露 cache 实例', () => {
+      expect(parser.cache).toBeDefined()
+      expect(parser.cache.computeHash).toBeDefined()
+      expect(parser.cache.get).toBeDefined()
+      expect(parser.cache.set).toBeDefined()
+    })
+
+    it('应暴露 cache.cacheDir 属性', () => {
+      expect(parser.cache.cacheDir).toBe(mockApp.cacheDir)
     })
   })
 
@@ -380,9 +347,9 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.meta.authors).toEqual(['test-author'])
-      expect(result.meta.createdAt).toBe('2024-01-01T00:00:00+08:00')
-      expect(result.meta.lastUpdateAt).toBe('2024-01-01T00:00:00+08:00')
+      expect(result).toContain('"authors":["test-author"]')
+      expect(result).toContain('"createdAt":"2024-01-01T00:00:00+08:00"')
+      expect(result).toContain('"lastUpdateAt":"2024-01-01T00:00:00+08:00"')
     })
 
     it('应正确设置相对路径', () => {
@@ -391,7 +358,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.meta.relativePath).toBe('docs/guide/getting-started.md')
+      expect(result).toContain('"relativePath":"docs/guide/getting-started.md"')
     })
 
     it('frontmatter 应覆盖默认元数据', () => {
@@ -403,14 +370,14 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result.meta.title).toBe('Custom Title')
-      expect(result.meta.description).toBe('Custom Description')
+      expect(result).toContain('"title":"Custom Title"')
+      expect(result).toContain('"description":"Custom Description"')
     })
   })
 
   describe('插件集成', () => {
     it('应调用插件的 beforeParse 钩子', () => {
-      const beforeParseMock = vi.fn((_filePath: string, content: string) => {
+      const beforeParseMock = vi.fn((content: string, _filePath: string) => {
         return content.replace('# Test', '# Modified')
       })
 
@@ -427,7 +394,7 @@ describe('MdParser', () => {
 
       pluginParser.parse(filePath, '# Test')
 
-      expect(beforeParseMock).toHaveBeenCalledWith(filePath, '# Test')
+      expect(beforeParseMock).toHaveBeenCalledWith('# Test', filePath)
     })
 
     it('应调用插件的 afterParse 钩子', () => {
@@ -452,11 +419,11 @@ describe('MdParser', () => {
       const result = pluginParser.parse(filePath, '# Test')
 
       expect(afterParseMock).toHaveBeenCalled()
-      expect((result.meta as any).customField).toBe('custom-value')
+      expect(result).toContain('"customField":"custom-value"')
     })
 
     it('插件 beforeParse 返回空值时应保持原内容', () => {
-      const beforeParseMock = vi.fn((_file: string, _content: string): string | void => {
+      const beforeParseMock = vi.fn((_content: string, _file: string): string | void => {
         return
       })
 
@@ -473,7 +440,7 @@ describe('MdParser', () => {
 
       const result = pluginParser.parse(filePath, '# Test')
 
-      expect(result.content).toContain('<h1>Test</h1>')
+      expect(result).toContain('<h1>Test</h1>')
     })
 
     it('插件抛出错误时不应中断解析', async () => {
