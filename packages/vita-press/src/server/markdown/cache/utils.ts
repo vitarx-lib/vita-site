@@ -1,13 +1,19 @@
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
+
 /**
- * 将文件路径转换为缓存文件名
+ * 写入缓存文件
  *
- * @param filePath - 相对文件路径
- * @returns 缓存文件名
+ * 自动创建目录
  *
- * @example
- * pathToCacheFileName('docs/README.md') // 'docs_README.md.json'
- * pathToCacheFileName('docs/guide/getting-started.md') // 'docs_guide_getting-started.md.json'
+ * @param filePath
+ * @param content
  */
-export function pathToCacheFileName(filePath: string): string {
-  return filePath.replace(/[\/\\]/g, '_') + '.json'
+export function writeCacheFileSync(filePath: string, content: string) {
+  const dir = dirname(filePath)
+  if (!existsSync(dir)) {
+    // 创建目录
+    mkdirSync(dir, { recursive: true })
+  }
+  writeFileSync(filePath, content, 'utf-8')
 }

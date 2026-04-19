@@ -1,24 +1,14 @@
 import { createHash } from 'node:crypto'
-import {
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  unlinkSync,
-  writeFileSync
-} from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import { debug } from 'vitarx-router/file-router'
-import type { MdParseResult } from '../parser/parser.js'
-import { pathToCacheFileName } from './utils.js'
+import { writeCacheFileSync } from './utils.js'
 
-interface CacheEntry {
-  filePath: string
+interface EntryInfo {
   hash: string
-  result: MdParseResult
+  mdPath: string
+  componentPath: string
 }
-
-export const DEFAULT_CACHE_DIR = '.vitapress/.cache/docs'
 
 /**
  * 缓存管理器
@@ -28,20 +18,20 @@ export const DEFAULT_CACHE_DIR = '.vitapress/.cache/docs'
  * 避免单文件过大导致的内存问题。
  */
 export class CacheManager {
-  private readonly cacheDir: string
-  private readonly root: string
-  private readonly memoryCache: Map<string, CacheEntry> = new Map()
+  public readonly cacheDir: string
   private readonly hash: string
 
   /**
    * 创建缓存管理器
    *
-   * @param root - 项目根目录
+   * @param cacheDir - 缓存目录
    * @param hash - 额外的缓存哈希值
    */
-  constructor(root: string, hash: string = '') {
-    this.root = root
-    this.cacheDir = path.resolve(root, DEFAULT_CACHE_DIR)
+  constructor(cacheDir: string, hash: string = '') {
+    /**
+     * 缓存目录
+     */
+    this.cacheDir = cacheDir
     // 创建缓存目录
     if (!existsSync(this.cacheDir)) {
       mkdirSync(this.cacheDir, { recursive: true })
@@ -68,25 +58,17 @@ export class CacheManager {
    * @param content - 文件内容
    * @returns 缓存结果或 undefined
    */
-  get(filePath: string, content: string): MdParseResult | undefined {
+  get(filePath: string, content: string): string | undefined {
     const hash = this.computeHash(content)
 
-    const memoryEntry = this.memoryCache.get(filePath)
-    if (memoryEntry && memoryEntry.hash === hash) {
-      return memoryEntry.result
-    }
-
-    const cacheFile = this.getCacheFilePath(filePath)
+    const cacheFile = this.getCacheFilePath(filePath, 'json')
     if (!existsSync(cacheFile)) return undefined
 
     try {
       const fileContent = readFileSync(cacheFile, 'utf-8')
-      const entry: CacheEntry = JSON.parse(fileContent)
-
+      const entry: EntryInfo = JSON.parse(fileContent)
       if (entry.hash !== hash) return undefined
-
-      this.memoryCache.set(filePath, entry)
-      return entry.result
+      return readFileSync(entry.componentPath, 'utf-8')
     } catch {
       return undefined
     }
@@ -97,93 +79,65 @@ export class CacheManager {
    *
    * 更新内存缓存并同步写入磁盘。
    *
-   * @param filePath - 文件相对路径
-   * @param content - 文件内容
-   * @param result - 转换结果
+   * @param mdPath - 文档相对路径
+   * @param rawContent - 文件原始内容
+   * @param componentCode - 组件代码
    */
-  set(filePath: string, content: string, result: MdParseResult): void {
-    const hash = this.computeHash(content)
-    const entry: CacheEntry = { filePath, hash, result }
+  set(mdPath: string, rawContent: string, componentCode: string): void {
+    const hash = this.computeHash(rawContent)
+    const entry: EntryInfo = { mdPath, hash, componentPath: this.getCacheFilePath(mdPath, 'jsx') }
 
-    this.memoryCache.set(filePath, entry)
-
-    const cacheFile = this.getCacheFilePath(filePath)
+    const entryPath = this.getCacheFilePath(mdPath, 'json')
     try {
-      writeFileSync(cacheFile, JSON.stringify(entry))
+      // 写入缓存文件
+      writeCacheFileSync(entryPath, JSON.stringify(entry))
+      // 写入组件缓存
+      writeCacheFileSync(entry.componentPath, componentCode)
     } catch (e) {
       debug('[CacheManager] Error writing cache file:', e)
     }
   }
 
   /**
-   * 清理失效缓存
-   *
-   * 删除源文件已不存在的缓存条目。
-   *
-   * @returns 清理的缓存条目数量
-   */
-  prune(): number {
-    let prunedCount = 0
-
-    try {
-      const cacheFiles = readdirSync(this.cacheDir)
-
-      for (const cacheFileName of cacheFiles) {
-        const cacheFilePath = path.join(this.cacheDir, cacheFileName)
-        let filePath: string | undefined
-        try {
-          const fileContent = readFileSync(cacheFilePath, 'utf-8')
-          const entry: CacheEntry = JSON.parse(fileContent)
-          filePath = entry.filePath
-        } catch {
-          unlinkSync(cacheFilePath)
-          prunedCount++
-          continue
-        }
-
-        if (!filePath) {
-          unlinkSync(cacheFilePath)
-          prunedCount++
-          continue
-        }
-
-        const sourceFile = path.join(this.root, filePath)
-        if (!existsSync(sourceFile)) {
-          unlinkSync(cacheFilePath)
-          this.memoryCache.delete(filePath)
-          prunedCount++
-        }
-      }
-    } catch {
-      // 目录不存在或读取失败，忽略
-    }
-
-    return prunedCount
-  }
-
-  /**
    * 清理所有缓存
    */
   clear(): void {
-    this.memoryCache.clear()
-
     try {
-      const cacheFiles = readdirSync(this.cacheDir)
-      for (const file of cacheFiles) {
-        unlinkSync(path.join(this.cacheDir, file))
+      // 删除缓存目录及其所有文件
+      if (existsSync(this.cacheDir)) {
+        rmSync(this.cacheDir, { recursive: true, force: true })
       }
-    } catch {
-      // 目录不存在，忽略
+    } catch (e) {
+      debug('[CacheManager] Error clearing cache:', e)
+    }
+  }
+
+  /**
+   * 删除指定文件的缓存
+   *
+   * @param mdPath - md文件相对路径
+   */
+  remove(mdPath: string): void {
+    const infoPath = this.getCacheFilePath(mdPath, 'json')
+    if (existsSync(infoPath)) {
+      try {
+        const entry: EntryInfo = JSON.parse(readFileSync(infoPath, 'utf-8'))
+        unlinkSync(entry.componentPath)
+        unlinkSync(infoPath)
+      } catch (e) {
+        debug('[CacheManager] Error removing cache file:', e)
+      }
     }
   }
 
   /**
    * 获取缓存文件完整路径
    *
-   * @param filePath - 文件相对路径
+   * @param mdPath - 文件相对路径
+   * @param ext - 文件扩展名
    * @returns 缓存文件完整路径
    */
-  private getCacheFilePath(filePath: string): string {
-    return path.join(this.cacheDir, pathToCacheFileName(filePath))
+  public getCacheFilePath(mdPath: string, ext: 'json' | 'jsx'): string {
+    return path.join(this.cacheDir, `${mdPath}.${ext}`)
   }
 }
