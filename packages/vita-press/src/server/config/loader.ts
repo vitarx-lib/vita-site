@@ -19,7 +19,11 @@ const CONFIG_FILES = [
   '.vitapress/config.ts',
   '.vitapress/config.js',
   '.vitapress/config.mjs',
-  '.vitapress/config.mts'
+  '.vitapress/config.mts',
+  '.vitapress/config.server.ts',
+  '.vitapress/config.server.js',
+  '.vitapress/config.server.mjs',
+  '.vitapress/config.server.mts'
 ]
 
 /**
