@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import { debug } from 'vitarx-router/file-router'
-import { writeCacheFileSync } from './utils.js'
+import { writeCacheFileSync } from '../../common/utils.js'
 
 interface EntryInfo {
   hash: string

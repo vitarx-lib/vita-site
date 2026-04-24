@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { type Plugin, type UserConfig, version } from 'vite'
+import { writeCacheFileSync } from '../../server/common/utils.js'
 import { VitaPressApp } from '../../server/index.js'
-import { writeCacheFileSync } from '../../server/markdown/cache/utils.js'
 import { BODY_CONTENT_PLACEHOLDER } from '../common/constant.js'
 import { HtmlPatcher } from '../common/htmlPatcher.js'
 
