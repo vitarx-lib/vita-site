@@ -190,12 +190,18 @@ export class ConfigManager {
   /**
    * 创建配置管理器
    * @param root - 根目录
-   * @param configFile - 配置文件名
+   * @param config - 配置文件名
    */
-  public static async create(root: string, configFile?: string): Promise<ConfigManager> {
-    const { config } = await loadUserConfig(root, configFile)
+  public static async create(root: string, config?: string | UserConfig): Promise<ConfigManager> {
+    let loadedConfig: UserConfig
+    if (isPlainObject(config)) {
+      loadedConfig = config
+    } else {
+      const result = await loadUserConfig(root, config)
+      loadedConfig = result.config
+    }
     const manager = new ConfigManager(root)
-    await manager.init(config)
+    await manager.init(loadedConfig)
     return manager
   }
 }

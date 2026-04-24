@@ -5,7 +5,7 @@ import { warn } from 'vitarx-router/file-router'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
 import { VitaPressRouter } from '../router/index.js'
-import type { ResolvedConfig } from '../types/index.js'
+import type { ResolvedConfig, UserConfig } from '../types/index.js'
 import type { VitaPressPlugin } from '../types/plugin.js'
 
 export type CommandName = 'dev' | 'build' | 'preview'
@@ -130,14 +130,14 @@ export class VitaPressApp {
    *
    * @param root - 根目录
    * @param command - 命令模式
-   * @param configFile - 配置文件路径
+   * @param config - 配置文件路径
    */
   static async create(
     root: string,
     command: CommandName,
-    configFile?: string
+    config?: string | UserConfig
   ): Promise<VitaPressApp> {
-    const configManager = await ConfigManager.create(root, configFile)
+    const configManager = await ConfigManager.create(root, config)
     const markdownIt = await createMarkdownIt(configManager.config.markdownIt)
 
     const results: (void | Promise<void>)[] = []
