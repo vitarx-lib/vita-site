@@ -5,6 +5,7 @@ import type {
   PluginWithParams
 } from 'markdown-it'
 import type { TocTree } from '../markdown/plugins/tocTree.js'
+import type { PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
 
 type PluginWithOptionsType<T> = {
@@ -50,12 +51,11 @@ export interface MarkdownItConfig {
    */
   shikiConfig?: Partial<ShikiConfig>
 }
-
 /**
  * markdown解析环境上下文
  */
 export interface MarkdownParseEnvContext {
   readonly filePath: string
-  readonly frontmatter: Record<string, any>
+  readonly frontmatter: PageMetaData
   readonly tocList: TocTree[]
 }
