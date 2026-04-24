@@ -53,7 +53,7 @@ function mergeTwoArrays<E = any>(a?: readonly any[] | null, b?: any[] | null): E
  */
 export function mergeConfig<T = any>(
   defaults: Record<string, any>,
-  overrides: Record<string, any> | undefined
+  overrides: Record<string, any> | undefined | null
 ): T {
   const result: Record<string, any> = { ...defaults }
   if (Object.is(defaults, overrides) || !overrides) return result as T
