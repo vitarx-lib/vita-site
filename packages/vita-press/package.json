@@ -22,9 +22,7 @@
     }
   },
   "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
+    "dist"
   ],
   "scripts": {
     "build": "pnpm clean && pnpm test && tsc -p tsconfig.build.json",
