@@ -113,8 +113,8 @@ describe('createMarkdownIt', () => {
       const md = await createMarkdownIt()
       const result = md.render('# Test Heading')
 
-      expect(result).toContain('<a href="#')
-      expect(result).toContain('</a>')
+      expect(result).toContain('<RouterLink to="#')
+      expect(result).toContain('</RouterLink>')
     })
 
     it('routerLink 插件应将 a 标签转换为 RouterLink', async () => {
