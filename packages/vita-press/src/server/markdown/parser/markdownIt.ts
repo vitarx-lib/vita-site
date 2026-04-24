@@ -3,6 +3,7 @@ import type { MarkdownItConfig } from '../../types/index.js'
 import { anchorPoint } from '../plugins/anchorPoint.js'
 import { bracketTranslator } from '../plugins/bracketTranslator.js'
 import { codeImport } from '../plugins/codeImport.js'
+import { extractTitle } from '../plugins/extractTitle.js'
 import { fenceTranslator } from '../plugins/fenceTranslator.js'
 import { jsxComponentParser } from '../plugins/jsxComponentParser.js'
 import { routerLink } from '../plugins/routerLink.js'
@@ -33,7 +34,8 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
     routerLink,
     bracketTranslator,
     fenceTranslator,
-    jsxComponentParser
+    jsxComponentParser,
+    extractTitle
   ]
   // 挂载内置插件
   builtinPlugins.forEach(plugin => md.use(plugin))
