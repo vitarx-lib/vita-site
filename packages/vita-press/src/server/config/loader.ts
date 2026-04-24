@@ -36,7 +36,7 @@ const CONFIG_FILES = [
 export async function loadUserConfig(root: string, configFile?: string): Promise<LoadConfigResult> {
   const configFilePath = await findConfigFile(root, configFile)
   const userConfig = await readUserConfig(configFilePath)
-  validateConfig(userConfig, process.cwd())
+  validateConfig(userConfig, root)
   return {
     config: userConfig,
     configFile: configFilePath
