@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../../app/index.js'
-import { isPlainObject } from '../../common/utils.js'
+import { getVersion, isPlainObject } from '../../common/utils.js'
 import { mergeConfig } from '../../config/index.js'
 import type { MarkdownParseEnvContext } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
@@ -48,14 +48,14 @@ export class MdParser {
     this.injectCode = this.app.config.injectCode.length
       ? Array.from(new Set(this.app.config.injectCode)).join('\n') + '\n'
       : ''
-    // TODO 将版本号也添加进hash
     const configHash = createHash('md5')
       .update(
         JSON.stringify({
           root: app.root,
           defaultLang: app.defaultLang,
           languages: app.langPathMap,
-          injectCode: app.config.injectCode
+          injectCode: app.config.injectCode,
+          version: getVersion()
         })
       )
       .digest('hex')
