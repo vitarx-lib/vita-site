@@ -17,8 +17,8 @@ describe('anchorPoint', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '## 测试标题')
 
-      expect(html).toContain('<a href="#')
-      expect(html).toContain('</a>')
+      expect(html).toContain('<RouterLink to="#')
+      expect(html).toContain('</RouterLink>')
     })
 
     it('应正确提取标题的 id 作为锚点 href', () => {
@@ -30,7 +30,7 @@ describe('anchorPoint', () => {
       const id = headingOpen?.attrGet('id')
 
       const html = md.render('## Hello World')
-      expect(html).toContain(`href="#${id}"`)
+      expect(html).toContain(`to="#${id}"`)
     })
   })
 
@@ -40,8 +40,8 @@ describe('anchorPoint', () => {
       const html = renderMarkdown(md, '# 主标题')
 
       expect(html).toContain('<h1')
-      expect(html).toContain('<a href="#')
-      expect(html).toContain('</a></h1>')
+      expect(html).toContain('<RouterLink to="#')
+      expect(html).toContain('</RouterLink></h1>')
     })
 
     it('应处理 h2 标题', () => {
@@ -49,8 +49,8 @@ describe('anchorPoint', () => {
       const html = renderMarkdown(md, '## 二级标题')
 
       expect(html).toContain('<h2')
-      expect(html).toContain('<a href="#')
-      expect(html).toContain('</a></h2>')
+      expect(html).toContain('<RouterLink to="#')
+      expect(html).toContain('</RouterLink></h2>')
     })
 
     it('应处理 h3 标题', () => {
@@ -58,8 +58,8 @@ describe('anchorPoint', () => {
       const html = renderMarkdown(md, '### 三级标题')
 
       expect(html).toContain('<h3')
-      expect(html).toContain('<a href="#')
-      expect(html).toContain('</a></h3>')
+      expect(html).toContain('<RouterLink to="#')
+      expect(html).toContain('</RouterLink></h3>')
     })
 
     it('应处理 h4-h6 标题', () => {
@@ -67,15 +67,15 @@ describe('anchorPoint', () => {
 
       const html4 = renderMarkdown(md, '#### 四级标题')
       expect(html4).toContain('<h4')
-      expect(html4).toContain('<a href="#')
+      expect(html4).toContain('<RouterLink to="#')
 
       const html5 = renderMarkdown(md, '##### 五级标题')
       expect(html5).toContain('<h5')
-      expect(html5).toContain('<a href="#')
+      expect(html5).toContain('<RouterLink to="#')
 
       const html6 = renderMarkdown(md, '###### 六级标题')
       expect(html6).toContain('<h6')
-      expect(html6).toContain('<a href="#')
+      expect(html6).toContain('<RouterLink to="#')
     })
   })
 
@@ -89,7 +89,7 @@ describe('anchorPoint', () => {
 ## 第二章`
       )
 
-      const anchorCount = (html.match(/<a href="#/g) || []).length
+      const anchorCount = (html.match(/<RouterLink to="#/g) || []).length
       expect(anchorCount).toBe(3)
     })
 
@@ -101,7 +101,7 @@ describe('anchorPoint', () => {
 ## Introduction`
       )
 
-      const hrefs = html.match(/href="#[^"]+"/g) || []
+      const hrefs = html.match(/to="#[^"]+"/g) || []
       expect(hrefs).toHaveLength(2)
       expect(hrefs[0]).not.toBe(hrefs[1])
     })
@@ -112,28 +112,28 @@ describe('anchorPoint', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '')
 
-      expect(html).not.toContain('<a href="#')
+      expect(html).not.toContain('<a to="#')
     })
 
     it('应处理无标题的文档', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '这是一段普通文本。')
 
-      expect(html).not.toContain('<a href="#')
+      expect(html).not.toContain('<a to="#')
     })
 
     it('应处理包含特殊字符的标题', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '## Hello!!!World')
 
-      expect(html).toContain('<a href="#')
+      expect(html).toContain('<RouterLink to="#')
     })
 
     it('应处理中文标题', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '## 中文标题测试')
 
-      expect(html).toContain('<a href="#')
+      expect(html).toContain('<RouterLink to="#')
       expect(html).toContain('中文标题测试')
     })
   })
@@ -143,14 +143,14 @@ describe('anchorPoint', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '## Test')
 
-      expect(html).toMatch(/<h2[^>]*>\s*<a href="#[^"]+">[^<]*<\/a>\s*<\/h2>/)
+      expect(html).toMatch(/<h2[^>]*>\s*<RouterLink to="#[^"]+">[^<]*<\/RouterLink>\s*<\/h2>/)
     })
 
     it('锚点应包含标题文本', () => {
       const md = createMarkdownWithPlugin(anchorPoint)
       const html = renderMarkdown(md, '## My Heading')
 
-      expect(html).toContain('>My Heading</a>')
+      expect(html).toContain('>My Heading</RouterLink>')
     })
   })
 })

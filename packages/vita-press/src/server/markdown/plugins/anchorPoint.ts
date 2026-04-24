@@ -12,12 +12,12 @@ export function anchorPoint(md: MarkdownIt): void {
     if (!token) return ''
 
     const tag = self.renderToken(tokens, idx, options)
-    return `${tag}\n<a href="#${token.attrGet('id')}">`
+    return `${tag}\n<RouterLink to="#${token.attrGet('id')}">`
   }
   // 标题标签结束
   md.renderer.rules['heading_close'] = (tokens, idx, _options, _env, _self) => {
     const token = tokens[idx]
     if (!token) return ''
-    return `</a></${token.tag}>\n`
+    return `</RouterLink></${token.tag}>\n`
   }
 }
