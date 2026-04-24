@@ -1,11 +1,5 @@
+import { isPlainObject } from '../common/utils.js'
 import type { UserConfig } from '../types/index.js'
-
-/**
- * 判断是否为普通对象（排除 null / 数组 / 内置对象等）
- */
-export function isPlainObject(value: unknown): value is Record<string, any> {
-  return Object.prototype.toString.call(value) === '[object Object]'
-}
 
 /**
  * 合并两个数组（支持 a / b 为 undefined），返回一个新数组

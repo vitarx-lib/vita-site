@@ -1,4 +1,5 @@
-import { isPlainObject, loadUserConfig, mergeConfig, validateConfig } from '../config/index.js'
+import { isPlainObject } from '../common/utils.js'
+import { loadUserConfig, mergeConfig, validateConfig } from '../config/index.js'
 import type { ResolvedConfig, UserConfig } from '../types/index.js'
 import type { VitaPressPlugin } from '../types/plugin.js'
 import { DEFAULT_CONFIG } from './constant.js'
