@@ -41,13 +41,17 @@ export class VitaPressApp {
    */
   public readonly docDirPath: string
   /**
-   * 客户端入口脚本路径
+   * 客户端配置路径
    */
-  public readonly clientEntryPath: string | null
+  public readonly clientConfigPath: string | null
   /**
    * 缓存目录
    */
   public readonly cacheDir: string
+  /**
+   * 临时目录
+   */
+  public readonly tempDir: string
   /**
    * 默认语言
    */
@@ -79,18 +83,19 @@ export class VitaPressApp {
   private constructor(options: VitaPressAppOptions) {
     this.root = options.root
     this.cacheDir = path.resolve(this.root, '.vitapress/.cache')
+    this.tempDir = path.resolve(this.root, '.vitapress/.temp')
     this.command = options.command
     this.config = Object.freeze(options.config)
     this.plugins = Object.freeze(options.plugins)
     this.mdParser = this.createMdParser(options.markdownIt)
     this.router = this.createRouter()
     this.docDirPath = path.resolve(this.root, options.config.docDir.dir)
-    const mainTsPath = path.resolve(this.root, '.vitapress/main.ts')
-    const mainJsPath = path.resolve(this.root, '.vitapress/main.js')
-    this.clientEntryPath = existsSync(mainTsPath)
-      ? mainTsPath
-      : existsSync(mainJsPath)
-        ? mainJsPath
+    const configTsPath = path.resolve(this.root, '.vitapress/config.client.ts')
+    const configJsPath = path.resolve(this.root, '.vitapress/config.client.js')
+    this.clientConfigPath = existsSync(configTsPath)
+      ? configTsPath
+      : existsSync(configJsPath)
+        ? configJsPath
         : null
     this.defaultLang = this.config.lang || 'zh-CN'
     if (Array.isArray(this.config.langDirs) && this.config.langDirs.length) {
