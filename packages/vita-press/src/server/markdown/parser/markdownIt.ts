@@ -1,6 +1,5 @@
 import MarkdownIt from 'markdown-it'
 import type { MarkdownItConfig } from '../../types/index.js'
-import { anchorPoint } from '../plugins/anchorPoint.js'
 import { bracketTranslator } from '../plugins/bracketTranslator.js'
 import { codeImport } from '../plugins/codeImport.js'
 import { extractTitle } from '../plugins/extractTitle.js'
@@ -30,7 +29,6 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
     shikiPlugin,
     codeImport,
     tocTree,
-    anchorPoint,
     routerLink,
     bracketTranslator,
     fenceTranslator,

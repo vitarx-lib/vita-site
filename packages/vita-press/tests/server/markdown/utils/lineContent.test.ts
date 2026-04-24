@@ -11,7 +11,7 @@ function createMockState(src: string, lines: string[]): StateBlock {
   for (const line of lines) {
     bMarks.push(currentPos)
     eMarks.push(currentPos + line.length)
-    const leadingSpaces = line.match(/^(\s*)/)?.[1].length || 0
+    const leadingSpaces = line.match(/^(\s*)/)?.[1]?.length ?? 0
     tShift.push(leadingSpaces)
     currentPos += line.length + 1
   }

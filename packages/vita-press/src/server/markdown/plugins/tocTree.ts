@@ -27,7 +27,9 @@ export interface TocTree {
 }
 
 const MIN_HEADING_LEVEL = 1
-const MAX_HEADING_LEVEL = 3
+const MAX_HEADING_LEVEL = 6
+const TOC_MIN_LEVEL = 2
+const TOC_MAX_LEVEL = 3
 const ID_NUMBER_PREFIX = '_'
 
 /**
@@ -52,7 +54,7 @@ function processTokens(tokens: Token[], env: TocParseEnvContext): void {
     token.attrSet('id', hash)
     token.attrPush(['class', 'paragraph-title'])
 
-    if (headingLevel === MIN_HEADING_LEVEL) continue
+    if (headingLevel < TOC_MIN_LEVEL || headingLevel > TOC_MAX_LEVEL) continue
 
     rawItems.push({
       level: headingLevel,
@@ -73,7 +75,7 @@ function processTokens(tokens: Token[], env: TocParseEnvContext): void {
  * 解析标题级别
  *
  * @param tag - HTML 标签名，如 'h1', 'h2'
- * @returns 标题级别 1-3，无效时返回 null
+ * @returns 标题级别 1-6，无效时返回 null
  */
 function parseHeadingLevel(tag: string): number | null {
   if (!tag || tag.length !== 2 || tag[0] !== 'h') {
@@ -161,8 +163,9 @@ function buildTocTree(items: TocTree[]): TocTree[] {
  * TOC 树解析插件
  *
  * 功能：
- * - 为标题生成唯一 id
- * - 构建目录树结构
+ * - 为所有标题（h1-h6）生成唯一 id
+ * - 为所有标题添加锚点链接（RouterLink）
+ * - 构建目录树结构（仅 h2-h3）
  *
  * @param md - Markdown-it 实例
  */
@@ -173,4 +176,18 @@ export function tocTree(md: MarkdownIt): void {
 
     processTokens(state.tokens, state.env)
   })
+
+  md.renderer.rules['heading_open'] = (tokens, idx, options, _env, self) => {
+    const token = tokens[idx]
+    if (!token) return ''
+
+    const tag = self.renderToken(tokens, idx, options)
+    return `${tag}\n<RouterLink to="#${token.attrGet('id')}">`
+  }
+
+  md.renderer.rules['heading_close'] = (tokens, idx, _options, _env, _self) => {
+    const token = tokens[idx]
+    if (!token) return ''
+    return `</RouterLink></${token.tag}>\n`
+  }
 }
