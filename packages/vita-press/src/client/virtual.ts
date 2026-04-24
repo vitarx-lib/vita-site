@@ -1,0 +1,37 @@
+declare module 'virtual:vitapress/runtime/config' {
+  import type { App, AppConfig, Component, View } from 'vitarx'
+  import type { Router, RouterOptions } from 'vitarx-router'
+
+  /**
+   * 运行时配置
+   */
+  export interface RuntimeConfig {
+    /**
+     * 应用入口布局组件或视图对象
+     *
+     * @default () => <RouterView />
+     */
+    layout?: View | Component
+    /**
+     * 应用配置
+     */
+    app?: AppConfig
+    /**
+     * 路由配置
+     */
+    router?: RouterOptions
+    /**
+     * 拓展应用
+     *
+     * 在app挂载之前调用
+     *
+     * @param app - 应用实例
+     * @param router - 路由器实例
+     */
+    enhanceApp?: (app: App, router: Router) => void
+  }
+
+  const config: RuntimeConfig
+
+  export default config
+}
