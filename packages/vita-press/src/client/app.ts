@@ -59,11 +59,6 @@ function createPageMetaManager(): AfterCallback {
  */
 async function createClientApp(): Promise<App> {
   const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
-  const router = createRouter(routerOptions)
-  if (import.meta.hot) {
-    handleHotUpdate(router)
-  }
-
   const metaManager = createPageMetaManager()
   if (routerOptions.afterEach) {
     if (Array.isArray(routerOptions.afterEach)) {
@@ -71,8 +66,13 @@ async function createClientApp(): Promise<App> {
     } else {
       routerOptions.afterEach = [routerOptions.afterEach, metaManager]
     }
+  } else {
+    routerOptions.afterEach = metaManager
   }
-
+  const router = createRouter(routerOptions)
+  if (import.meta.hot) {
+    handleHotUpdate(router)
+  }
   await router.isReady()
   await router.resolveComponents()
   const app = createSSRApp(
