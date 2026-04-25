@@ -32,6 +32,9 @@ export class VitaPressRouter extends FileRouter {
         return content
       },
       extendRoute: (route, parsed) => {
+        const lang = app.langPathMap[parsed.filePath] || app.defaultLang
+        route.meta ??= {}
+        route.meta['lang'] = typeof route.meta['lang'] === 'string' ? route.meta['lang'] : lang
         for (const plugin of app.plugins) {
           if (typeof plugin.extendRoute === 'function') {
             try {
