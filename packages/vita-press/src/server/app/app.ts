@@ -87,8 +87,6 @@ export class VitaPressApp {
     this.command = options.command
     this.config = Object.freeze(options.config)
     this.plugins = Object.freeze(options.plugins)
-    this.mdParser = this.createMdParser(options.markdownIt)
-    this.router = this.createRouter()
     this.docDirPath = path.resolve(this.root, options.config.docDir.dir)
     const configTsPath = path.resolve(this.root, '.vitapress/config.client.ts')
     const configJsPath = path.resolve(this.root, '.vitapress/config.client.js')
@@ -103,6 +101,8 @@ export class VitaPressApp {
         this.langPathMap[path.resolve(this.docDirPath, lang)] = lang
       })
     }
+    this.mdParser = this.createMdParser(options.markdownIt)
+    this.router = this.createRouter()
   }
   /**
    * 是否为开发模式
