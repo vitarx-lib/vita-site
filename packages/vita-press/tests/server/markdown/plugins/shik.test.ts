@@ -3,7 +3,7 @@ import {
   createShikiHighlighter,
   type PartialShikiConfig
 } from '../../../../src/server/markdown/plugins/shik.js'
-import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
+import { createMarkdownWithPlugin, renderMarkdown } from '../../../testUtils.js'
 
 describe('shik', () => {
   describe('默认配置', () => {

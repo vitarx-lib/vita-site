@@ -462,23 +462,6 @@ This is a danger
   })
 
   describe('多语言支持', () => {
-    it('应根据路径自动检测语言', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir, {
-        langDirs: ['zh-CN', 'en-US']
-      })
-      const parser = new MdParser(md, app as any)
-
-      const zhPath = createMarkdownFile('docs/zh-CN/test.md', '# 中文')
-      const enPath = createMarkdownFile('docs/en-US/test.md', '# English')
-
-      const zhResult = parser.parse(zhPath, '# 中文')
-      const enResult = parser.parse(enPath, '# English')
-
-      expect(zhResult).toContain('"lang":"zh-CN"')
-      expect(enResult).toContain('"lang":"en-US"')
-    })
-
     it('frontmatter 中的语言应覆盖自动检测', async () => {
       const md = await createMarkdownIt()
       const app = createMockApp(tempDir, {

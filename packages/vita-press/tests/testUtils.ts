@@ -1,5 +1,6 @@
 import type { PluginSimple } from 'markdown-it'
 import MarkdownIt from 'markdown-it'
+import { type UserConfig, VitaPressApp } from '../src/server/index.js'
 
 /**
  * 创建带有指定插件的 MarkdownIt 实例
@@ -71,4 +72,14 @@ export function hasClass(html: string, className: string): boolean {
   const classAttr = extractAttribute(html, 'class')
   if (!classAttr) return false
   return classAttr.split(' ').includes(className)
+}
+
+/**
+ * 创建测试用的 VitaPressApp 实例
+ *
+ * @param root
+ * @param config
+ */
+export async function createTestApp(root: string, config: UserConfig = {}): Promise<VitaPressApp> {
+  return await VitaPressApp.create(root, 'dev', config)
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { bracketTranslator } from '../../../../src/server/markdown/plugins/bracketTranslator.js'
-import { createMarkdownWithPlugin, renderMarkdown } from '../testUtils.js'
+import { createMarkdownWithPlugin, renderMarkdown } from '../../../testUtils.js'
 
 describe('bracketTranslator', () => {
   describe('花括号转义', () => {

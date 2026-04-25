@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { jsxComponentParser } from '../../../../src/server/markdown/plugins/jsxComponentParser.js'
-import { createMarkdownWithPlugin, parseMarkdown, renderMarkdown } from '../testUtils.js'
+import { createMarkdownWithPlugin, parseMarkdown, renderMarkdown } from '../../../testUtils.js'
 
 describe('jsxComponentParser', () => {
   describe('自闭合标签', () => {

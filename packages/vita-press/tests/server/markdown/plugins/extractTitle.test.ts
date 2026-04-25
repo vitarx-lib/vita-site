@@ -1,7 +1,10 @@
 import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'vitest'
-import { extractTitle, type TitleEnv } from '../../../../src/server/markdown/plugins/extractTitle.js'
-import { createMarkdownWithPlugin } from '../testUtils.js'
+import {
+  extractTitle,
+  type TitleEnv
+} from '../../../../src/server/markdown/plugins/extractTitle.js'
+import { createMarkdownWithPlugin } from '../../../testUtils.js'
 
 describe('extractTitle', () => {
   describe('基础功能', () => {

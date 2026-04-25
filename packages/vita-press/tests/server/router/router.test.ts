@@ -2,10 +2,8 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { ParsedNode, RouteNode } from 'vitarx-router/file-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ResolvedConfig, VitaPressPlugin } from '../../../src/server/index.js'
-import { VitaPressApp } from '../../../src/server/index.js'
-import type { MdParser } from '../../../src/server/markdown/index.js'
-import { VitaPressRouter } from '../../../src/server/router/router.js'
+import type { VitaPressPlugin } from '../../../src/server/index.js'
+import { createTestApp } from '../../testUtils.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const mod = await importOriginal<typeof import('vitarx-router/file-router')>()
@@ -14,96 +12,6 @@ vi.mock('vitarx-router/file-router', async importOriginal => {
     warn: vi.fn()
   }
 })
-
-function createMockMdParser(): MdParser {
-  const mockComponentCode = `// 此文件由vita-press自动生成
-import { builder } from 'vitarx'
-definePage({
-  meta: {}
-})
-export default builder(() => {
-  return <article class="v-doc-content">Mock MD Content</article>
-})
-`
-  return {
-    parse: vi.fn().mockImplementation((_filePath: string, _content?: string): string => {
-      return mockComponentCode
-    }),
-    cache: {
-      getCacheFilePath: (mdPath: string, ext: 'json' | 'jsx'): string => {
-        return `/mock/cache/${mdPath}.${ext}`
-      }
-    }
-  } as unknown as MdParser
-}
-
-function createMockApp(options: {
-  root: string
-  docDir?: string | { dir: string; prefix?: string; group?: boolean }
-  pageDirs?: { dir: string; prefix?: string; group?: boolean }[]
-  languages?: string[]
-  plugins?: VitaPressPlugin[]
-  mdParser?: MdParser
-}): VitaPressApp {
-  const docDirConfig =
-    typeof options.docDir === 'string'
-      ? {
-          dir: options.docDir,
-          prefix: '/',
-          include: ['**/*.{tsx,jsx,md}'],
-          exclude: ['**/.*'],
-          group: true
-        }
-      : {
-          dir: 'docs',
-          prefix: '/',
-          include: ['**/*.{tsx,jsx,md}'],
-          exclude: ['**/.*'],
-          group: true,
-          ...options.docDir
-        }
-
-  const config: ResolvedConfig = {
-    title: '',
-    description: '',
-    keywords: '',
-    lang: options.languages || 'zh-CN',
-    langDirs: [],
-    docDir: docDirConfig,
-    pageDirs:
-      options.pageDirs?.map(p => ({
-        dir: p.dir,
-        prefix: p.prefix || '/',
-        include: ['**/*.{tsx,jsx,md}'],
-        exclude: ['**/.*'],
-        group: p.group ?? true
-      })) || [],
-    dts: false,
-    plugins: options.plugins || [],
-    injectHead: [],
-    injectBody: [],
-    injectCode: [],
-    markdownIt: {},
-    viteConfig: {
-      base: '/',
-      publicDir: '.vitapress/public',
-      define: {},
-      plugins: [],
-      resolve: {},
-      server: {}
-    }
-  } as ResolvedConfig
-
-  return {
-    root: options.root,
-    config,
-    plugins: options.plugins || [],
-    mdParser: options.mdParser || createMockMdParser(),
-    command: 'serve',
-    isDev: true,
-    docDirPath: join(options.root, docDirConfig.dir)
-  } as unknown as VitaPressApp
-}
 
 describe('VitaPressRouter', () => {
   let tempDir: string
@@ -120,36 +28,33 @@ describe('VitaPressRouter', () => {
   })
 
   describe('初始化与配置', () => {
-    it('应正确初始化路由器', () => {
+    it('应正确初始化路由器', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const app = await createTestApp(tempDir)
 
-      expect(router).toBeDefined()
+      expect(app.router).toBeDefined()
     })
 
-    it('应正确配置 importMode 为 lazy', () => {
+    it('应正确配置 importMode 为 lazy', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('lazy')
     })
 
-    it('应正确配置 pathStrategy 为 kebab', () => {
+    it('应正确配置 pathStrategy 为 kebab', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'MyPage.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('my-page')
@@ -157,13 +62,12 @@ describe('VitaPressRouter', () => {
   })
 
   describe('Markdown 文件转换', () => {
-    it('应正确处理 Markdown 文件并生成路由', () => {
+    it('应正确处理 Markdown 文件并生成路由', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -171,20 +75,19 @@ describe('VitaPressRouter', () => {
       expect(code).toContain('guide.md')
     })
 
-    it('应正确处理 Markdown 文件作为入口页', () => {
+    it('应正确处理 Markdown 文件作为入口页', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
       expect(code).toContain('path: "/"')
     })
 
-    it('应正确处理 TSX 文件', () => {
+    it('应正确处理 TSX 文件', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(
@@ -192,8 +95,7 @@ describe('VitaPressRouter', () => {
         'export default function CustomPage() { return <div>Custom</div> }'
       )
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('path: "custom"')
@@ -202,7 +104,7 @@ describe('VitaPressRouter', () => {
   })
 
   describe('插件扩展路由', () => {
-    it('应调用插件的 extendRoute 钩子', () => {
+    it('应调用插件的 extendRoute 钩子', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
@@ -213,14 +115,13 @@ describe('VitaPressRouter', () => {
         extendRoute: extendRouteMock
       }
 
-      const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { plugins: [plugin] })
       router.generate()
 
       expect(extendRouteMock).toHaveBeenCalled()
     })
 
-    it('应传递正确的参数给 extendRoute 钩子', () => {
+    it('应传递正确的参数给 extendRoute 钩子', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
@@ -236,15 +137,14 @@ describe('VitaPressRouter', () => {
         }
       }
 
-      const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { plugins: [plugin] })
       router.generate()
 
       expect(capturedRoute).not.toBeNull()
       expect(capturedParsed).not.toBeNull()
     })
 
-    it('应处理插件 extendRoute 抛出的错误', () => {
+    it('应处理插件 extendRoute 抛出的错误', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
@@ -256,15 +156,14 @@ describe('VitaPressRouter', () => {
         }
       }
 
-      const app = createMockApp({ root: tempDir, plugins: [plugin] })
+      const { router } = await createTestApp(tempDir, { plugins: [plugin] })
 
       expect(() => {
-        const router = new VitaPressRouter(app)
         router.generate()
       }).not.toThrow()
     })
 
-    it('应支持多个插件的 extendRoute 钩子', () => {
+    it('应支持多个插件的 extendRoute 钩子', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
@@ -285,8 +184,7 @@ describe('VitaPressRouter', () => {
         }
       ]
 
-      const app = createMockApp({ root: tempDir, plugins })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { plugins })
       router.generate()
 
       expect(callOrder).toContain('plugin-1')
@@ -295,28 +193,26 @@ describe('VitaPressRouter', () => {
   })
 
   describe('路由生成', () => {
-    it('应生成正确的路由代码', () => {
+    it('应生成正确的路由代码', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
       expect(code).toContain('path: "/"')
     })
 
-    it('应正确处理嵌套目录结构', () => {
+    it('应正确处理嵌套目录结构', async () => {
       const docsDir = join(tempDir, 'docs')
       const apiDir = join(docsDir, 'api')
       mkdirSync(apiDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
       writeFileSync(join(apiDir, 'intro.tsx'), 'export default function Intro() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/"')
@@ -324,12 +220,11 @@ describe('VitaPressRouter', () => {
       expect(code).toContain('path: "intro"')
     })
 
-    it('应正确处理空文档目录', () => {
+    it('应正确处理空文档目录', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -337,34 +232,31 @@ describe('VitaPressRouter', () => {
   })
 
   describe('页面目录配置', () => {
-    it('应支持自定义文档目录', () => {
+    it('应支持自定义文档目录', async () => {
       const customDocsDir = join(tempDir, 'custom-docs')
       mkdirSync(customDocsDir, { recursive: true })
       writeFileSync(join(customDocsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir, docDir: 'custom-docs' })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { docDir: { dir: 'custom-docs' } })
       const { code } = router.generate()
 
       expect(code).toContain('export default')
     })
 
-    it('应支持自定义文档目录前缀（group: false）', () => {
+    it('应支持自定义文档目录前缀（group: false）', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({
-        root: tempDir,
+      const { router } = await createTestApp(tempDir, {
         docDir: { dir: 'docs', prefix: '/docs', group: false }
       })
-      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/docs"')
     })
 
-    it('应支持额外的页面目录', () => {
+    it('应支持额外的页面目录', async () => {
       const docsDir = join(tempDir, 'docs')
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(docsDir, { recursive: true })
@@ -372,17 +264,15 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
       writeFileSync(join(pagesDir, 'admin.tsx'), 'export default function Admin() {}')
 
-      const app = createMockApp({
-        root: tempDir,
+      const { router } = await createTestApp(tempDir, {
         pageDirs: [{ dir: 'pages', prefix: '/' }]
       })
-      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
-      expect(code).toContain('path: "admin"')
+      expect(code).toContain('path: "/admin"')
     })
 
-    it('应支持自定义页面目录前缀（group: false）', () => {
+    it('应支持自定义页面目录前缀（group: false）', async () => {
       const docsDir = join(tempDir, 'docs')
       const pagesDir = join(tempDir, 'pages')
       mkdirSync(docsDir, { recursive: true })
@@ -390,11 +280,9 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
       writeFileSync(join(pagesDir, 'dashboard.tsx'), 'export default function Dashboard() {}')
 
-      const app = createMockApp({
-        root: tempDir,
+      const { router } = await createTestApp(tempDir, {
         pageDirs: [{ dir: 'pages', prefix: '/app/', group: false }]
       })
-      const router = new VitaPressRouter(app)
       const { code } = router.generate()
 
       expect(code).toContain('path: "/app/dashboard"')
@@ -402,13 +290,12 @@ describe('VitaPressRouter', () => {
   })
 
   describe('热更新支持', () => {
-    it('应支持重新扫描路由', () => {
+    it('应支持重新扫描路由', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
 
       let { code } = router.generate()
       expect(code).toContain('path: "/"')
@@ -421,13 +308,12 @@ describe('VitaPressRouter', () => {
       expect(code).toContain('path: "guide"')
     })
 
-    it('应支持清空缓存', () => {
+    it('应支持清空缓存', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
 
       router.generate()
       router.clearGenerateResult()
@@ -438,32 +324,30 @@ describe('VitaPressRouter', () => {
   })
 
   describe('DTS 配置', () => {
-    it('应正确传递 dts 配置', () => {
+    it('应正确传递 dts 配置', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
 
       expect(router).toBeDefined()
     })
   })
 
   describe('边界情况', () => {
-    it('应处理没有插件的情况', () => {
+    it('应处理没有插件的情况', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
 
-      const app = createMockApp({ root: tempDir, plugins: [] })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { plugins: [] })
       const { code } = router.generate()
 
       expect(code).toContain('export default')
     })
 
-    it('应处理插件没有 extendRoute 方法的情况', () => {
+    it('应处理插件没有 extendRoute 方法的情况', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
@@ -472,22 +356,20 @@ describe('VitaPressRouter', () => {
         name: 'plugin-without-extend'
       }
 
-      const app = createMockApp({ root: tempDir, plugins: [plugin] })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir, { plugins: [plugin] })
       const { code } = router.generate()
 
       expect(code).toContain('export default')
     })
 
-    it('应处理多个文件类型混合的情况', () => {
+    it('应处理多个文件类型混合的情况', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.tsx'), 'export default function Page() {}')
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
       writeFileSync(join(docsDir, 'about.jsx'), 'export default function About() {}')
 
-      const app = createMockApp({ root: tempDir })
-      const router = new VitaPressRouter(app)
+      const { router } = await createTestApp(tempDir)
       const { code } = router.generate()
 
       expect(code).toContain('export default')

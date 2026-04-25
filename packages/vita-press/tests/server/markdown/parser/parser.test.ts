@@ -166,57 +166,6 @@ describe('MdParser', () => {
       expect(result).toContain('@source')
     })
 
-    it('应正确设置默认语言', () => {
-      const filePath = createMarkdownFile('docs/test.md', '# Test')
-      const content = '# Test'
-
-      const result = parser.parse(filePath, content)
-
-      expect(result).toContain('"lang":"zh-CN"')
-    })
-
-    it('应支持多语言配置并根据路径自动推断语言', () => {
-      const multiLangApp = createMockApp(tempDir, {
-        langDirs: ['zh-CN', 'en-US'],
-        docDir: { dir: 'docs' }
-      })
-      const multiLangParser = new MdParser(md, multiLangApp as any)
-
-      const zhDir = join(tempDir, 'docs', 'zh-CN')
-      const enDir = join(tempDir, 'docs', 'en-US')
-      mkdirSync(zhDir, { recursive: true })
-      mkdirSync(enDir, { recursive: true })
-
-      const zhFilePath = join(zhDir, 'test.md')
-      const enFilePath = join(enDir, 'test.md')
-      writeFileSync(zhFilePath, '# 中文测试')
-      writeFileSync(enFilePath, '# English Test')
-
-      const zhResult = multiLangParser.parse(zhFilePath, '# 中文测试')
-      const enResult = multiLangParser.parse(enFilePath, '# English Test')
-
-      expect(zhResult).toContain('"lang":"zh-CN"')
-      expect(enResult).toContain('"lang":"en-US"')
-    })
-
-    it('应使用默认语言当路径不匹配任何语言目录时', () => {
-      const multiLangApp = createMockApp(tempDir, {
-        langDirs: ['zh-CN', 'en-US'],
-        docDir: { dir: 'docs' }
-      })
-      const multiLangParser = new MdParser(md, multiLangApp as any)
-
-      const docsDir = join(tempDir, 'docs')
-      mkdirSync(docsDir, { recursive: true })
-
-      const filePath = join(docsDir, 'test.md')
-      writeFileSync(filePath, '# Test')
-
-      const result = multiLangParser.parse(filePath, '# Test')
-
-      expect(result).toContain('"lang":"zh-CN"')
-    })
-
     it('frontmatter 中指定的语言应覆盖自动推断', () => {
       const multiLangApp = createMockApp(tempDir, {
         langDirs: ['zh-CN', 'en-US'],

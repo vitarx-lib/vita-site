@@ -1,6 +1,6 @@
 import MarkdownIt from 'markdown-it'
 import { describe, expect, it, vi } from 'vitest'
-import { createMarkdownIt } from '../../../../src/server/markdown/parser/markdownIt.js'
+import { createMarkdownIt } from '../../../../src/server/markdown/index.js'
 
 describe('createMarkdownIt', () => {
   describe('默认配置', () => {
