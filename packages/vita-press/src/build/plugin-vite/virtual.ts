@@ -35,7 +35,7 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
         return RESOLVED_RUNTIME_ENTER_ID
       }
       if (id === VIRTUAL_CLIENT_CONFIG_ID) {
-        return RESOLVED_ROUTES_ID
+        return RESOLVED_CLIENT_CONFIG_ID
       }
       if (id === VIRTUAL_ROUTES_ID) {
         return RESOLVED_ROUTES_ID
