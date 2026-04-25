@@ -18,7 +18,7 @@ export function generateServerEnterCode(): string {
 import { renderToString } from "vitarx"
 import { __ROUTER_KEY__ } from "vitarx-router"
 /**
- * 渲染所有页面为字符串
+ * 渲染所有静态页面为字符串
  *
  * @returns {Promise<{ [url: string]: { body: string; context: { [key: string]: any }; meta: { [key: string]: any } } }>}
  */
@@ -34,7 +34,7 @@ export async function renderPages() {
     pages[url] = {
       body,
       context,
-      meta: route.meta || {}
+      meta: router.route.meta || {}
     }
   }
   return pages
