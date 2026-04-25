@@ -23,6 +23,8 @@ export interface MdParseResult {
   filePath: string
   /** 文档页面的元数据信息 */
   meta: DocPageMetaData
+  /** 文档页面的别名 */
+  alias: string | string[] | undefined
 }
 
 /**
@@ -94,6 +96,14 @@ export class MdParser {
    */
   public transform(filePath: string, content: string): MdParseResult {
     const { data: frontmatter, content: markdownContent } = parseFrontMatter(content)
+    let alias: string | string[] | undefined = undefined
+    if (
+      frontmatter['alias'] &&
+      (typeof frontmatter['alias'] === 'string' || Array.isArray(frontmatter['alias']))
+    ) {
+      alias = frontmatter['alias']
+      delete frontmatter['alias']
+    }
     const gitInfo = getCommitInfo(filePath)
     const env: MarkdownParseEnvContext = {
       filePath: filePath,
@@ -103,7 +113,6 @@ export class MdParser {
     const html = this.md.render(markdownContent, env)
     const toc = env.tocList
     const docPageMetaData: DocPageMetaData = {
-      lang: '',
       authors: gitInfo.authors,
       createdAt: gitInfo.createdAt,
       lastUpdateAt: gitInfo.lastUpdateAt,
@@ -111,10 +120,10 @@ export class MdParser {
       relativePath: path.relative(this.app.root, filePath),
       ...frontmatter
     }
-    if (!docPageMetaData.lang) docPageMetaData.lang = this.parseLanguage(filePath)
     return {
       html: html,
       filePath,
+      alias,
       meta: docPageMetaData
     }
   }
@@ -126,13 +135,13 @@ export class MdParser {
    * @returns 组件代码
    */
   public generateComponent(parseResult: MdParseResult): string {
-    const { html: html, meta, filePath } = parseResult
+    const { html: html, meta, filePath, alias } = parseResult
     const injectCodeBlock = this.injectCode
 
     return `// 此文件由vita-press自动生成
 import { RouterLink } from 'vitarx-router'
 ${injectCodeBlock}
-definePage({
+definePage({${alias ? `\nalias:${JSON.stringify(alias)},` : ''}
   meta:${JSON.stringify(meta)}
 })
 /**
@@ -142,17 +151,6 @@ definePage({
  */
 export default () => (<article class="v-doc-content">${html}</article>)
 `
-  }
-
-  /**
-   * 解析文件语言
-   *
-   * @param filePath
-   * @private
-   */
-  private parseLanguage(filePath: string): string {
-    const lang = Object.keys(this.app.langPathMap).find(key => filePath.startsWith(key))
-    return lang ? this.app.langPathMap[lang]! : this.app.defaultLang
   }
 
   /**
