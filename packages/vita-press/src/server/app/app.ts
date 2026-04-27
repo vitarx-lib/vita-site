@@ -55,11 +55,11 @@ export class VitaPressApp {
   /**
    * 默认语言
    */
-  public readonly defaultLang: string
+  public readonly lang: string
   /**
-   * 语言目录映射
+   * 语言列表
    */
-  public readonly langPathMap: Record<string, string> = {}
+  public readonly langs: string[] = []
   /**
    * 插件列表
    */
@@ -80,6 +80,10 @@ export class VitaPressApp {
    * 路由器实例
    */
   public readonly router: VitaPressRouter
+  /**
+   * 创建一个 VitaPressApp 实例
+   * @param options
+   */
   private constructor(options: VitaPressAppOptions) {
     this.root = options.root
     this.cacheDir = path.resolve(this.root, '.vitapress/.cache')
@@ -95,11 +99,9 @@ export class VitaPressApp {
       : existsSync(configJsPath)
         ? configJsPath
         : null
-    this.defaultLang = this.config.lang || 'zh-CN'
-    if (Array.isArray(this.config.langDirs) && this.config.langDirs.length) {
-      this.config.langDirs.forEach(lang => {
-        this.langPathMap[path.resolve(this.docDirPath, lang)] = lang
-      })
+    this.lang = this.config.locales[0]?.id || 'zh-CN'
+    for (const locale of this.config.locales) {
+      this.langs.push(locale.id)
     }
     this.mdParser = this.createMdParser(options.markdownIt)
     this.router = this.createRouter()

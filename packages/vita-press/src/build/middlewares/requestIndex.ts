@@ -17,7 +17,7 @@ export function requestIndex(server: ViteDevServer, app: VitaPressApp): Connect.
 
     if (pathname === '/' || pathname === '/index.html') {
       try {
-        let html = generateIndexHtml(app.config)
+        let html = generateIndexHtml({ ...app.config, lang: app.lang })
         html = await server.transformIndexHtml(url, html, originalUrl)
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         res.setHeader('Cache-Control', 'no-cache')

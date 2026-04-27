@@ -50,10 +50,10 @@ export async function renderPages() {
  * @returns HTML 模板字符串
  */
 export function generateIndexHtml(
-  config: Pick<ResolvedConfig, keyof SiteOptions | 'injectBody' | 'injectHead'>,
+  config: Pick<ResolvedConfig, keyof SiteOptions | 'injectBody' | 'injectHead'> & { lang: string },
   content: string = ''
 ): string {
-  const { title, description, keywords, lang, injectHead, injectBody } = config
+  const { title, description, keywords, injectHead, injectBody, lang } = config
   const headInject = injectHead.join('\n')
   const bodyInject = injectBody.join('\n')
 

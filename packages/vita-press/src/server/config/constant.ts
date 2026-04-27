@@ -2,11 +2,10 @@ import type { ResolvedConfig } from '../types/index.js'
 
 export const DEFAULT_CONFIG: ResolvedConfig = {
   dts: false,
-  lang: 'zh-CN',
   title: '',
   description: '',
   keywords: '',
-  langDirs: [],
+  locales: [],
   docDir: {
     dir: 'docs',
     include: ['**/*.{tsx,jsx,md}'],

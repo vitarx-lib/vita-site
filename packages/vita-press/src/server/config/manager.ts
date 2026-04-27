@@ -161,6 +161,14 @@ export class ConfigManager {
         currentConfig = mergeConfig(currentConfig, pluginConfig)
       }
     }
+    if (!config.locales || config.locales.length === 0) {
+      if (currentConfig.locales.length === 0) {
+        currentConfig = {
+          ...currentConfig,
+          locales: [{ id: 'zh-CN', name: '简体中文' }]
+        }
+      }
+    }
     return currentConfig
   }
   /**

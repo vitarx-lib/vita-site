@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it'
-import type { ParsedNode, RouteNode } from 'vitarx-router/file-router'
+import type { RouteNode } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../app/index.js'
 import type { MdParseResult } from '../markdown/index.js'
 import type { ResolvedConfig, UserConfig } from './config.js'
@@ -38,7 +38,7 @@ export interface PluginHooks {
   /**
    * 生成路由之前
    */
-  extendRoute?: (route: RouteNode, parsed: Readonly<ParsedNode>, app: VitaPressApp) => void
+  extendRoute?: (route: RouteNode, app: VitaPressApp) => void
 }
 
 /**

@@ -54,9 +54,9 @@ export class MdParser {
       .update(
         JSON.stringify({
           root: app.root,
-          defaultLang: app.defaultLang,
-          languages: app.langPathMap,
-          injectCode: app.config.injectCode,
+          lang: app.lang,
+          langs: app.langs,
+          injectCode: this.injectCode,
           version: getVersion()
         })
       )

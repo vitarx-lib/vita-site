@@ -187,38 +187,39 @@ describe('validateConfig', () => {
   })
 
   describe('语言配置验证', () => {
-    it('应接受字符串类型的 lang', () => {
-      const config: UserConfig = { lang: 'zh-CN' }
+    it('应接受数组类型的 locales', () => {
+      const config: UserConfig = { locales: [{ id: 'zh-CN', name: '简体中文' }] }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应拒绝非字符串类型的 lang', () => {
-      const config = { lang: 123 }
+    it('应拒绝非数组类型的 locales', () => {
+      const config = { locales: 'zh-CN' }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'lang 必须是字符串类型'
-      )
-    })
-  })
-
-  describe('langDirs 配置验证', () => {
-    it('应接受数组类型的 langDirs', () => {
-      const config: UserConfig = { langDirs: ['zh-CN', 'en-US'] }
-      expect(() => validateConfig(config, tempDir)).not.toThrow()
-    })
-
-    it('应拒绝非数组类型的 langDirs', () => {
-      const config = { langDirs: 'zh-CN' }
-      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'langDirs 必须是数组类型'
+        'locales 必须是数组类型'
       )
     })
 
-    it('应拒绝 langDirs 数组中包含非字符串元素', () => {
-      const config = { langDirs: ['zh-CN', 123] }
+    it('应拒绝 locales 数组中包含非对象元素', () => {
+      const config = { locales: ['zh-CN'] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('langDirs[1] 必须是字符串类型')
+      expect(() => validateConfig(config as any, tempDir)).toThrow('locales[0] 必须是对象类型')
+    })
+
+    it('应拒绝 locales 中缺少 id 属性', () => {
+      const config = { locales: [{ name: '简体中文' }] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'locales[0] 必须有 id 属性'
+      )
+    })
+
+    it('应拒绝 locales 中缺少 name 属性', () => {
+      const config = { locales: [{ id: 'zh-CN' }] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'locales[0] 必须有 name 属性'
+      )
     })
   })
 

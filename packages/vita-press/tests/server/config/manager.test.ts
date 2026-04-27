@@ -181,7 +181,7 @@ describe('ConfigManager', () => {
       createConfigFile(`export default {}`)
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.lang).toBe('zh-CN')
+      expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
       expect(manager.config.dts).toBe(false)
     })
 
@@ -189,14 +189,14 @@ describe('ConfigManager', () => {
       createConfigFile(`
         export default {
           title: 'Custom Title',
-          lang: 'en-US',
+          locales: [{ id: 'en-US', name: 'English' }],
           dts: true
         }
       `)
       const manager = await ConfigManager.create(tempDir)
 
       expect(manager.config.title).toBe('Custom Title')
-      expect(manager.config.lang).toBe('en-US')
+      expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
       expect(manager.config.dts).toBe(true)
     })
   })

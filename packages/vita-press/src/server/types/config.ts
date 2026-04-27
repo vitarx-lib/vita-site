@@ -43,15 +43,6 @@ export interface MarkdownItOptions {
 }
 export interface SiteOptions {
   /**
-   * 网站默认语言
-   *
-   * 文档或页面中通过配置定义的lang优先级高于此配置，
-   * 其次如果文档处于多语言映射目录下，则优先使用文档语言。
-   *
-   * @default 'zh-CN'
-   */
-  lang?: string
-  /**
    * 网站标题
    *
    * @default ''
@@ -70,6 +61,22 @@ export interface SiteOptions {
    */
   keywords?: string
 }
+
+export interface Locale {
+  /**
+   * 语言标识，如：zh-CN、en-US
+   *
+   * 遵循 IETF BCP 47 标准的（Tags for Identifying Languages）
+   */
+  id: string
+  /**
+   * 语言名称
+   *
+   * 用于显示在语言切换菜单中展示
+   */
+  name: string
+}
+
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
   /**
    * 是否生成路由 dts 文件
@@ -82,23 +89,21 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    */
   dts?: string | boolean
   /**
-   * 默认语言
-   *
-   * 如果文档支持多语言，则将docs目录下的语言目录名称传入。
+   * 多语言配置
    *
    * @example
    * ```ts
    * // 多语言配置
-   * // docs/zh-CN/index.md
-   * // docs/en-US/index.md
+   * // docs/index.md
+   * // docs/index.en-US.md
    * {
-   *  langDirs: ['zh-CN', 'en-US']
+   *  locales: [{ id: 'zh-CN', name: '简体中文' }, { id: 'en-US', name: 'English' }]
    * }
    * ```
    *
-   * @default []
+   * @default [{ id: 'zh-CN', name: '简体中文' }]
    */
-  langDirs?: string[]
+  locales?: Locale[]
   /**
    * 文档目录
    *

@@ -45,7 +45,10 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
     load(id: string, options): string | null {
       // 生成index.html
       if (id === 'index.html') {
-        return generateIndexHtml(app.config, isBuild ? BODY_CONTENT_PLACEHOLDER : '')
+        return generateIndexHtml(
+          { ...app.config, lang: app.lang },
+          isBuild ? BODY_CONTENT_PLACEHOLDER : ''
+        )
       }
       // 输出routes内容
       if (id === RESOLVED_ROUTES_ID) {

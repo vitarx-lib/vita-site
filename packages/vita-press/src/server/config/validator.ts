@@ -26,8 +26,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateInjectOptions(config)
   validateDocsDir(config, root)
   validatePagesDir(config, root)
-  validateLang(config)
-  validateLangDirs(config)
+  validateLocales(config)
   validateMarkdownIt(config)
   validateDts(config)
   validatePlugins(config, 'plugins')
@@ -181,32 +180,25 @@ function validateDirConfig(dirConfig: PageDirOptions, fieldName: string, root: s
  * @param config - 用户配置对象
  * @throws {ConfigValidationError} 语言配置无效时抛出
  */
-function validateLang(config: UserConfig): void {
-  if (config.lang === undefined) return
+function validateLocales(config: UserConfig): void {
+  if (config.locales === undefined) return
 
-  if (typeof config.lang !== 'string') {
-    throw new ConfigValidationError(`lang 必须是字符串类型，当前类型: ${typeof config.lang}`)
-  }
-}
-
-/**
- * 验证语言目录配置
- *
- * @param config - 用户配置对象
- * @throws {ConfigValidationError} 语言目录配置无效时抛出
- */
-function validateLangDirs(config: UserConfig): void {
-  if (config.langDirs === undefined) return
-
-  if (!Array.isArray(config.langDirs)) {
-    throw new ConfigValidationError(`langDirs 必须是数组类型，当前类型: ${typeof config.langDirs}`)
+  if (!Array.isArray(config.locales)) {
+    throw new ConfigValidationError(`locales 必须是数组类型，当前类型: ${typeof config.locales}`)
   }
 
-  for (let i = 0; i < config.langDirs.length; i++) {
-    if (typeof config.langDirs[i] !== 'string') {
+  for (let i = 0; i < config.locales.length; i++) {
+    const locale = config.locales[i]
+    if (!locale || typeof locale !== 'object') {
       throw new ConfigValidationError(
-        `langDirs[${i}] 必须是字符串类型，当前类型: ${typeof config.langDirs[i]}`
+        `locales[${i}] 必须是对象类型，当前类型: ${typeof locale}`
       )
+    }
+    if (!locale.id) {
+      throw new ConfigValidationError(`locales[${i}] 必须有 id 属性`)
+    }
+    if (!locale.name) {
+      throw new ConfigValidationError(`locales[${i}] 必须有 name 属性`)
     }
   }
 }

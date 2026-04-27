@@ -1,5 +1,5 @@
-import path from 'node:path'
-import { FileRouter, warn } from 'vitarx-router/file-router'
+import { relative } from 'node:path'
+import { FileRouter, type PageParseResult, warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../app/index.js'
 
 /**
@@ -15,10 +15,7 @@ export class VitaPressRouter extends FileRouter {
       injectImports: [`import { lazy } from "vitarx"`],
       importMode: ({ importPath, filePath }) => {
         if (filePath.endsWith('.md')) {
-          const cachePath = app.mdParser.cache.getCacheFilePath(
-            path.relative(app.root, filePath),
-            'jsx'
-          )
+          const cachePath = app.mdParser.cache.getCacheFilePath(relative(app.root, filePath), 'jsx')
           return `lazy(() => import("${cachePath}"))`
         }
         return `lazy(() => import(${importPath}))`
@@ -31,14 +28,33 @@ export class VitaPressRouter extends FileRouter {
         }
         return content
       },
-      extendRoute: (route, parsed) => {
-        const lang = app.langPathMap[parsed.filePath] || app.defaultLang
-        route.meta ??= {}
-        route.meta['lang'] = typeof route.meta['lang'] === 'string' ? route.meta['lang'] : lang
+      pageParser: basename => {
+        const [path, viewName] = basename.split('@', 2) as [string, string]
+        const result: PageParseResult = { path, viewName }
+        let lang: string = app.lang
+
+        if (path.includes('.')) {
+          const parts = path.split('.')
+          const lastPart = parts.pop()!
+
+          if (app.langs.includes(lastPart)) {
+            lang = lastPart
+            result.path = parts.join('-') + '-' + lastPart
+          } else {
+            result.path = path.replace(/\./g, '-')
+          }
+        }
+
+        result.options = {
+          meta: { lang }
+        }
+        return result
+      },
+      extendRoute: route => {
         for (const plugin of app.plugins) {
           if (typeof plugin.extendRoute === 'function') {
             try {
-              plugin.extendRoute(route, parsed, app)
+              plugin.extendRoute(route, app)
             } catch (e) {
               warn(`Plugin ${plugin.name} extendRoute error:`, e)
             }

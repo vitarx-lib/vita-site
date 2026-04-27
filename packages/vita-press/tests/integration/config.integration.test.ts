@@ -81,7 +81,7 @@ describe('配置系统端到端集成测试', () => {
         export default {
           title: 'Valid Config',
           description: 'Valid description',
-          lang: 'en-US',
+          locales: [{ id: 'en-US', name: 'English' }],
           dts: true
         }
       `)
@@ -89,7 +89,7 @@ describe('配置系统端到端集成测试', () => {
       const manager = await ConfigManager.create(tempDir)
 
       expect(manager.config.title).toBe('Valid Config')
-      expect(manager.config.lang).toBe('en-US')
+      expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
       expect(manager.config.dts).toBe(true)
     })
 
@@ -100,7 +100,7 @@ describe('配置系统端到端集成测试', () => {
 
       expect(manager.config).toBeDefined()
       expect(manager.config.title).toBe('')
-      expect(manager.config.lang).toBe('zh-CN')
+      expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
     })
 
     it('应正确处理部分配置', async () => {
@@ -114,7 +114,7 @@ describe('配置系统端到端集成测试', () => {
 
       expect(manager.config.title).toBe('Partial Config')
       expect(manager.config.description).toBe('')
-      expect(manager.config.lang).toBe('zh-CN')
+      expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
     })
   })
 
@@ -123,14 +123,14 @@ describe('配置系统端到端集成测试', () => {
       createConfigFile(`
         export default {
           title: 'User Title',
-          lang: 'en-US'
+          locales: [{ id: 'en-US', name: 'English' }]
         }
       `)
 
       const manager = await ConfigManager.create(tempDir)
 
       expect(manager.config.title).toBe('User Title')
-      expect(manager.config.lang).toBe('en-US')
+      expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
       expect(manager.config.dts).toBe(false)
     })
 
@@ -271,36 +271,44 @@ describe('配置系统端到端集成测试', () => {
   })
 
   describe('多语言配置', () => {
-    it('应使用默认语言', async () => {
+    it('应使用默认语言配置', async () => {
       createConfigFile(`export default {}`)
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.lang).toBe('zh-CN')
+      expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
     })
 
-    it('应支持自定义默认语言', async () => {
+    it('应支持自定义语言配置', async () => {
       createConfigFile(`
         export default {
-          lang: 'en-US'
+          locales: [{ id: 'en-US', name: 'English' }]
         }
       `)
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.lang).toBe('en-US')
+      expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
     })
 
-    it('应支持语言目录配置', async () => {
+    it('应支持多语言配置', async () => {
       createConfigFile(`
         export default {
-          langDirs: ['zh-CN', 'en-US', 'ja-JP']
+          locales: [
+            { id: 'zh-CN', name: '简体中文' },
+            { id: 'en-US', name: 'English' },
+            { id: 'ja-JP', name: '日本語' }
+          ]
         }
       `)
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.langDirs).toEqual(['zh-CN', 'en-US', 'ja-JP'])
+      expect(manager.config.locales).toEqual([
+        { id: 'zh-CN', name: '简体中文' },
+        { id: 'en-US', name: 'English' },
+        { id: 'ja-JP', name: '日本語' }
+      ])
     })
   })
 
@@ -449,7 +457,7 @@ describe('配置系统端到端集成测试', () => {
     it('应正确合并配置对象', () => {
       const defaults = {
         title: 'Default',
-        lang: 'zh-CN',
+        locales: [] as Array<{ id: string; name: string }>,
         dts: false
       }
       const overrides = {
@@ -460,7 +468,7 @@ describe('配置系统端到端集成测试', () => {
       const result = mergeConfig(defaults, overrides)
 
       expect(result.title).toBe('Custom')
-      expect(result.lang).toBe('zh-CN')
+      expect(result.locales).toEqual([])
       expect(result.dts).toBe(true)
     })
 

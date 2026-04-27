@@ -58,7 +58,7 @@ describe('VitaPressApp 端到端集成测试', () => {
       expect(app.docDirPath).toBe(join(tempDir, 'docs'))
       expect(app.cacheDir).toBe(join(tempDir, '.vitapress/.cache'))
       expect(app.tempDir).toBe(join(tempDir, '.vitapress/.temp'))
-      expect(app.defaultLang).toBe('zh-CN')
+      expect(app.lang).toBe('zh-CN')
     })
 
     it('应正确识别客户端配置文件（TypeScript）', async () => {
@@ -280,34 +280,37 @@ describe('VitaPressApp 端到端集成测试', () => {
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.defaultLang).toBe('zh-CN')
+      expect(app.lang).toBe('zh-CN')
     })
 
     it('应支持自定义默认语言', async () => {
       createProjectStructure({
         '.vitapress/config.ts': `export default {
-          lang: 'en-US'
+          locales: [{ id: 'en-US', name: 'English' }]
         }`,
         'docs/index.md': '# Home'
       })
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.defaultLang).toBe('en-US')
+      expect(app.lang).toBe('en-US')
     })
 
-    it('应正确配置语言目录映射', async () => {
+    it('应正确配置多语言', async () => {
       createProjectStructure({
         '.vitapress/config.ts': `export default {
-          langDirs: ['zh-CN', 'en-US']
+          locales: [
+            { id: 'zh-CN', name: '简体中文' },
+            { id: 'en-US', name: 'English' }
+          ]
         }`,
-        'docs/zh-CN/index.md': '# 中文',
-        'docs/en-US/index.md': '# English'
+        'docs/index.md': '# 中文',
+        'docs/index.en-US.md': '# English'
       })
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.config.langDirs).toEqual(['zh-CN', 'en-US'])
+      expect(app.langs).toEqual(['zh-CN', 'en-US'])
     })
   })
 
@@ -321,7 +324,7 @@ describe('VitaPressApp 端到端集成测试', () => {
       const app = await VitaPressApp.create(tempDir, 'dev')
 
       expect(app.config.dts).toBe(false)
-      expect(app.config.lang).toBe('zh-CN')
+      expect(app.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
     })
 
     it('用户配置应覆盖默认配置', async () => {
@@ -329,7 +332,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         '.vitapress/config.ts': `export default {
           title: 'Custom Title',
           description: 'Custom Description',
-          lang: 'en-US',
+          locales: [{ id: 'en-US', name: 'English' }],
           dts: true
         }`,
         'docs/index.md': '# Home'
@@ -339,7 +342,7 @@ describe('VitaPressApp 端到端集成测试', () => {
 
       expect(app.config.title).toBe('Custom Title')
       expect(app.config.description).toBe('Custom Description')
-      expect(app.config.lang).toBe('en-US')
+      expect(app.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
       expect(app.config.dts).toBe(true)
     })
 

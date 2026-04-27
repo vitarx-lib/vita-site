@@ -6,6 +6,14 @@ import type { SiteOptions } from './config.js'
  * 页面元数据
  */
 export interface PageMetaData extends SiteOptions {
+  /**
+   * 网站语言
+   *
+   * 文档或页面中通过配置定义的lang优先级高于此配置，
+   *
+   * @default 'zh-CN'
+   */
+  lang?: string
   [key: string]: any
 }
 

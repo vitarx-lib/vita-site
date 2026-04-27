@@ -47,7 +47,7 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
         const title = meta['title'] || app.config.title
         const description = meta['description'] || app.config.description
         const keywords = meta['keywords'] || app.config.keywords
-        const lang = meta['lang'] || app.config.lang
+        const lang = meta['lang'] || app.lang
 
         // SSR HTML
         const ssrHtml = detail.body || ''

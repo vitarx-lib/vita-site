@@ -4,7 +4,7 @@ import { DEFAULT_CONFIG } from '../../../src/server/config/constant.js'
 describe('DEFAULT_CONFIG', () => {
   it('应定义所有必需的配置项', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('dts')
-    expect(DEFAULT_CONFIG).toHaveProperty('lang')
+    expect(DEFAULT_CONFIG).toHaveProperty('locales')
     expect(DEFAULT_CONFIG).toHaveProperty('title')
     expect(DEFAULT_CONFIG).toHaveProperty('description')
     expect(DEFAULT_CONFIG).toHaveProperty('keywords')
@@ -23,8 +23,8 @@ describe('DEFAULT_CONFIG', () => {
       expect(DEFAULT_CONFIG.dts).toBe(false)
     })
 
-    it('lang 应为 zh-CN', () => {
-      expect(DEFAULT_CONFIG.lang).toBe('zh-CN')
+    it('locales 默认应为空数组', () => {
+      expect(DEFAULT_CONFIG.locales).toEqual([])
     })
 
     it('title 应为空字符串', () => {
