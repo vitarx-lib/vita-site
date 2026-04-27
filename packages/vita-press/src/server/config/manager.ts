@@ -162,12 +162,13 @@ export class ConfigManager {
       }
     }
     if (!config.locales || config.locales.length === 0) {
-      if (currentConfig.locales.length === 0) {
-        currentConfig = {
-          ...currentConfig,
-          locales: [{ id: 'zh-CN', name: '简体中文' }]
-        }
-      }
+      currentConfig.locales = [{ id: 'zh-CN', name: '简体中文' }]
+    }
+    if (currentConfig.docDir.include.length === 0) {
+      currentConfig.docDir.include = ['**/*.md']
+    }
+    if (currentConfig.docDir.exclude.length === 0) {
+      currentConfig.docDir.exclude = ['**/.*']
     }
     return currentConfig
   }
