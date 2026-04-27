@@ -107,13 +107,11 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
   /**
    * 文档目录
    *
-   * @default { dir: 'docs', patterns: ['**\/*.{tsx,jsx,md}','!.*'], exclude: ['**\/.*'], prefix:'/', group: true }
+   * @default { dir: 'docs', include: ['**\/*.md'], exclude: ['**\/.*'], prefix:'/', group: true }
    */
   docDir?: PageDirOptions
   /**
    * 页面目录
-   *
-   * @default []
    */
   pageDirs?: PageDirOptions[]
   /**
