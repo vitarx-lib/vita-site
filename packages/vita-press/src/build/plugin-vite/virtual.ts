@@ -6,8 +6,10 @@ import { VitaPressApp } from '../../server/index.js'
 import {
   BODY_CONTENT_PLACEHOLDER,
   RESOLVED_CLIENT_CONFIG_ID,
+  RESOLVED_LOCALES_ID,
   RESOLVED_RUNTIME_ENTER_ID,
   VIRTUAL_CLIENT_CONFIG_ID,
+  VIRTUAL_LOCALES_ID,
   VIRTUAL_RUNTIME_ENTER_ID
 } from '../common/constant.js'
 import {
@@ -37,6 +39,9 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === VIRTUAL_CLIENT_CONFIG_ID) {
         return RESOLVED_CLIENT_CONFIG_ID
       }
+      if (id === VIRTUAL_LOCALES_ID) {
+        return RESOLVED_LOCALES_ID
+      }
       if (id === VIRTUAL_ROUTES_ID) {
         return RESOLVED_ROUTES_ID
       }
@@ -49,6 +54,10 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
           { ...app.config, lang: app.lang },
           isBuild ? BODY_CONTENT_PLACEHOLDER : ''
         )
+      }
+      // 输出 locales 内容
+      if (id === RESOLVED_LOCALES_ID) {
+        return `const locales = ${JSON.stringify(app.config.locales, null, 2)};\nexport default locales`
       }
       // 输出routes内容
       if (id === RESOLVED_ROUTES_ID) {

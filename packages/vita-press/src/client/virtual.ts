@@ -35,3 +35,8 @@ declare module 'virtual:vitapress/runtime/config' {
 
   export default config
 }
+
+declare module 'virtual:vitapress/runtime/locales' {
+  const locales: { id: string; name: string }[]
+  export default locales
+}

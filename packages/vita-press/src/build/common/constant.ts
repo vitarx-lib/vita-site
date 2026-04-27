@@ -18,3 +18,8 @@ export const RESOLVED_RUNTIME_ENTER_ID = '\0' + VIRTUAL_RUNTIME_ENTER_ID
 
 /** body 内容占位符 */
 export const BODY_CONTENT_PLACEHOLDER = '<!--ssr-outlet-->'
+
+/** 本地化配置虚拟模块 ID */
+export const VIRTUAL_LOCALES_ID = 'virtual:vitapress/runtime/locales'
+/** 本地化配置虚拟模块解析后的 ID */
+export const RESOLVED_LOCALES_ID = '\0' + VIRTUAL_LOCALES_ID
