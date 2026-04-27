@@ -8,8 +8,8 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   locales: [],
   docDir: {
     dir: 'docs',
-    include: ['**/*.{tsx,jsx,md}'],
-    exclude: ['**/.*'],
+    include: [],
+    exclude: [],
     prefix: '/',
     group: true
   },
