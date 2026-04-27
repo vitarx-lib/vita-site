@@ -72,8 +72,14 @@ export function mergeConfig<T = any>(
     } else if (Array.isArray(targetValue) && Array.isArray(sourceValue)) {
       result[key] = mergeTwoArrays(targetValue, sourceValue) as any
     } else {
-      // 数组 / 基本类型 / 其他对象：直接覆盖
-      result[key] = sourceValue
+      // 数组 / 基本类型 / 其他对象：进行浅拷贝后覆盖
+      if (Array.isArray(sourceValue)) {
+        result[key] = [...sourceValue]
+      } else if (isPlainObject(sourceValue)) {
+        result[key] = { ...sourceValue }
+      } else {
+        result[key] = sourceValue
+      }
     }
   }
 
