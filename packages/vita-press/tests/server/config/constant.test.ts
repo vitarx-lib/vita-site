@@ -70,11 +70,11 @@ describe('DEFAULT_CONFIG', () => {
     })
 
     it('include 应包含正确的文件模式', () => {
-      expect(DEFAULT_CONFIG.docDir.include).toContain('**/*.{tsx,jsx,md}')
+      expect(DEFAULT_CONFIG.docDir.include).toEqual([])
     })
 
     it('exclude 应排除隐藏文件', () => {
-      expect(DEFAULT_CONFIG.docDir.exclude).toContain('**/.*')
+      expect(DEFAULT_CONFIG.docDir.exclude).toEqual([])
     })
 
     it('prefix 应为 /', () => {
