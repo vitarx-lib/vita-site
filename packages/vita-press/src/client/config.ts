@@ -1,5 +1,6 @@
 import type { App, AppConfig, Component, View } from 'vitarx'
 import type { Router, RouterOptions } from 'vitarx-router'
+import type { I18nOptions } from './i18n.js'
 
 /**
  * 运行时配置
@@ -19,6 +20,10 @@ export interface RuntimeConfig {
    * 路由配置
    */
   router?: RouterOptions
+  /**
+   * i18n 配置
+   */
+  i18n?: I18nOptions
   /**
    * 拓展应用
    *

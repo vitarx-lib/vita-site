@@ -3,11 +3,12 @@ import { type App, createComponentView, createSSRApp, type View } from 'vitarx'
 import {
   type AfterCallback,
   createMemoryRouter,
-  createRouter,
+  createWebRouter,
   type RouteLocation,
   RouterView
 } from 'vitarx-router'
 import { handleHotUpdate, routes } from 'vitarx-router/auto-routes'
+import { createI18n } from './i18n.js'
 
 interface PageMeta {
   title: string
@@ -58,6 +59,10 @@ function createPageMetaManager(): AfterCallback {
  * @returns {Promise<App>} 应用实例
  */
 async function createClientApp(): Promise<App> {
+  const app = createSSRApp(
+    config.layout ?? ((): View => createComponentView(RouterView)),
+    config.app
+  )
   const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
   const metaManager = createPageMetaManager()
   if (routerOptions.afterEach) {
@@ -69,17 +74,15 @@ async function createClientApp(): Promise<App> {
   } else {
     routerOptions.afterEach = metaManager
   }
-  const router = createRouter(routerOptions)
+  const router = createWebRouter(routerOptions)
   if (import.meta.hot) {
     handleHotUpdate(router)
   }
   await router.isReady()
   await router.resolveComponents()
-  const app = createSSRApp(
-    config.layout ?? ((): View => createComponentView(RouterView)),
-    config.app
-  )
   app.use(router)
+  const i18n = createI18n(config.i18n)
+  app.use(i18n)
   if (typeof config.enhanceApp === 'function') {
     config.enhanceApp(app, router)
   }
@@ -96,13 +99,15 @@ async function createClientApp(): Promise<App> {
  * @returns {Promise<App>} 应用实例
  */
 async function createNodeApp(): Promise<App> {
-  const routerOptions = Object.assign({}, { routes }, config.router)
-  const router = createMemoryRouter(routerOptions)
   const app = createSSRApp(
     config.layout ?? ((): View => createComponentView(RouterView)),
     config.app
   )
+  const routerOptions = Object.assign({}, { routes }, config.router)
+  const router = createMemoryRouter(routerOptions)
   app.use(router)
+  const i18n = createI18n(config.i18n)
+  app.use(i18n)
   if (typeof config.enhanceApp === 'function') {
     config.enhanceApp(app, router)
   }
