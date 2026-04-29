@@ -347,10 +347,7 @@ describe('MdParser', () => {
 
     it('应调用插件的 afterParse 钩子', () => {
       const afterParseMock = vi.fn((result: any) => {
-        return {
-          ...result,
-          meta: { ...result.meta, customField: 'custom-value' }
-        }
+        result.meta = { ...result.meta, customField: 'custom-value' }
       })
 
       const pluginApp = createMockApp(tempDir)
