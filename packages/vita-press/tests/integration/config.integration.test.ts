@@ -137,7 +137,7 @@ describe('配置系统端到端集成测试', () => {
     it('应深度合并嵌套配置', async () => {
       createConfigFile(`
         export default {
-          viteConfig: {
+          vite: {
             base: '/docs/',
             server: {
               port: 3000
@@ -148,8 +148,8 @@ describe('配置系统端到端集成测试', () => {
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.viteConfig.base).toBe('/docs/')
-      expect(manager.config.viteConfig.server?.port).toBe(3000)
+      expect(manager.config.vite.base).toBe('/docs/')
+      expect(manager.config.vite.server?.port).toBe(3000)
     })
 
     it('用户配置应完全覆盖数组配置', async () => {
@@ -347,13 +347,13 @@ describe('配置系统端到端集成测试', () => {
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.viteConfig).toBeDefined()
+      expect(manager.config.vite).toBeDefined()
     })
 
     it('应支持自定义 Vite 配置', async () => {
       createConfigFile(`
         export default {
-          viteConfig: {
+          vite: {
             base: '/docs/',
             server: {
               port: 3000,
@@ -365,9 +365,9 @@ describe('配置系统端到端集成测试', () => {
 
       const manager = await ConfigManager.create(tempDir)
 
-      expect(manager.config.viteConfig.base).toBe('/docs/')
-      expect(manager.config.viteConfig.server?.port).toBe(3000)
-      expect(manager.config.viteConfig.server?.open).toBe(true)
+      expect(manager.config.vite.base).toBe('/docs/')
+      expect(manager.config.vite.server?.port).toBe(3000)
+      expect(manager.config.vite.server?.open).toBe(true)
     })
   })
 
@@ -474,7 +474,7 @@ describe('配置系统端到端集成测试', () => {
 
     it('应深度合并嵌套对象', () => {
       const defaults = {
-        viteConfig: {
+        vite: {
           base: '/',
           server: {
             port: 3000
@@ -482,7 +482,7 @@ describe('配置系统端到端集成测试', () => {
         }
       }
       const overrides = {
-        viteConfig: {
+        vite: {
           server: {
             port: 4000,
             open: true
@@ -492,9 +492,9 @@ describe('配置系统端到端集成测试', () => {
 
       const result = mergeConfig(defaults, overrides)
 
-      expect(result.viteConfig.base).toBe('/')
-      expect(result.viteConfig.server.port).toBe(4000)
-      expect(result.viteConfig.server.open).toBe(true)
+      expect(result.vite.base).toBe('/')
+      expect(result.vite.server.port).toBe(4000)
+      expect(result.vite.server.open).toBe(true)
     })
 
     it('应处理 null 和 undefined', () => {
