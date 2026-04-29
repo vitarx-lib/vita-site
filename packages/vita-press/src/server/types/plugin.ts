@@ -31,14 +31,19 @@ export interface PluginHooks {
   beforeParse?: (content: string, file: string) => string | void
   /**
    * 在解析 Markdown 文件之后调用
+   *
    * @param res - 解析结果
-   * @returns {MdParseResult | void} - 返回解析结果（自动合并）或 void
+   * @returns {void}
    */
-  afterParse?: (res: MdParseResult) => MdParseResult | void
+  afterParse?: (res: MdParseResult) => void
   /**
-   * 生成路由之前
+   * 扩展路由节点
    */
   extendRoute?: (route: RouteNode, app: VitaPressApp) => void
+  /**
+   * 写入路由之前
+   */
+  beforeWriteRoutes?: (routes: RouteNode[], app: VitaPressApp) => RouteNode[] | void
 }
 
 /**

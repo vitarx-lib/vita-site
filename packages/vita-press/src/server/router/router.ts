@@ -60,6 +60,19 @@ export class VitaPressRouter extends FileRouter {
             }
           }
         }
+      },
+      beforeWriteRoutes: routes => {
+        for (const plugin of app.plugins) {
+          if (typeof plugin.beforeWriteRoutes === 'function') {
+            try {
+              const result = plugin.beforeWriteRoutes(routes, app)
+              if (Array.isArray(result)) routes = result
+            } catch (e) {
+              warn(`Plugin ${plugin.name} beforeWriteRoutes error:`, e)
+            }
+          }
+        }
+        return routes
       }
     })
   }
