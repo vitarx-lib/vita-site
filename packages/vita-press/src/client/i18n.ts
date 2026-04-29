@@ -1,36 +1,9 @@
-import { type App, type Computed, computed, getApp, shallowRef, type ShallowRef } from 'vitarx'
+import { type App, type Computed, computed, getApp } from 'vitarx'
+import { cloneRouteLocation, type RouteLocation, type Router } from 'vitarx-router'
 import type { Locale } from '../server/index.js'
 import { locales } from './locales.js'
 
 export type I18nMessages = Record<string, Record<string, string>>
-
-const LANG_CACHE_KEY = 'vitapress:lang'
-
-/**
- * 从缓存中读取语言偏好
- *
- * @returns 缓存的语言标识或 null
- */
-function getCachedLang(): string | null {
-  try {
-    return localStorage.getItem(LANG_CACHE_KEY)
-  } catch {
-    return null
-  }
-}
-
-/**
- * 将语言偏好写入缓存
- *
- * @param lang - 语言标识
- */
-function setCachedLang(lang: string): void {
-  try {
-    localStorage.setItem(LANG_CACHE_KEY, lang)
-  } catch {
-    // localStorage 不可用时静默忽略
-  }
-}
 
 export interface I18nOptions {
   /**
@@ -57,6 +30,11 @@ export interface I18nOptions {
  * i18n 注入键
  */
 export const __I18N_INJECT_KEY__ = Symbol.for('__vitapress_i18n__')
+
+interface PageLocale extends Locale {
+  route: RouteLocation | null
+}
+
 /**
  * 国际化类
  */
@@ -64,15 +42,19 @@ export class I18n {
   /**
    * 当前语言标识（响应式）
    */
-  public readonly lang: ShallowRef<string>
+  public readonly lang: Computed<string>
   /**
    * 当前语言配置（计算属性）
    */
-  public readonly locale: Computed<Locale | undefined>
+  public readonly locale: Computed<PageLocale | undefined>
   /**
    * 所有支持的语言列表
    */
-  public readonly locales: readonly Locale[]
+  public readonly locales: Computed<readonly PageLocale[]>
+  /**
+   * 默认语言标识
+   */
+  public readonly defaultLang: string
   /**
    * 翻译消息
    * @private
@@ -84,15 +66,40 @@ export class I18n {
    */
   readonly #currentMessages: Computed<Record<string, string>>
 
-  constructor(options: I18nOptions = {}) {
-    this.locales = locales
+  constructor(
+    private readonly router: Router,
+    options: I18nOptions = {}
+  ) {
+    this.defaultLang = locales[0]!.id
     this.#messages = options.messages || {}
-    const cachedLang = getCachedLang()
-    const initialLang =
-      cachedLang && this.locales.some(l => l.id === cachedLang) ? cachedLang : this.locales[0]!.id
-    this.lang = shallowRef(initialLang)
+    this.lang = computed((prevLang): string => {
+      return router.route.meta['lang'] || prevLang || this.defaultLang
+    })
+    let lastComputedLang: string | undefined
+    this.locales = computed((oldValue): PageLocale[] => {
+      const currentRoute = this.router.route
+      const currentLang = this.lang.value
+      if (currentLang === lastComputedLang && oldValue) return oldValue
+      lastComputedLang = currentLang
+      let path: string
+      if (currentLang === this.defaultLang) {
+        path = currentRoute.path
+      } else {
+        path = currentRoute.path.replace(`-${currentLang}`, '')
+        if (path === '/index') path = '/'
+      }
+      return locales.map(item => {
+        return {
+          ...item,
+          route:
+            item.id === currentLang
+              ? cloneRouteLocation(currentRoute)
+              : this.matchRoute(path, item.id)
+        }
+      })
+    })
     this.locale = computed(() => {
-      return this.locales.find(l => l.id === this.lang.value)
+      return this.locales.value.find(l => l.id === this.lang.value)
     })
     this.#currentMessages = computed(() => {
       const currentLang = this.lang.value
@@ -104,18 +111,17 @@ export class I18n {
    * 设置当前语言
    *
    * @param newLang - 语言标识
+   * @throws {Error} 如果语言标识无效
    */
   setLang(newLang: string): void {
-    const isValidLang = this.locales.some(locale => locale.id === newLang)
-    if (!isValidLang) {
-      console.warn(`[i18n] Invalid language: ${newLang}`)
-      return
+    const locale = this.locales.value.find(l => l.id === newLang)
+    if (!locale) {
+      throw new Error(`[i18n] Invalid language: ${newLang}`)
     }
-    this.lang.value = newLang
-    setCachedLang(newLang)
-    if (typeof document !== 'undefined') {
-      document.documentElement.lang = newLang
+    if (!locale.route) {
+      throw new Error(`[i18n] Currently, there are no matching routes for the ${newLang} language`)
     }
+    this.router.push(locale.route)
   }
 
   /**
@@ -139,13 +145,13 @@ export class I18n {
   }
 
   /**
-   * 判断是否为当前语言
+   * 判断语言是否支持
    *
    * @param targetLang - 语言标识
-   * @returns {boolean} 是否为当前语言
+   * @returns {boolean} 是否支持该语言
    */
-  isLang(targetLang: string): boolean {
-    return this.lang.value === targetLang
+  has(targetLang: string): boolean {
+    return this.locales.value.some(l => l.id === targetLang && l.route)
   }
 
   /**
@@ -155,16 +161,21 @@ export class I18n {
   install(app: App): void {
     app.provide(__I18N_INJECT_KEY__, this)
   }
-}
 
-/**
- * 创建 i18n 实例
- *
- * @param options - i18n 配置选项
- * @returns i18n 实例
- */
-export function createI18n(options?: I18nOptions): I18n {
-  return new I18n(options)
+  /**
+   * 匹配路由
+   * @param path
+   * @param newLang
+   * @private
+   */
+  private matchRoute(path: string, newLang: string) {
+    if (path === '/') {
+      path = newLang === this.defaultLang ? path : `/index-${newLang}`
+    } else {
+      path = newLang === this.defaultLang ? path : `${path}-${newLang}`
+    }
+    return this.router.matchRoute({ index: path })
+  }
 }
 
 /**
