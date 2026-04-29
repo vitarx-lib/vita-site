@@ -103,7 +103,7 @@ async function createNodeApp(): Promise<App> {
     config.layout ?? ((): View => createComponentView(RouterView)),
     config.app
   )
-  const routerOptions = Object.assign({}, { routes }, config.router)
+  const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
   const router = createMemoryRouter(routerOptions)
   app.use(router)
   const i18n = createI18n(config.i18n)
