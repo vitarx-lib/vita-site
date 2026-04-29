@@ -4,8 +4,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../../app/index.js'
-import { getVersion, isPlainObject } from '../../common/utils.js'
-import { mergeConfig } from '../../config/index.js'
+import { getVersion } from '../../common/utils.js'
 import type { MarkdownParseEnvContext } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
@@ -82,7 +81,7 @@ export class MdParser {
     if (cached) return cached
     content = this.beforeParse(filePath, content)
     let result = this.transform(filePath, content)
-    result = this.afterParse(result)
+    this.afterParse(result)
     const componentCode = this.generateComponent(result)
     this.cache.set(relativePath, content, componentCode)
     return componentCode
@@ -180,17 +179,15 @@ export default () => (<article class="v-doc-content">${html}</article>)
    * @param result
    * @private
    */
-  private afterParse(result: MdParseResult): MdParseResult {
+  private afterParse(result: MdParseResult): void {
     for (const plugin of this.app.plugins) {
       if (typeof plugin.afterParse === 'function') {
         try {
-          const _result = plugin.afterParse(result)
-          if (isPlainObject(_result)) result = mergeConfig(result, _result)
+          plugin.afterParse(result)
         } catch (e) {
           warn(`Plugin ${plugin.name} afterParse error:`, e)
         }
       }
     }
-    return result
   }
 }
