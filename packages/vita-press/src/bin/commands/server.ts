@@ -113,7 +113,7 @@ async function handlePreview(
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
   const server = await preview(
-    mergeConfig(app.config.viteConfig, {
+    mergeConfig(app.config.vite, {
       server: serverConfig
     })
   )
@@ -130,9 +130,9 @@ async function handleDev(
   app: VitaPressApp,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
-  const vitarxPlugin = await getVitarxPlugin(app.config.viteConfig.plugins)
+  const vitarxPlugin = await getVitarxPlugin(app.config.vite.plugins)
   const server = await createServer(
-    mergeConfig(app.config.viteConfig, {
+    mergeConfig(app.config.vite, {
       server: serverConfig,
       plugins: [virtualModulePlugin(app), devPlugin(app), vitarxPlugin]
     })
@@ -152,10 +152,10 @@ async function handleBuild(
   app: VitaPressApp,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
-  const vitarxPlugin = await getVitarxPlugin(app.config.viteConfig.plugins)
+  const vitarxPlugin = await getVitarxPlugin(app.config.vite.plugins)
 
   await build(
-    mergeConfig(app.config.viteConfig, {
+    mergeConfig(app.config.vite, {
       server: serverConfig,
       plugins: [virtualModulePlugin(app), serverBuildPlugin(app), vitarxPlugin],
       logLevel: 'warn'
@@ -163,7 +163,7 @@ async function handleBuild(
   )
 
   await build(
-    mergeConfig(app.config.viteConfig, {
+    mergeConfig(app.config.vite, {
       server: serverConfig,
       plugins: [virtualModulePlugin(app), clientBuildPlugin(app), vitarxPlugin]
     })

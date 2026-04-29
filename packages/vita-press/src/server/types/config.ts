@@ -61,7 +61,12 @@ export interface SiteOptions {
    */
   keywords?: string
 }
-
+export interface PluginOptions {
+  /**
+   * 插件列表
+   */
+  plugins?: VitaPressPlugin[]
+}
 export interface Locale {
   /**
    * 语言标识，如：zh-CN、en-US
@@ -76,8 +81,7 @@ export interface Locale {
    */
   name: string
 }
-
-export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions {
+export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions, PluginOptions {
   /**
    * 是否生成路由 dts 文件
    *
@@ -115,12 +119,8 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOption
    */
   pageDirs?: PageDirOptions[]
   /**
-   * 插件列表
-   */
-  plugins?: VitaPressPlugin[]
-  /**
    * Vite 配置
    */
-  viteConfig?: ViteUserConfig
+  vite?: ViteUserConfig
 }
 export type ResolvedConfig = DeepReadonly<Required<UserConfig>>

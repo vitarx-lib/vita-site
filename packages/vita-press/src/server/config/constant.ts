@@ -19,7 +19,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   markdownIt: {},
   pageDirs: [],
   plugins: [],
-  viteConfig: {
+  vite: {
     publicDir: '.vitapress/public',
     build: {
       outDir: '.vitapress/dist'

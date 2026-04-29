@@ -1,5 +1,5 @@
 import config from 'virtual:vitapress/runtime/config'
-import { type App, createComponentView, createSSRApp, type SSRApp, type View } from 'vitarx'
+import { type App, createComponentView, createSSRApp, type SSRApp } from 'vitarx'
 import {
   type AfterCallback,
   createMemoryRouter,
@@ -12,6 +12,7 @@ import {
 import { handleHotUpdate, routes } from 'vitarx-router/auto-routes'
 import type { EnhanceApp } from './config.js'
 import { I18n } from './i18n.js'
+import { concatHook } from './merge.js'
 
 /**
  * 创建基础应用实例和路由配置
@@ -19,11 +20,9 @@ import { I18n } from './i18n.js'
  * @returns 应用实例与路由配置
  */
 function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
-  const app = createSSRApp(
-    config.layout ?? ((): View => createComponentView(RouterView)),
-    config.app
-  )
-  const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
+  const layout = config.layout ?? createComponentView(RouterView)
+  const app = createSSRApp(layout, config.app)
+  const routerOptions: RouterOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
   return { app, routerOptions }
 }
 
@@ -59,6 +58,13 @@ function setupPlugins(app: App, router: Router): void {
   applyEnhanceApp(config.enhanceApp, app, router)
 }
 
+interface PageMeta {
+  title: string
+  description: string
+  keywords: string
+  lang: string
+}
+
 /**
  * 创建页面元数据管理器
  *
@@ -69,7 +75,7 @@ function createPageMetaManager(): AfterCallback {
   const metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]')
   const metaKeywords = document.querySelector<HTMLMetaElement>('meta[name="keywords"]')
 
-  const rawMeta = {
+  const rawMeta: PageMeta = {
     title: document.title,
     description: metaDescription?.content || '',
     keywords: metaKeywords?.content || '',
@@ -96,31 +102,13 @@ function createPageMetaManager(): AfterCallback {
 }
 
 /**
- * 将回调追加到路由 afterEach，兼容单函数或数组
- *
- * @param options - 路由配置
- * @param callback - 待追加的回调
- */
-function appendAfterEach(options: RouterOptions, callback: AfterCallback): void {
-  if (options.afterEach) {
-    if (Array.isArray(options.afterEach)) {
-      options.afterEach.push(callback)
-    } else {
-      options.afterEach = [options.afterEach, callback]
-    }
-  } else {
-    options.afterEach = callback
-  }
-}
-
-/**
  * 创建客户端应用
  *
  * @returns {Promise<App>} 应用实例
  */
 async function createClientApp(): Promise<SSRApp> {
   const { app, routerOptions } = createBaseApp()
-  appendAfterEach(routerOptions, createPageMetaManager())
+  routerOptions.afterEach = concatHook(routerOptions.afterEach, createPageMetaManager())
   const router = createWebRouter(routerOptions)
   if (import.meta.hot) {
     handleHotUpdate(router)

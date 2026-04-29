@@ -1,10 +1,48 @@
 import type { App, AppConfig, Component, View } from 'vitarx'
-import type { Router, RouterOptions } from 'vitarx-router'
-import type { I18nOptions } from './i18n.js'
+import type { AfterCallback, NavigationGuard, Router, RouterOptions } from 'vitarx-router'
+import type { I18nMessages, I18nOptions } from './i18n.js'
 
 export type EnhanceApp = (app: App, router: Router) => void
+
+export interface ThemeExpandConfig {
+  /**
+   * 应用入口布局组件或视图对象
+   *
+   * 优先级低于 RuntimeConfig.layout
+   */
+  layout?: View | Component
+  /**
+   * i18n 翻译消息
+   */
+  messages?: I18nMessages
+  /**
+   * 拓展应用
+   *
+   * 在app挂载之前调用
+   *
+   * @param app - 应用实例
+   * @param router - 路由器实例
+   */
+  enhanceApp?: EnhanceApp | EnhanceApp[]
+  /**
+   * 未匹配到路由时显示的组件
+   */
+  missing?: Component
+  /**
+   * 路由跳转前的守卫
+   */
+  beforeEach?: NavigationGuard | NavigationGuard[]
+  /**
+   * 路由跳转后的回调
+   */
+  afterEach?: AfterCallback | AfterCallback[]
+}
+
 /**
  * 运行时配置
+ *
+ * 由虚拟模块 virtual:vitapress/runtime/config 提供，
+ * 已合并所有插件的主题配置，无需手动处理 theme 字段。
  */
 export interface RuntimeConfig {
   /**
@@ -20,7 +58,7 @@ export interface RuntimeConfig {
   /**
    * 路由配置
    */
-  router?: RouterOptions
+  router?: Omit<RouterOptions, 'routes'>
   /**
    * i18n 配置
    */
@@ -35,6 +73,7 @@ export interface RuntimeConfig {
    */
   enhanceApp?: EnhanceApp | EnhanceApp[]
 }
+
 /**
  * 定义运行时配置
  *

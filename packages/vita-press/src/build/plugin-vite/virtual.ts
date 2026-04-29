@@ -19,6 +19,63 @@ import {
 } from '../common/generate.js'
 
 /**
+ * 收集插件中的客户端主题配置模块路径
+ *
+ * @param plugins - 已注册的插件列表
+ * @returns clientConfig 模块路径数组
+ */
+export function collectClientConfigs(plugins: readonly { clientConfig?: string }[]): string[] {
+  const configs: string[] = []
+  for (const plugin of plugins) {
+    if (plugin.clientConfig) {
+      configs.push(plugin.clientConfig)
+    }
+  }
+  return configs
+}
+
+/**
+ * 生成客户端配置虚拟模块代码
+ *
+ * 策略：
+ * - 收集所有插件的 clientConfig 模块路径并生成 import 语句
+ * - 导入用户客户端配置文件
+ * - 调用 resolveRuntimeConfig 合并为最终配置并导出
+ *
+ * @param clientConfigPath - 用户客户端配置文件路径
+ * @param clientConfigs - 插件提供的客户端配置模块路径数组
+ * @returns 生成的模块代码
+ */
+export function generateClientConfigCode(
+  clientConfigPath: string | null,
+  clientConfigs: string[]
+): string {
+  const lines: string[] = []
+  lines.push("import { resolveRuntimeConfig } from 'vitapress'")
+
+  for (let i = 0; i < clientConfigs.length; i++) {
+    lines.push(`import __theme_${i} from '${clientConfigs[i]}'`)
+  }
+
+  const themeArray =
+    clientConfigs.length > 0 ? `[${clientConfigs.map((_, i) => `__theme_${i}`).join(', ')}]` : '[]'
+
+  if (clientConfigPath && existsSync(clientConfigPath)) {
+    const content = readFileSync(clientConfigPath, 'utf-8')
+    if (content.includes('export default')) {
+      lines.push(`import __userConfig from '${clientConfigPath}'`)
+      lines.push(`export default resolveRuntimeConfig(${themeArray}, __userConfig)`)
+    } else {
+      lines.push(`export default resolveRuntimeConfig(${themeArray}, {})`)
+    }
+  } else {
+    lines.push(`export default resolveRuntimeConfig(${themeArray}, {})`)
+  }
+
+  return lines.join('\n')
+}
+
+/**
  * Virtual module plugin for VitaPress
  * @param app
  */
@@ -48,22 +105,18 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       return null
     },
     load(id: string, options): string | null {
-      // 生成index.html
       if (id === 'index.html') {
         return generateIndexHtml(
           { ...app.config, lang: app.lang },
           isBuild ? BODY_CONTENT_PLACEHOLDER : ''
         )
       }
-      // 输出 locales 内容
       if (id === RESOLVED_LOCALES_ID) {
         return `const locales = ${JSON.stringify(app.config.locales, null, 2)};\nexport default locales`
       }
-      // 输出routes内容
       if (id === RESOLVED_ROUTES_ID) {
         return app.router.generate().code
       }
-      // 生成运行时入口代码
       if (id === RESOLVED_RUNTIME_ENTER_ID) {
         if (options?.ssr) {
           return generateServerEnterCode()
@@ -71,21 +124,14 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
           return generateClientEnterCode()
         }
       }
-      // 加载客户端配置
       if (id === RESOLVED_CLIENT_CONFIG_ID) {
-        if (app.clientConfigPath && existsSync(app.clientConfigPath)) {
-          const code = readFileSync(app.clientConfigPath, 'utf-8')
-          if (code.includes('export default')) {
-            return code
-          }
-        }
-        return 'export default {}'
+        const clientConfigs = collectClientConfigs(app.plugins)
+        return generateClientConfigCode(app.clientConfigPath, clientConfigs)
       }
       return null
     },
     transform(code: string, id: string) {
       try {
-        // 移除 definePage 全局宏
         return app.router.removeDefinePage(code, id)
       } catch (error) {
         warn(`Failed to transform ${id}:`, error)
