@@ -527,10 +527,7 @@ lang: en-US
         {
           name: 'test-plugin',
           afterParse: (result: any) => {
-            return {
-              ...result,
-              meta: { ...result.meta, customField: 'custom-value' }
-            }
+            result.meta = { ...result.meta, customField: 'custom-value' }
           }
         }
       ]
