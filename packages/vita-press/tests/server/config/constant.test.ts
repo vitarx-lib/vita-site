@@ -15,7 +15,7 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('markdownIt')
     expect(DEFAULT_CONFIG).toHaveProperty('pageDirs')
     expect(DEFAULT_CONFIG).toHaveProperty('plugins')
-    expect(DEFAULT_CONFIG).toHaveProperty('viteConfig')
+    expect(DEFAULT_CONFIG).toHaveProperty('vite')
   })
 
   describe('默认值', () => {
@@ -86,9 +86,9 @@ describe('DEFAULT_CONFIG', () => {
     })
   })
 
-  describe('viteConfig 配置', () => {
+  describe('vite 配置', () => {
     it('publicDir 应为 .vitapress/public', () => {
-      expect(DEFAULT_CONFIG.viteConfig.publicDir).toBe('.vitapress/public')
+      expect(DEFAULT_CONFIG.vite.publicDir).toBe('.vitapress/public')
     })
   })
 
