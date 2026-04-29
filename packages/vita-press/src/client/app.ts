@@ -1,20 +1,62 @@
 import config from 'virtual:vitapress/runtime/config'
-import { type App, createComponentView, createSSRApp, type View } from 'vitarx'
+import { type App, createComponentView, createSSRApp, type SSRApp, type View } from 'vitarx'
 import {
   type AfterCallback,
   createMemoryRouter,
   createWebRouter,
   type RouteLocation,
+  type Router,
+  type RouterOptions,
   RouterView
 } from 'vitarx-router'
 import { handleHotUpdate, routes } from 'vitarx-router/auto-routes'
-import { createI18n } from './i18n.js'
+import type { EnhanceApp } from './config.js'
+import { I18n } from './i18n.js'
 
-interface PageMeta {
-  title: string
-  description: string
-  keywords: string
-  lang: string
+/**
+ * 创建基础应用实例和路由配置
+ *
+ * @returns 应用实例与路由配置
+ */
+function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
+  const app = createSSRApp(
+    config.layout ?? ((): View => createComponentView(RouterView)),
+    config.app
+  )
+  const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
+  return { app, routerOptions }
+}
+
+/**
+ * 执行应用增强函数，兼容单个函数或数组
+ *
+ * @param enhanceApp - 单个增强函数或增强函数数组
+ * @param app - 应用实例
+ * @param router - 路由器实例
+ */
+function applyEnhanceApp(
+  enhanceApp: EnhanceApp | EnhanceApp[] | undefined,
+  app: App,
+  router: Router
+): void {
+  if (enhanceApp == null) return
+  const fns = Array.isArray(enhanceApp) ? enhanceApp : [enhanceApp]
+  for (const fn of fns) {
+    fn(app, router)
+  }
+}
+
+/**
+ * 注册路由、国际化插件并执行增强函数
+ *
+ * @param app - 应用实例
+ * @param router - 路由器实例
+ */
+function setupPlugins(app: App, router: Router): void {
+  app.use(router)
+  const i18n = new I18n(router, config.i18n)
+  app.use(i18n)
+  applyEnhanceApp(config.enhanceApp, app, router)
 }
 
 /**
@@ -27,7 +69,7 @@ function createPageMetaManager(): AfterCallback {
   const metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]')
   const metaKeywords = document.querySelector<HTMLMetaElement>('meta[name="keywords"]')
 
-  const rawMeta: PageMeta = {
+  const rawMeta = {
     title: document.title,
     description: metaDescription?.content || '',
     keywords: metaKeywords?.content || '',
@@ -54,38 +96,38 @@ function createPageMetaManager(): AfterCallback {
 }
 
 /**
+ * 将回调追加到路由 afterEach，兼容单函数或数组
+ *
+ * @param options - 路由配置
+ * @param callback - 待追加的回调
+ */
+function appendAfterEach(options: RouterOptions, callback: AfterCallback): void {
+  if (options.afterEach) {
+    if (Array.isArray(options.afterEach)) {
+      options.afterEach.push(callback)
+    } else {
+      options.afterEach = [options.afterEach, callback]
+    }
+  } else {
+    options.afterEach = callback
+  }
+}
+
+/**
  * 创建客户端应用
  *
  * @returns {Promise<App>} 应用实例
  */
-async function createClientApp(): Promise<App> {
-  const app = createSSRApp(
-    config.layout ?? ((): View => createComponentView(RouterView)),
-    config.app
-  )
-  const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
-  const metaManager = createPageMetaManager()
-  if (routerOptions.afterEach) {
-    if (Array.isArray(routerOptions.afterEach)) {
-      routerOptions.afterEach.push(metaManager)
-    } else {
-      routerOptions.afterEach = [routerOptions.afterEach, metaManager]
-    }
-  } else {
-    routerOptions.afterEach = metaManager
-  }
+async function createClientApp(): Promise<SSRApp> {
+  const { app, routerOptions } = createBaseApp()
+  appendAfterEach(routerOptions, createPageMetaManager())
   const router = createWebRouter(routerOptions)
   if (import.meta.hot) {
     handleHotUpdate(router)
   }
   await router.isReady()
   await router.resolveComponents()
-  app.use(router)
-  const i18n = createI18n(config.i18n)
-  app.use(i18n)
-  if (typeof config.enhanceApp === 'function') {
-    config.enhanceApp(app, router)
-  }
+  setupPlugins(app, router)
   app.mount(
     '#root',
     (window as unknown as { __INITIAL_STATE__?: Record<string, any> }).__INITIAL_STATE__
@@ -99,18 +141,9 @@ async function createClientApp(): Promise<App> {
  * @returns {Promise<App>} 应用实例
  */
 async function createNodeApp(): Promise<App> {
-  const app = createSSRApp(
-    config.layout ?? ((): View => createComponentView(RouterView)),
-    config.app
-  )
-  const routerOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
+  const { app, routerOptions } = createBaseApp()
   const router = createMemoryRouter(routerOptions)
-  app.use(router)
-  const i18n = createI18n(config.i18n)
-  app.use(i18n)
-  if (typeof config.enhanceApp === 'function') {
-    config.enhanceApp(app, router)
-  }
+  setupPlugins(app, router)
   return app
 }
 

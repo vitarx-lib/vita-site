@@ -2,6 +2,7 @@ import type { App, AppConfig, Component, View } from 'vitarx'
 import type { Router, RouterOptions } from 'vitarx-router'
 import type { I18nOptions } from './i18n.js'
 
+export type EnhanceApp = (app: App, router: Router) => void
 /**
  * 运行时配置
  */
@@ -32,7 +33,7 @@ export interface RuntimeConfig {
    * @param app - 应用实例
    * @param router - 路由器实例
    */
-  enhanceApp?: (app: App, router: Router) => void
+  enhanceApp?: EnhanceApp | EnhanceApp[]
 }
 /**
  * 定义运行时配置
