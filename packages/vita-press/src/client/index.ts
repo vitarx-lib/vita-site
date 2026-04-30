@@ -1,3 +1,4 @@
+export type * from '../server/types/page.js'
 export * from './config.js'
 export { resolveRuntimeConfig } from './merge.js'
 export * from './app.js'

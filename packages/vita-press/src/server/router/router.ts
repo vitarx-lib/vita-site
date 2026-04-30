@@ -1,6 +1,8 @@
 import { relative } from 'node:path'
 import { FileRouter, type PageParseResult, warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../app/index.js'
+import type { NavTree } from '../types/nav.js'
+import { buildNavTree } from './nav.js'
 
 /**
  * 路由器
@@ -8,6 +10,17 @@ import { VitaPressApp } from '../app/index.js'
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
 export class VitaPressRouter extends FileRouter {
+  private _navTree: NavTree | null = null
+
+  /**
+   * 获取导航树
+   *
+   * 在 generate() 调用后可用，返回按语言分组的导航数据。
+   */
+  get navTree(): NavTree | null {
+    return this._navTree
+  }
+
   constructor(app: VitaPressApp) {
     super({
       root: app.root,
@@ -75,6 +88,7 @@ export class VitaPressRouter extends FileRouter {
             }
           }
         }
+        this._navTree = buildNavTree(routes, app.docDirPath, app.lang)
         return routes
       }
     })

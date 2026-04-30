@@ -23,3 +23,8 @@ export const BODY_CONTENT_PLACEHOLDER = '<!--ssr-outlet-->'
 export const VIRTUAL_LOCALES_ID = 'virtual:vitapress/runtime/locales'
 /** 本地化配置虚拟模块解析后的 ID */
 export const RESOLVED_LOCALES_ID = '\0' + VIRTUAL_LOCALES_ID
+
+/** 导航树虚拟模块 ID */
+export const VIRTUAL_NAV_ID = 'virtual:vitapress/runtime/nav'
+/** 导航树虚拟模块解析后的 ID */
+export const RESOLVED_NAV_ID = '\0' + VIRTUAL_NAV_ID

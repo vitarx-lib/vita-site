@@ -7,9 +7,11 @@ import {
   BODY_CONTENT_PLACEHOLDER,
   RESOLVED_CLIENT_CONFIG_ID,
   RESOLVED_LOCALES_ID,
+  RESOLVED_NAV_ID,
   RESOLVED_RUNTIME_ENTER_ID,
   VIRTUAL_CLIENT_CONFIG_ID,
   VIRTUAL_LOCALES_ID,
+  VIRTUAL_NAV_ID,
   VIRTUAL_RUNTIME_ENTER_ID
 } from '../common/constant.js'
 import {
@@ -99,6 +101,9 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === VIRTUAL_LOCALES_ID) {
         return RESOLVED_LOCALES_ID
       }
+      if (id === VIRTUAL_NAV_ID) {
+        return RESOLVED_NAV_ID
+      }
       if (id === VIRTUAL_ROUTES_ID) {
         return RESOLVED_ROUTES_ID
       }
@@ -113,6 +118,10 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       }
       if (id === RESOLVED_LOCALES_ID) {
         return `const locales = ${JSON.stringify(app.config.locales, null, 2)};\nexport default locales`
+      }
+      if (id === RESOLVED_NAV_ID) {
+        const navTree = app.router.navTree ?? {}
+        return `const navTree = ${JSON.stringify(navTree, null, 2)};\nexport default navTree`
       }
       if (id === RESOLVED_ROUTES_ID) {
         return app.router.generate().code

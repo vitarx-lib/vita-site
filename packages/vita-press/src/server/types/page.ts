@@ -22,6 +22,26 @@ export interface PageMetaData extends SiteOptions {
  */
 export interface DocPageMetaData extends GitCommitInfo, PageMetaData {
   /**
+   * 导航标题
+   *
+   * 显示在侧边栏/导航栏中的标题，缺省取 title 或从路径推断。
+   */
+  navTitle?: string
+  /**
+   * 导航排序权重
+   *
+   * 数值越小越靠前。
+   *
+   * @default 0
+   */
+  navOrder?: number
+  /**
+   * 是否在导航中隐藏
+   *
+   * @default false
+   */
+  navHidden?: boolean
+  /**
    * 段落目录列表
    */
   tocList: TocTree[]

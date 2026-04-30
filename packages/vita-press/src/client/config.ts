@@ -4,6 +4,9 @@ import type { I18nMessages, I18nOptions } from './i18n.js'
 
 export type EnhanceApp = (app: App, router: Router) => void
 
+/**
+ * 主题扩展配置
+ */
 export interface ThemeExpandConfig {
   /**
    * 应用入口布局组件或视图对象

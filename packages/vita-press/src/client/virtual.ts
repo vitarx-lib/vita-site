@@ -15,3 +15,11 @@ declare module 'virtual:vitapress/runtime/locales' {
 
   export default locales
 }
+
+declare module 'virtual:vitapress/runtime/nav' {
+  type NavTree = import('../server/types/nav').NavTree
+
+  const navTree: NavTree
+
+  export default navTree
+}
