@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import { type Plugin, type UserConfig, version } from 'vite'
 import { writeCacheFileSync } from '../../server/common/utils.js'
@@ -32,8 +32,9 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
       distDir = path.resolve(app.root, config.build.outDir)
     },
     async closeBundle() {
-      const htmlTemplate = readFileSync(path.resolve(distDir, 'index.html'), 'utf-8')
-
+      const indexPath = path.resolve(distDir, 'index.html')
+      const htmlTemplate = readFileSync(indexPath, 'utf-8')
+      unlinkSync(indexPath)
       const { renderPages } = (await import(
         path.resolve(app.tempDir, 'server-render.js')
       )) as ServerRenderModule
@@ -49,7 +50,6 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
         const keywords = meta['keywords'] || app.config.keywords
         const lang = meta['lang'] || app.lang
 
-        // SSR HTML
         const ssrHtml = detail.body || ''
 
         const patch = new HtmlPatcher(htmlTemplate)
@@ -64,10 +64,17 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
 
         const html = patch.get()
 
-        // 4️⃣ 输出路径
         const filePath = path.resolve(distDir, `${url === '/' ? 'index' : url.slice(1)}.html`)
 
         writeCacheFileSync(filePath, html)
+      }
+
+      const spaFallbackPath = path.resolve(distDir, '_200.html')
+      if (!existsSync(spaFallbackPath)) {
+        const spaFallback = new HtmlPatcher(htmlTemplate)
+          .replace(BODY_CONTENT_PLACEHOLDER, '')
+          .get()
+        writeCacheFileSync(spaFallbackPath, spaFallback)
       }
     }
   }
