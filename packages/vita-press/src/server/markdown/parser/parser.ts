@@ -18,6 +18,8 @@ import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
 export interface MdParseResult {
   /** 文档转换后的html内容 */
   html: string
+  /** 去除 frontmatter 后的原始 Markdown 内容 */
+  content: string
   /** 源文件的绝对路径 */
   filePath: string
   /** 文档页面的元数据信息 */
@@ -121,6 +123,7 @@ export class MdParser {
     }
     return {
       html: html,
+      content: markdownContent,
       filePath,
       alias,
       meta: docPageMetaData
