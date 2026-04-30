@@ -122,6 +122,9 @@ export function mergeRuntimeConfig(
   const layout = override.layout ?? base.layout
   if (layout != null) result.layout = layout
 
+  const lazy = override.lazy ?? base.lazy
+  if (lazy != null) result.lazy = lazy
+
   const baseHooks: MergedRouterHooks = {
     missing: base.missing,
     beforeEach: base.beforeEach,
@@ -169,6 +172,8 @@ export function mergeThemes(themes: ThemeExpandConfig[]): ThemeExpandConfig {
     const result: ThemeExpandConfig = {}
     const layout = theme.layout ?? acc.layout
     if (layout != null) result.layout = layout
+    const lazy = theme.lazy ?? acc.lazy
+    if (lazy != null) result.lazy = lazy
     const missing = theme.missing ?? acc.missing
     if (missing != null) result.missing = missing
     const messages =

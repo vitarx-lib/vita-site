@@ -1,4 +1,4 @@
-import type { App, AppConfig, Component, View } from 'vitarx'
+import type { App, AppConfig, Component, LazyLoadOptions, View } from 'vitarx'
 import type { AfterCallback, NavigationGuard, Router, RouterOptions } from 'vitarx-router'
 import type { I18nMessages, I18nOptions } from './i18n.js'
 
@@ -11,6 +11,12 @@ export interface ThemeExpandConfig {
    * 优先级低于 RuntimeConfig.layout
    */
   layout?: View | Component
+  /**
+   * 惰性加载配置选项
+   *
+   * 优先级低于 RuntimeConfig.lazy
+   */
+  lazy?: LazyLoadOptions
   /**
    * i18n 翻译消息
    */
@@ -51,6 +57,28 @@ export interface RuntimeConfig {
    * @default () => <RouterView />
    */
   layout?: View | Component
+  /**
+   * 惰性加载配置选项
+   *
+   * 用于配置路由组件懒加载行为，如 loading 组件、延迟时间、超时时间等。
+   *
+   * @example
+   * ```ts
+   * // .vitapress/config.client.ts
+   * import { defineConfig } from 'vitapress'
+   * import Loading from './components/Loading.tsx'
+   *
+   * export default defineConfig({
+   *   lazy: {
+   *     loading: () => Loading,
+   *     delay: 300,
+   *     timeout: 10000,
+   *     onError: (e) => <div>加载失败: {String(e)}</div>
+   *   }
+   * })
+   * ```
+   */
+  lazy?: LazyLoadOptions
   /**
    * 应用配置
    */

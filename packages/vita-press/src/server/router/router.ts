@@ -12,13 +12,16 @@ export class VitaPressRouter extends FileRouter {
     super({
       root: app.root,
       pages: [app.config.docDir, ...app.config.pageDirs],
-      injectImports: [`import { lazy } from "vitarx"`],
+      injectImports: [
+        `import { lazy } from "vitarx"`,
+        `import __runtimeConfig from "virtual:vitapress/runtime/config"`
+      ],
       importMode: ({ importPath, filePath }) => {
         if (filePath.endsWith('.md')) {
           const cachePath = app.mdParser.cache.getCacheFilePath(relative(app.root, filePath), 'jsx')
-          return `lazy(() => import("${cachePath}"))`
+          return `lazy(() => import("${cachePath}"), __runtimeConfig.lazy)`
         }
-        return `lazy(() => import(${importPath}))`
+        return `lazy(() => import(${importPath}), __runtimeConfig.lazy)`
       },
       pathStrategy: 'kebab',
       dts: app.config.dts || false,
