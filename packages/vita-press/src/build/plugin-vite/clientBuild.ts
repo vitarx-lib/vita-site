@@ -76,6 +76,16 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
           .get()
         writeCacheFileSync(spaFallbackPath, spaFallback)
       }
+
+      for (const plugin of app.plugins) {
+        if (typeof plugin.buildEnd === 'function') {
+          try {
+            await plugin.buildEnd(app)
+          } catch (e) {
+            console.error(`Plugin ${plugin.name} buildEnd error:`, e)
+          }
+        }
+      }
     }
   }
 }

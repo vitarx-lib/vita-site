@@ -44,6 +44,15 @@ export interface PluginHooks {
    * 写入路由之前
    */
   beforeWriteRoutes?: (routes: RouteNode[], app: VitaPressApp) => RouteNode[] | void
+  /**
+   * 构建结束时调用
+   *
+   * 在客户端构建完成且所有 HTML 文件已生成后调用。
+   * 适用于搜索索引生成、站点地图输出等需要在构建产物上操作的场景。
+   *
+   * @param app - VitaPress 应用实例
+   */
+  buildEnd?: (app: VitaPressApp) => void | Promise<void>
 }
 
 /**
