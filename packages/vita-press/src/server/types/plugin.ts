@@ -23,19 +23,30 @@ export interface PluginHooks {
    */
   markdown?: (md: MarkdownIt) => void | Promise<void>
   /**
+   * 应用实例创建完成后调用
+   *
+   * 在 VitaPressApp 实例完全构造后、路由扫描前调用。
+   * 插件可在此钩子中记录 app 实例引用，供后续钩子使用。
+   *
+   * @param app - VitaPress 应用实例
+   */
+  appCreated?: (app: VitaPressApp) => void | Promise<void>
+  /**
    * 在解析 Markdown 文件之前调用
+   *
    * @param content - 文件内容
    * @param file - 文件路径
-   * @returns {string | void} - 返回修改后的内容或 void
+   * @param app - VitaPress 应用实例
+   * @returns 修改后的内容或 void
    */
-  beforeParse?: (content: string, file: string) => string | void
+  beforeParse?: (content: string, file: string, app: VitaPressApp) => string | void
   /**
    * 在解析 Markdown 文件之后调用
    *
    * @param res - 解析结果
-   * @returns {void}
+   * @param app - VitaPress 应用实例
    */
-  afterParse?: (res: MdParseResult) => void
+  afterParse?: (res: MdParseResult, app: VitaPressApp) => void
   /**
    * 扩展路由节点
    */

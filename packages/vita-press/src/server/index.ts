@@ -1,5 +1,6 @@
 export type * from './types/index.js'
 export * from './app/index.js'
+export type { MdParseResult } from './markdown/index.js'
 export { loadUserConfig } from './config/loader.js'
 export { mergeConfig, defineConfig } from './config/utils.js'
 export { getVersion } from './common/utils.js'

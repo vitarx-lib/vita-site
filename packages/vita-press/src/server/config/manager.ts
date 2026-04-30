@@ -1,3 +1,4 @@
+import { invokeParallel } from '../common/hooks.js'
 import { isPlainObject } from '../common/utils.js'
 import { loadUserConfig, mergeConfig, validateConfig } from '../config/index.js'
 import type { ResolvedConfig, UserConfig } from '../types/index.js'
@@ -138,14 +139,7 @@ export class ConfigManager {
    * @private
    */
   private async invokeConfigResolvedHook(config: ResolvedConfig): Promise<void> {
-    const invokes: (void | Promise<void>)[] = []
-    for (const plugin of this.#plugins) {
-      if (typeof plugin.configResolved === 'function') {
-        const result = plugin.configResolved(config)
-        invokes.push(result)
-      }
-    }
-    await Promise.all(invokes)
+    await invokeParallel(this.#plugins, 'configResolved', config)
   }
   /**
    * 解析配置

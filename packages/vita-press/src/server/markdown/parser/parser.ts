@@ -2,8 +2,8 @@ import MarkdownIt from 'markdown-it'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { warn } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../../app/index.js'
+import { invokeParallel, invokePipe } from '../../common/hooks.js'
 import { getVersion } from '../../common/utils.js'
 import type { MarkdownParseEnvContext } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
@@ -163,17 +163,7 @@ export default () => (<article class="v-doc-content">${html}</article>)
    * @private
    */
   private beforeParse(filePath: string, content: string): string {
-    for (const plugin of this.app.plugins) {
-      if (typeof plugin.beforeParse === 'function') {
-        try {
-          const result = plugin.beforeParse(content, filePath)
-          if (result) content = result
-        } catch (e) {
-          warn(`Plugin ${plugin.name} beforeParse error:`, e)
-        }
-      }
-    }
-    return content
+    return invokePipe(this.app.plugins, 'beforeParse', content, filePath, this.app)
   }
 
   /**
@@ -183,14 +173,6 @@ export default () => (<article class="v-doc-content">${html}</article>)
    * @private
    */
   private afterParse(result: MdParseResult): void {
-    for (const plugin of this.app.plugins) {
-      if (typeof plugin.afterParse === 'function') {
-        try {
-          plugin.afterParse(result)
-        } catch (e) {
-          warn(`Plugin ${plugin.name} afterParse error:`, e)
-        }
-      }
-    }
+    invokeParallel(this.app.plugins, 'afterParse', result, this.app)
   }
 }

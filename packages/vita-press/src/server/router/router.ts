@@ -1,5 +1,6 @@
 import { relative } from 'node:path'
-import { FileRouter, type PageParseResult, warn } from 'vitarx-router/file-router'
+import { FileRouter, type PageParseResult } from 'vitarx-router/file-router'
+import { invokeParallel, invokePipe } from '../common/hooks.js'
 import { VitaPressApp } from '../app/index.js'
 import type { NavTree } from '../types/nav.js'
 import { buildNavTree } from './nav.js'
@@ -67,30 +68,13 @@ export class VitaPressRouter extends FileRouter {
         return result
       },
       extendRoute: route => {
-        for (const plugin of app.plugins) {
-          if (typeof plugin.extendRoute === 'function') {
-            try {
-              plugin.extendRoute(route, app)
-            } catch (e) {
-              warn(`Plugin ${plugin.name} extendRoute error:`, e)
-            }
-          }
-        }
+        invokeParallel(app.plugins, 'extendRoute', route, app)
       },
       beforeWriteRoutes: routes => {
-        for (const plugin of app.plugins) {
-          if (typeof plugin.beforeWriteRoutes === 'function') {
-            try {
-              const result = plugin.beforeWriteRoutes(routes, app)
-              if (Array.isArray(result)) routes = result
-            } catch (e) {
-              warn(`Plugin ${plugin.name} beforeWriteRoutes error:`, e)
-            }
-          }
-        }
-        this._navTree = buildNavTree(routes, app.docDirPath, app.lang)
-        return routes
+        const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
+        this._navTree = buildNavTree(result, app.docDirPath, app.lang)
+        return result
       }
-    })
+    }, false)
   }
 }

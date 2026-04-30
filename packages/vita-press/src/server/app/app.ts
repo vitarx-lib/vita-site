@@ -1,7 +1,7 @@
 import MarkdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import { warn } from 'vitarx-router/file-router'
+import { invokeParallel } from '../common/hooks.js'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
 import { VitaPressRouter } from '../router/index.js'
@@ -142,25 +142,20 @@ export class VitaPressApp {
     const configManager = await ConfigManager.create(root, config)
     const markdownIt = await createMarkdownIt(configManager.config.markdownIt)
 
-    const results: (void | Promise<void>)[] = []
-    for (const plugin of configManager.plugins) {
-      if (typeof plugin.markdown === 'function') {
-        try {
-          const result = plugin.markdown(markdownIt)
-          results.push(result)
-        } catch (e) {
-          warn(`Plugin ${plugin.name} markdown error:`, e)
-        }
-      }
-    }
-    await Promise.all(results)
+    await invokeParallel(configManager.plugins, 'markdown', markdownIt)
 
-    return new VitaPressApp({
+    const app = new VitaPressApp({
       root,
       command,
       markdownIt,
       config: configManager.config,
       plugins: configManager.plugins
     })
+
+    await invokeParallel(app.plugins, 'appCreated', app)
+
+    app.router.reload()
+
+    return app
   }
 }

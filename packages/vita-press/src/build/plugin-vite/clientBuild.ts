@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import { type Plugin, type UserConfig, version } from 'vite'
+import { invokeParallel } from '../../server/common/hooks.js'
 import { writeCacheFileSync } from '../../server/common/utils.js'
 import { VitaPressApp } from '../../server/index.js'
 import { BODY_CONTENT_PLACEHOLDER } from '../common/constant.js'
@@ -77,15 +78,7 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
         writeCacheFileSync(spaFallbackPath, spaFallback)
       }
 
-      for (const plugin of app.plugins) {
-        if (typeof plugin.buildEnd === 'function') {
-          try {
-            await plugin.buildEnd(app)
-          } catch (e) {
-            console.error(`Plugin ${plugin.name} buildEnd error:`, e)
-          }
-        }
-      }
+      await invokeParallel(app.plugins, 'buildEnd', app)
     }
   }
 }
