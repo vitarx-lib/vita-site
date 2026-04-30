@@ -2,60 +2,8 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { ResolvedConfig, VitaPressPlugin } from '../../src/server/index.js'
-import { createMarkdownIt, MdParser } from '../../src/server/markdown/index.js'
-
-function createMockApp(
-  root: string,
-  options: Partial<ResolvedConfig> = {}
-): {
-  root: string
-  config: ResolvedConfig
-  plugins: VitaPressPlugin[]
-  defaultLang: string
-  langPathMap: Record<string, string>
-  cacheDir: string
-} {
-  const defaultConfig: ResolvedConfig = {
-    title: '',
-    description: '',
-    keywords: '',
-    injectHead: [],
-    injectBody: [],
-    injectCode: [],
-    markdownIt: {},
-    dts: false,
-    lang: 'zh-CN',
-    langDirs: [],
-    debug: false,
-    docDir: { dir: 'docs' },
-    pageDirs: [],
-    plugins: [],
-    viteConfig: {},
-    ...options
-  } as ResolvedConfig
-
-  const defaultLang = defaultConfig.lang || 'zh-CN'
-  const langPathMap: Record<string, string> = {}
-  if (Array.isArray(defaultConfig.langDirs) && defaultConfig.langDirs.length) {
-    const docDirPath = join(root, defaultConfig.docDir.dir)
-    defaultConfig.langDirs.forEach(lang => {
-      langPathMap[join(docDirPath, lang)] = lang
-    })
-  }
-
-  const cacheDir = join(root, '.vitapress', '.cache', 'docs')
-  mkdirSync(cacheDir, { recursive: true })
-
-  return {
-    root,
-    config: defaultConfig,
-    plugins: [],
-    defaultLang,
-    langPathMap,
-    cacheDir
-  }
-}
+import type { VitaPressPlugin } from '../../src/server/index.js'
+import { createTestApp } from '../testUtils.js'
 
 describe('Markdown 解析端到端集成测试', () => {
   let tempDir: string
@@ -81,9 +29,8 @@ describe('Markdown 解析端到端集成测试', () => {
 
   describe('基础 Markdown 解析', () => {
     it('应正确解析标题', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Title')
       const content = '# Title'
@@ -94,9 +41,8 @@ describe('Markdown 解析端到端集成测试', () => {
     })
 
     it('应正确解析多级标题', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `# H1
 ## H2
@@ -114,15 +60,17 @@ describe('Markdown 解析端到端集成测试', () => {
       expect(result).toContain('>H2</RouterLink></h2>')
       expect(result).toContain('id="h3"')
       expect(result).toContain('>H3</RouterLink></h3>')
+      expect(result).toContain('id="h4"')
       expect(result).toContain('>H4</RouterLink></h4>')
+      expect(result).toContain('id="h5"')
       expect(result).toContain('>H5</RouterLink></h5>')
+      expect(result).toContain('id="h6"')
       expect(result).toContain('>H6</RouterLink></h6>')
     })
 
     it('应正确解析段落', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = 'This is a paragraph.\n\nThis is another paragraph.'
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -133,9 +81,8 @@ describe('Markdown 解析端到端集成测试', () => {
     })
 
     it('应正确解析列表', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `- Item 1
 - Item 2
@@ -156,9 +103,8 @@ describe('Markdown 解析端到端集成测试', () => {
     })
 
     it('应正确解析链接和图片', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `[Link](https://example.com)\n\n![Image](https://example.com/image.png)`
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -171,9 +117,8 @@ describe('Markdown 解析端到端集成测试', () => {
     })
 
     it('应正确解析代码块', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `\`\`\`javascript
 const x = 1
@@ -196,9 +141,8 @@ console.log(y)
     })
 
     it('应正确解析行内代码', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = 'This is `inline code` in a paragraph.'
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -208,9 +152,8 @@ console.log(y)
     })
 
     it('应正确解析引用', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = '> This is a quote\n> Multiple lines'
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -221,9 +164,8 @@ console.log(y)
     })
 
     it('应正确解析表格', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `| Header 1 | Header 2 |
 |----------|----------|
@@ -243,9 +185,8 @@ console.log(y)
 
   describe('Frontmatter 解析', () => {
     it('应正确解析 YAML frontmatter', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `---
 title: Custom Title
@@ -264,9 +205,8 @@ author: Test Author
     })
 
     it('应正确处理空 frontmatter', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `---
 ---
@@ -281,9 +221,8 @@ author: Test Author
     })
 
     it('frontmatter 应覆盖默认元数据', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `---
 title: Frontmatter Title
@@ -300,9 +239,8 @@ title: Frontmatter Title
 
   describe('自定义容器和组件', () => {
     it('应正确解析自定义容器', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `::: tip
 This is a tip
@@ -325,9 +263,8 @@ This is a danger
     })
 
     it('应正确解析 JSX 组件', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `<CustomComponent title="Test" />
 
@@ -345,9 +282,8 @@ This is a danger
 
   describe('代码导入', () => {
     it('应正确处理代码导入语法', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `# Code Example
 
@@ -363,9 +299,8 @@ This is a danger
     })
 
     it('应正确处理代码片段导入语法', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `# Snippet Example
 
@@ -383,9 +318,8 @@ This is a danger
 
   describe('锚点和 TOC', () => {
     it('应为标题生成锚点', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `# Introduction
 
@@ -405,9 +339,8 @@ This is a danger
     })
 
     it('应生成目录树', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `# Main Title
 
@@ -432,9 +365,8 @@ This is a danger
 
   describe('路由链接', () => {
     it('应将相对链接转换为 RouterLink', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `[Home](/)\n[Guide](/guide)\n[API](/api/intro)`
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -447,9 +379,8 @@ This is a danger
     })
 
     it('应保留外部链接', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `[External](https://example.com)`
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -463,11 +394,10 @@ This is a danger
 
   describe('多语言支持', () => {
     it('frontmatter 中的语言应覆盖自动检测', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir, {
-        langDirs: ['zh-CN', 'en-US']
+      const app = await createTestApp(tempDir, {
+        locales: [{ id: 'zh-CN', name: '简体中文' }, { id: 'en-US', name: 'English' }]
       })
-      const parser = new MdParser(md, app as any)
+      const parser = app.mdParser
 
       const content = `---
 lang: en-US
@@ -485,11 +415,10 @@ lang: en-US
 
   describe('代码注入', () => {
     it('应注入自定义代码', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir, {
+      const app = await createTestApp(tempDir, {
         injectCode: ['import { Button } from "ui"', 'import { Card } from "components"']
       })
-      const parser = new MdParser(md, app as any)
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const result = parser.parse(filePath, '# Test')
@@ -501,17 +430,14 @@ lang: en-US
 
   describe('插件集成', () => {
     it('应调用插件的 beforeParse 钩子', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      app.plugins = [
-        {
-          name: 'test-plugin',
-          beforeParse: (content: string) => {
-            return content.replace('# Test', '# Modified')
-          }
+      const plugin: VitaPressPlugin = {
+        name: 'test-plugin',
+        beforeParse: (content: string) => {
+          return content.replace('# Test', '# Modified')
         }
-      ]
-      const parser = new MdParser(md, app as any)
+      }
+      const app = await createTestApp(tempDir, { plugins: [plugin] })
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const result = parser.parse(filePath, '# Test')
@@ -521,17 +447,14 @@ lang: en-US
     })
 
     it('应调用插件的 afterParse 钩子', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      app.plugins = [
-        {
-          name: 'test-plugin',
-          afterParse: (result: any) => {
-            result.meta = { ...result.meta, customField: 'custom-value' }
-          }
+      const plugin: VitaPressPlugin = {
+        name: 'test-plugin',
+        afterParse: (result: any) => {
+          result.meta = { ...result.meta, customField: 'custom-value' }
         }
-      ]
-      const parser = new MdParser(md, app as any)
+      }
+      const app = await createTestApp(tempDir, { plugins: [plugin] })
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const result = parser.parse(filePath, '# Test')
@@ -542,9 +465,8 @@ lang: en-US
 
   describe('缓存机制', () => {
     it('应缓存解析结果', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const result1 = parser.parse(filePath, '# Test')
@@ -554,9 +476,8 @@ lang: en-US
     })
 
     it('内容变化时应重新解析', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const result1 = parser.parse(filePath, '# Test')
@@ -568,9 +489,8 @@ lang: en-US
     })
 
     it('应支持清除缓存', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       parser.parse(filePath, '# Test')
@@ -583,9 +503,8 @@ lang: en-US
 
   describe('错误处理', () => {
     it('应处理不存在的文件', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const nonExistentPath = join(tempDir, 'non-existent.md')
 
@@ -593,9 +512,8 @@ lang: en-US
     })
 
     it('应处理无效的 Markdown 语法', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = '# Test\n\n```\nunclosed code block'
       const filePath = createMarkdownFile('docs/test.md', content)
@@ -606,9 +524,8 @@ lang: en-US
 
   describe('完整文档解析', () => {
     it('应正确解析完整的文档', async () => {
-      const md = await createMarkdownIt()
-      const app = createMockApp(tempDir)
-      const parser = new MdParser(md, app as any)
+      const app = await createTestApp(tempDir)
+      const parser = app.mdParser
 
       const content = `---
 title: Complete Document

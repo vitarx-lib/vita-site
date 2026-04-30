@@ -3,8 +3,9 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { ResolvedConfig, VitaPressPlugin } from '../../../../src/server/index.js'
+import type { VitaPressPlugin } from '../../../../src/server/index.js'
 import { MdParser } from '../../../../src/server/markdown/index.js'
+import { createTestApp } from '../../../testUtils.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const actual = await importOriginal<typeof import('vitarx-router/file-router')>()
@@ -38,63 +39,10 @@ vi.mock('../../../../src/server/markdown/utils/index.js', () => ({
   }))
 }))
 
-function createMockApp(
-  root: string,
-  options: Partial<ResolvedConfig> = {}
-): {
-  root: string
-  config: ResolvedConfig
-  plugins: VitaPressPlugin[]
-  defaultLang: string
-  langPathMap: Record<string, string>
-  cacheDir: string
-} {
-  const defaultConfig: ResolvedConfig = {
-    title: '',
-    description: '',
-    keywords: '',
-    injectHead: [],
-    injectBody: [],
-    injectCode: [],
-    markdownIt: {},
-    dts: false,
-    lang: 'zh-CN',
-    langDirs: [],
-    debug: false,
-    docDir: { dir: 'docs' },
-    pageDirs: [],
-    plugins: [],
-    viteConfig: {},
-    ...options
-  } as ResolvedConfig
-
-  const defaultLang = defaultConfig.lang || 'zh-CN'
-  const langPathMap: Record<string, string> = {}
-  if (Array.isArray(defaultConfig.langDirs) && defaultConfig.langDirs.length) {
-    const docDirPath = join(root, defaultConfig.docDir.dir)
-    defaultConfig.langDirs.forEach(lang => {
-      langPathMap[join(docDirPath, lang)] = lang
-    })
-  }
-
-  const cacheDir = join(root, '.vitapress', '.cache', 'docs')
-  mkdirSync(cacheDir, { recursive: true })
-
-  return {
-    root,
-    config: defaultConfig,
-    plugins: [],
-    defaultLang,
-    langPathMap,
-    cacheDir
-  }
-}
-
 describe('MdParser', () => {
   let tempDir: string
   let md: MarkdownIt
   let parser: MdParser
-  let mockApp: ReturnType<typeof createMockApp>
 
   const createMarkdownFile = (relativePath: string, content: string): string => {
     const fullPath = join(tempDir, relativePath)
@@ -104,12 +52,12 @@ describe('MdParser', () => {
     return fullPath
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
     tempDir = join(tmpdir(), `parser-test-${Date.now()}`)
     mkdirSync(tempDir, { recursive: true })
     md = new MarkdownIt()
-    mockApp = createMockApp(tempDir)
-    parser = new MdParser(md, mockApp as any)
+    const app = await createTestApp(tempDir)
+    parser = new MdParser(md, app)
   })
 
   afterEach(() => {
@@ -138,11 +86,11 @@ describe('MdParser', () => {
       expect(result).toContain('"title":"Test"')
     })
 
-    it('应注入自定义代码', () => {
-      const customApp = createMockApp(tempDir, {
+    it('应注入自定义代码', async () => {
+      const customApp = await createTestApp(tempDir, {
         injectCode: ['import { Button } from "components"', 'import { Card } from "ui"']
       })
-      const customParser = new MdParser(md, customApp as any)
+      const customParser = new MdParser(md, customApp)
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
@@ -166,12 +114,11 @@ describe('MdParser', () => {
       expect(result).toContain('@source')
     })
 
-    it('frontmatter 中指定的语言应覆盖自动推断', () => {
-      const multiLangApp = createMockApp(tempDir, {
-        langDirs: ['zh-CN', 'en-US'],
-        docDir: { dir: 'docs' }
+    it('frontmatter 中指定的语言应覆盖自动推断', async () => {
+      const multiLangApp = await createTestApp(tempDir, {
+        locales: [{ id: 'zh-CN', name: '简体中文' }, { id: 'en-US', name: 'English' }]
       })
-      const multiLangParser = new MdParser(md, multiLangApp as any)
+      const multiLangParser = new MdParser(md, multiLangApp)
 
       const zhDir = join(tempDir, 'docs', 'zh-CN')
       mkdirSync(zhDir, { recursive: true })
@@ -232,12 +179,12 @@ describe('MdParser', () => {
       expect(result2).toContain('Updated Test')
     })
 
-    it('不同配置应生成不同的缓存', () => {
-      const app1 = createMockApp(tempDir, { injectCode: ['import A from "a"'] })
-      const app2 = createMockApp(tempDir, { injectCode: ['import B from "b"'] })
+    it('不同配置应生成不同的缓存', async () => {
+      const app1 = await createTestApp(tempDir, { injectCode: ['import A from "a"'] })
+      const app2 = await createTestApp(tempDir, { injectCode: ['import B from "b"'] })
 
-      const parser1 = new MdParser(md, app1 as any)
-      const parser2 = new MdParser(md, app2 as any)
+      const parser1 = new MdParser(md, app1)
+      const parser2 = new MdParser(md, app2)
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
       const content = '# Test'
@@ -282,10 +229,6 @@ describe('MdParser', () => {
       expect(parser.cache.get).toBeDefined()
       expect(parser.cache.set).toBeDefined()
     })
-
-    it('应暴露 cache.cacheDir 属性', () => {
-      expect(parser.cache.cacheDir).toBe(mockApp.cacheDir)
-    })
   })
 
   describe('metadata', () => {
@@ -324,20 +267,18 @@ describe('MdParser', () => {
   })
 
   describe('插件集成', () => {
-    it('应调用插件的 beforeParse 钩子', () => {
+    it('应调用插件的 beforeParse 钩子', async () => {
       const beforeParseMock = vi.fn((content: string, _filePath: string) => {
         return content.replace('# Test', '# Modified')
       })
 
-      const pluginApp = createMockApp(tempDir)
-      pluginApp.plugins = [
-        {
-          name: 'test-plugin',
-          beforeParse: beforeParseMock
-        }
-      ]
+      const plugin: VitaPressPlugin = {
+        name: 'test-plugin',
+        beforeParse: beforeParseMock
+      }
 
-      const pluginParser = new MdParser(md, pluginApp as any)
+      const pluginApp = await createTestApp(tempDir, { plugins: [plugin] })
+      const pluginParser = new MdParser(md, pluginApp)
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
       pluginParser.parse(filePath, '# Test')
@@ -345,20 +286,18 @@ describe('MdParser', () => {
       expect(beforeParseMock).toHaveBeenCalledWith('# Test', filePath)
     })
 
-    it('应调用插件的 afterParse 钩子', () => {
+    it('应调用插件的 afterParse 钩子', async () => {
       const afterParseMock = vi.fn((result: any) => {
         result.meta = { ...result.meta, customField: 'custom-value' }
       })
 
-      const pluginApp = createMockApp(tempDir)
-      pluginApp.plugins = [
-        {
-          name: 'test-plugin',
-          afterParse: afterParseMock
-        }
-      ]
+      const plugin: VitaPressPlugin = {
+        name: 'test-plugin',
+        afterParse: afterParseMock
+      }
 
-      const pluginParser = new MdParser(md, pluginApp as any)
+      const pluginApp = await createTestApp(tempDir, { plugins: [plugin] })
+      const pluginParser = new MdParser(md, pluginApp)
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
       const result = pluginParser.parse(filePath, '# Test')
@@ -367,20 +306,18 @@ describe('MdParser', () => {
       expect(result).toContain('"customField":"custom-value"')
     })
 
-    it('插件 beforeParse 返回空值时应保持原内容', () => {
+    it('插件 beforeParse 返回空值时应保持原内容', async () => {
       const beforeParseMock = vi.fn((_content: string, _file: string): string | void => {
         return
       })
 
-      const pluginApp = createMockApp(tempDir)
-      pluginApp.plugins = [
-        {
-          name: 'test-plugin',
-          beforeParse: beforeParseMock
-        }
-      ]
+      const plugin: VitaPressPlugin = {
+        name: 'test-plugin',
+        beforeParse: beforeParseMock
+      }
 
-      const pluginParser = new MdParser(md, pluginApp as any)
+      const pluginApp = await createTestApp(tempDir, { plugins: [plugin] })
+      const pluginParser = new MdParser(md, pluginApp)
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
       const result = pluginParser.parse(filePath, '# Test')
@@ -393,7 +330,7 @@ describe('MdParser', () => {
       const warnMock = vi.mocked(warn)
       warnMock.mockClear()
 
-      const errorPlugin = {
+      const errorPlugin: VitaPressPlugin = {
         name: 'error-plugin',
         beforeParse: vi.fn(() => {
           throw new Error('Plugin error')
@@ -403,10 +340,8 @@ describe('MdParser', () => {
         })
       }
 
-      const pluginApp = createMockApp(tempDir)
-      pluginApp.plugins = [errorPlugin]
-
-      const pluginParser = new MdParser(md, pluginApp as any)
+      const pluginApp = await createTestApp(tempDir, { plugins: [errorPlugin] })
+      const pluginParser = new MdParser(md, pluginApp)
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
       expect(() => pluginParser.parse(filePath, '# Test')).not.toThrow()

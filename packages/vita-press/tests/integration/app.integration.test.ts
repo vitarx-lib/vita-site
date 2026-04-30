@@ -349,7 +349,7 @@ describe('VitaPressApp 端到端集成测试', () => {
     it('应正确处理嵌套配置', async () => {
       createProjectStructure({
         '.vitapress/config.ts': `export default {
-          viteConfig: {
+          vite: {
             base: '/docs/',
             server: {
               port: 3000
@@ -361,8 +361,8 @@ describe('VitaPressApp 端到端集成测试', () => {
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.config.viteConfig.base).toBe('/docs/')
-      expect(app.config.viteConfig.server?.port).toBe(3000)
+      expect(app.config.vite.base).toBe('/docs/')
+      expect(app.config.vite.server?.port).toBe(3000)
     })
   })
 
