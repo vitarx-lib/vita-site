@@ -447,19 +447,22 @@ lang: en-US
     })
 
     it('应调用插件的 afterParse 钩子', async () => {
+      const afterParseMock = vi.fn()
       const plugin: VitaPressPlugin = {
         name: 'test-plugin',
-        afterParse: (result: any) => {
-          result.meta = { ...result.meta, customField: 'custom-value' }
-        }
+        afterParse: afterParseMock
       }
       const app = await createTestApp(tempDir, { plugins: [plugin] })
       const parser = app.mdParser
 
       const filePath = createMarkdownFile('docs/test.md', '# Test')
-      const result = parser.parse(filePath, '# Test')
+      parser.parse(filePath, '# Test')
 
-      expect(result).toContain('"customField":"custom-value"')
+      expect(afterParseMock).toHaveBeenCalled()
+      expect(afterParseMock).toHaveBeenCalledWith(
+        expect.objectContaining({ meta: expect.objectContaining({ relativePath: 'docs/test.md' }) }),
+        app
+      )
     })
   })
 
