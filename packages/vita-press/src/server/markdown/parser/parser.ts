@@ -80,12 +80,15 @@ export class MdParser {
     const relativePath = path.relative(this.app.root, filePath)
 
     const cached = this.cache.get(relativePath, content)
-    if (cached) return cached
+    if (cached) {
+      this.afterParse(cached.parseResult)
+      return cached.componentCode
+    }
     content = this.beforeParse(filePath, content)
-    let result = this.transform(filePath, content)
-    this.afterParse(result)
+    const result = this.transform(filePath, content)
     const componentCode = this.generateComponent(result)
-    this.cache.set(relativePath, content, componentCode)
+    this.afterParse(Object.freeze(result))
+    this.cache.set(relativePath, content, componentCode, result)
     return componentCode
   }
 
@@ -121,8 +124,9 @@ export class MdParser {
       relativePath: path.relative(this.app.root, filePath),
       ...frontmatter
     }
+
     return {
-      html: html,
+      html,
       content: markdownContent,
       filePath,
       alias,
@@ -137,7 +141,7 @@ export class MdParser {
    * @returns 组件代码
    */
   public generateComponent(parseResult: MdParseResult): string {
-    const { html: html, meta, filePath, alias } = parseResult
+    const { html, meta, filePath, alias } = parseResult
     const injectCodeBlock = this.injectCode
 
     return `// 此文件由vita-press自动生成

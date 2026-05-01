@@ -41,9 +41,13 @@ export interface PluginHooks {
    */
   beforeParse?: (content: string, file: string, app: VitaPressApp) => string | void
   /**
-   * 在解析 Markdown 文件之后调用
+   * 在解析 Markdown 文件之后调用（通知钩子）
    *
-   * @param res - 解析结果
+   * 此钩子为纯通知性质，插件应仅读取解析结果数据，
+   * 不应修改 res 对象——修改不会被反映到最终输出。
+   * 即使缓存命中也会调用此钩子，确保插件能收集到所有文档数据。
+   *
+   * @param res - 解析结果（只读，不应修改）
    * @param app - VitaPress 应用实例
    */
   afterParse?: (res: MdParseResult, app: VitaPressApp) => void

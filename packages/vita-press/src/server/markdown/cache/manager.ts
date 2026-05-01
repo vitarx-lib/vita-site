@@ -3,11 +3,22 @@ import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync } from 'node:fs
 import path from 'node:path'
 import { debug } from 'vitarx-router/file-router'
 import { writeCacheFileSync } from '../../common/utils.js'
+import type { MdParseResult } from '../parser/index.js'
 
 interface EntryInfo {
   hash: string
-  mdPath: string
   componentPath: string
+  parseResult: MdParseResult
+}
+
+/**
+ * 缓存命中结果
+ */
+export interface CacheHit {
+  /** 组件代码 */
+  componentCode: string
+  /** 解析结果（通知钩子使用，不应被修改） */
+  parseResult: MdParseResult
 }
 
 /**
@@ -32,7 +43,6 @@ export class CacheManager {
      * 缓存目录
      */
     this.cacheDir = cacheDir
-    // 创建缓存目录
     if (!existsSync(this.cacheDir)) {
       mkdirSync(this.cacheDir, { recursive: true })
     }
@@ -52,13 +62,13 @@ export class CacheManager {
   /**
    * 获取缓存
    *
-   * 优先从内存缓存获取，内存未命中则从磁盘加载。
+   * 返回组件代码和解析结果，缓存未命中返回 undefined。
    *
    * @param filePath - 文件相对路径
    * @param content - 文件内容
-   * @returns 缓存结果或 undefined
+   * @returns 缓存命中结果或 undefined
    */
-  get(filePath: string, content: string): string | undefined {
+  get(filePath: string, content: string): CacheHit | undefined {
     const hash = this.computeHash(content)
 
     const cacheFile = this.getCacheFilePath(filePath, 'json')
@@ -68,7 +78,9 @@ export class CacheManager {
       const fileContent = readFileSync(cacheFile, 'utf-8')
       const entry: EntryInfo = JSON.parse(fileContent)
       if (entry.hash !== hash) return undefined
-      return readFileSync(entry.componentPath, 'utf-8')
+
+      const componentCode = readFileSync(entry.componentPath, 'utf-8')
+      return { componentCode, parseResult: entry.parseResult }
     } catch {
       return undefined
     }
@@ -77,21 +89,24 @@ export class CacheManager {
   /**
    * 设置缓存
    *
-   * 更新内存缓存并同步写入磁盘。
+   * 同时写入组件代码和解析结果。
    *
    * @param mdPath - 文档相对路径
    * @param rawContent - 文件原始内容
    * @param componentCode - 组件代码
+   * @param parseResult - 解析结果（用于 afterParse 通知钩子）
    */
-  set(mdPath: string, rawContent: string, componentCode: string): void {
+  set(mdPath: string, rawContent: string, componentCode: string, parseResult: MdParseResult): void {
     const hash = this.computeHash(rawContent)
-    const entry: EntryInfo = { mdPath, hash, componentPath: this.getCacheFilePath(mdPath, 'jsx') }
+    const entry: EntryInfo = {
+      hash,
+      componentPath: this.getCacheFilePath(mdPath, 'jsx'),
+      parseResult
+    }
 
     const entryPath = this.getCacheFilePath(mdPath, 'json')
     try {
-      // 写入缓存文件
       writeCacheFileSync(entryPath, JSON.stringify(entry))
-      // 写入组件缓存
       writeCacheFileSync(entry.componentPath, componentCode)
     } catch (e) {
       debug('[CacheManager] Error writing cache file:', e)
@@ -103,7 +118,6 @@ export class CacheManager {
    */
   clear(): void {
     try {
-      // 删除缓存目录及其所有文件
       if (existsSync(this.cacheDir)) {
         rmSync(this.cacheDir, { recursive: true, force: true })
       }
@@ -137,7 +151,7 @@ export class CacheManager {
    * @param ext - 文件扩展名
    * @returns 缓存文件完整路径
    */
-  public getCacheFilePath(mdPath: string, ext: 'json' | 'jsx'): string {
+  public getCacheFilePath(mdPath: string, ext: 'json' | 'jsx' | 'meta'): string {
     return path.join(this.cacheDir, `${mdPath}.${ext}`)
   }
 }
