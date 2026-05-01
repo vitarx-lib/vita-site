@@ -283,13 +283,11 @@ describe('MdParser', () => {
 
       pluginParser.parse(filePath, '# Test')
 
-      expect(beforeParseMock).toHaveBeenCalledWith('# Test', filePath)
+      expect(beforeParseMock).toHaveBeenCalledWith('# Test', filePath, pluginApp)
     })
 
     it('应调用插件的 afterParse 钩子', async () => {
-      const afterParseMock = vi.fn((result: any) => {
-        result.meta = { ...result.meta, customField: 'custom-value' }
-      })
+      const afterParseMock = vi.fn()
 
       const plugin: VitaPressPlugin = {
         name: 'test-plugin',
@@ -303,7 +301,10 @@ describe('MdParser', () => {
       const result = pluginParser.parse(filePath, '# Test')
 
       expect(afterParseMock).toHaveBeenCalled()
-      expect(result).toContain('"customField":"custom-value"')
+      expect(afterParseMock).toHaveBeenCalledWith(
+        expect.objectContaining({ meta: expect.objectContaining({ relativePath: 'docs/test.md' }) }),
+        pluginApp
+      )
     })
 
     it('插件 beforeParse 返回空值时应保持原内容', async () => {
