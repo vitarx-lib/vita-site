@@ -3,6 +3,22 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { CacheManager } from '../../../../src/server/markdown/cache/manager.js'
+import type { MdParseResult } from '../../../../src/server/markdown/parser/index.js'
+
+const mockParseResult = {
+  html: '<p>test</p>',
+  content: 'test',
+  filePath: '/docs/test.md',
+  meta: {
+    title: 'Test',
+    tocList: [],
+    relativePath: 'docs/test.md',
+    authors: [],
+    createdAt: '',
+    lastUpdateAt: ''
+  },
+  alias: undefined
+} as MdParseResult
 
 describe('CacheManager', () => {
   let tempDir: string
@@ -55,11 +71,12 @@ describe('CacheManager', () => {
       const content = '# Test Content'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       const cached = cacheManager.get(filePath, content)
       expect(cached).toBeDefined()
-      expect(cached).toBe(componentCode)
+      expect(cached!.componentCode).toBe(componentCode)
+      expect(cached!.parseResult).toEqual(mockParseResult)
     })
 
     it('内容变化时应返回 undefined', () => {
@@ -68,7 +85,7 @@ describe('CacheManager', () => {
       const content2 = '# Test Content 2'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content1, componentCode)
+      cacheManager.set(filePath, content1, componentCode, mockParseResult)
 
       const cached = cacheManager.get(filePath, content2)
       expect(cached).toBeUndefined()
@@ -84,29 +101,30 @@ describe('CacheManager', () => {
       const content = '# Test Content'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       const newManager = new CacheManager(tempDir)
       const cached = newManager.get(filePath, content)
       expect(cached).toBeDefined()
-      expect(cached).toBe(componentCode)
+      expect(cached!.componentCode).toBe(componentCode)
+      expect(cached!.parseResult).toEqual(mockParseResult)
     })
 
-    it('缓存条目应包含正确的 hash 和 componentPath', () => {
+    it('缓存条目应包含正确的 hash、componentPath 和 parseResult', () => {
       const filePath = 'docs/api_test.md'
       const content = '# Test'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       const jsonFilePath = cacheManager.getCacheFilePath(filePath, 'json')
       expect(existsSync(jsonFilePath)).toBe(true)
 
       const entry = JSON.parse(readFileSync(jsonFilePath, 'utf-8'))
       expect(entry.hash).toBe(cacheManager.computeHash(content))
-      expect(entry.mdPath).toBe(filePath)
       expect(entry.componentPath).toBeDefined()
       expect(entry.componentPath.endsWith('.jsx')).toBe(true)
+      expect(entry.parseResult).toEqual(mockParseResult)
     })
 
     it('应正确读取组件缓存文件', () => {
@@ -114,7 +132,7 @@ describe('CacheManager', () => {
       const content = '# Test'
       const componentCode = 'export default function() { return "component" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       const jsonFilePath = cacheManager.getCacheFilePath(filePath, 'json')
       const entry = JSON.parse(readFileSync(jsonFilePath, 'utf-8'))
@@ -131,8 +149,8 @@ describe('CacheManager', () => {
       const content = '# Test'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath1, content, componentCode)
-      cacheManager.set(filePath2, content, componentCode)
+      cacheManager.set(filePath1, content, componentCode, mockParseResult)
+      cacheManager.set(filePath2, content, componentCode, mockParseResult)
 
       cacheManager.clear()
 
@@ -145,7 +163,7 @@ describe('CacheManager', () => {
       const content = '# Test'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
@@ -167,8 +185,8 @@ describe('CacheManager', () => {
       const content = '# Test'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
-      expect(cacheManager.get(filePath, content)).toBe(componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
+      expect(cacheManager.get(filePath, content)).toBeDefined()
 
       cacheManager.remove(filePath)
       expect(cacheManager.get(filePath, content)).toBeUndefined()
@@ -183,7 +201,7 @@ describe('CacheManager', () => {
       const content = '# Test'
       const componentCode = 'export default function() { return "test" }'
 
-      cacheManager.set(filePath, content, componentCode)
+      cacheManager.set(filePath, content, componentCode, mockParseResult)
 
       expect(existsSync(cacheManager.getCacheFilePath(filePath, 'json'))).toBe(true)
       expect(existsSync(cacheManager.getCacheFilePath(filePath, 'jsx'))).toBe(true)
