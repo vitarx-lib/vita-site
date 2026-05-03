@@ -35,9 +35,9 @@ export interface InjectOptions {
    */
   injectCode?: string[]
 }
-export interface MarkdownItOptions {
+export interface MarkdownOptions {
   /**
-   * markdownIt解析器配置
+   * markdown 解析器相关配置
    */
   markdownIt?: MarkdownItConfig
 }
@@ -81,7 +81,7 @@ export interface Locale {
    */
   name: string
 }
-export interface UserConfig extends SiteOptions, InjectOptions, MarkdownItOptions, PluginOptions {
+export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions, PluginOptions {
   /**
    * 是否生成路由 dts 文件
    *
