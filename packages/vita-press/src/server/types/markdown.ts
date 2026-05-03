@@ -4,6 +4,7 @@ import type {
   PluginWithOptions,
   PluginWithParams
 } from 'markdown-it'
+import { VitaPressApp } from '../app/index.js'
 import type { TocTree } from '../markdown/plugins/tocTree.js'
 import type { PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
@@ -55,7 +56,20 @@ export interface MarkdownItConfig {
  * markdown解析环境上下文
  */
 export interface MarkdownParseEnvContext {
+  /**
+   * VitaPress应用实例
+   */
+  readonly app: VitaPressApp
+  /**
+   * 文件路径
+   */
   readonly filePath: string
+  /**
+   * 前置 matter 配置
+   */
   readonly frontmatter: PageMetaData
+  /**
+   * 目录列表
+   */
   readonly tocList: TocTree[]
 }
