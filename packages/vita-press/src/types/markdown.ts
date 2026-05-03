@@ -1,9 +1,11 @@
 import type {
-  Options as MarkdownItOptions,
+  Options as _MarkdownItOptions,
   PluginSimple,
   PluginWithOptions,
   PluginWithParams
 } from 'markdown-it'
+import type Renderer from 'markdown-it/lib/renderer.mjs'
+import type Token from 'markdown-it/lib/token.mjs'
 import { VitaPressApp } from '../server/app/index.js'
 import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 import type { DocPageMetaData, PageMetaData } from './page.js'
@@ -19,10 +21,26 @@ export type MarkdownItPluginWithParamsType = {
   options: any[]
 }
 
+/**
+ * markdown-it插件
+ */
 export type MarkdownItPlugin = PluginSimple
+/**
+ * markdown-it实例配置
+ */
+export type MarkdownItOptions = _MarkdownItOptions
+/**
+ * markdown-it token
+ */
+export type MarkdownItToken = Token
 
 /**
- * markdown-it配置
+ * markdown-it 渲染器
+ */
+export type MarkdownItRenderer = Renderer
+
+/**
+ * markdown-it 配置
  */
 export interface MarkdownItConfig {
   /**
@@ -51,6 +69,7 @@ export interface MarkdownItConfig {
    */
   shikiConfig?: Partial<ShikiConfig>
 }
+
 /**
  * markdown解析环境上下文
  */
