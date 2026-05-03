@@ -2,8 +2,10 @@ import type { ResolvedConfig, UserConfig } from '../../types/index.js'
 import type { VitaPressPlugin } from '../../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { isPlainObject } from '../common/utils.js'
-import { loadUserConfig, mergeConfig, validateConfig } from '../config/index.js'
 import { DEFAULT_CONFIG } from './constant.js'
+import { loadUserConfig } from './loader.js'
+import { mergeConfig } from './utils.js'
+import { validateConfig } from './validator.js'
 
 /**
  * 配置管理器
