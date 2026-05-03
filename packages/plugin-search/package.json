@@ -16,7 +16,8 @@
     "README.md"
   ],
   "scripts": {
-    "build": "pnpm test && tsc -p tsconfig.build.json",
+    "build": "pnpm test && tsc -p tsconfig.build.json && pnpm check:circular",
+    "check:circular": "madge --extensions js --circular dist --warning --exclude '.*\\.d\\.ts$'",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "release": "pnpm dlx @vitarx/release-cli"
