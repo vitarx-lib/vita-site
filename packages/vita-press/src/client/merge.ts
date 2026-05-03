@@ -160,7 +160,7 @@ export function mergeClientConfig(base: ExtendedConfig, override: ClientConfig):
  * 按数组顺序依次合并，后者覆盖前者。
  *
  * @param configs - 扩展配置数组
- * @returns 合并后的主题配置
+ * @returns 合并后的扩展配置
  */
 export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
   if (configs.length === 0) return {}
