@@ -27,8 +27,8 @@ describe('defineConfig', () => {
   })
 })
 
-describe('ThemeExpandConfig', () => {
-  it('ThemeExpandConfig 应包含所有主题扩展字段', () => {
+describe('ExtendedConfig', () => {
+  it('ExtendedConfig 应包含所有扩展字段', () => {
     const theme: ExtendedConfig = {
       layout: {} as any,
       messages: { 'zh-CN': { 'nav.home': '首页' } },
@@ -45,7 +45,7 @@ describe('ThemeExpandConfig', () => {
     expect(theme.afterEach).toBeDefined()
   })
 
-  it('ThemeExpandConfig enhanceApp 应支持数组', () => {
+  it('ExtendedConfig enhanceApp 应支持数组', () => {
     const theme: ExtendedConfig = {
       enhanceApp: [() => {}, () => {}]
     }
