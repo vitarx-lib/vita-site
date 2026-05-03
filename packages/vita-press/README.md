@@ -374,7 +374,7 @@ type NavTree = Record<string, NavEntry[]>
 
 #### 目录级配置（`_config.ts`）
 
-```typescript
+```js
 // docs/guide/_config.ts
 definePage({
   meta: {
@@ -527,7 +527,7 @@ alias: /old-path/
 
 在目录下创建 `_config.ts` 文件，使用 `definePage` 配置该目录的路由属性：
 
-```typescript
+```js
 // docs/guide/_config.ts
 definePage({
   meta: {
@@ -651,7 +651,7 @@ export default defineConfig({
 
 ### 插件客户端配置
 
-插件通过 `clientConfig` 字段提供客户端主题配置，构建时自动与用户配置合并：
+插件通过 `clientConfig` 字段提供客户端配置，构建时自动与用户配置合并：
 
 ```typescript
 const myThemePlugin: VitaPressPlugin = {
