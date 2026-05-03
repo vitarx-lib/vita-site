@@ -2,11 +2,11 @@ import MarkdownIt from 'markdown-it'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import type { MarkdownParseEnvContext } from '../../types/index.js'
-import type { DocPageMetaData } from '../../types/page.js'
 import { VitaPressApp } from '../../app/index.js'
 import { invokeParallel, invokePipe } from '../../common/hooks.js'
 import { getVersion } from '../../common/utils.js'
+import type { MarkdownParseEnvContext } from '../../types/index.js'
+import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
 import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
 
@@ -110,8 +110,9 @@ export class MdParser {
     }
     const gitInfo = getCommitInfo(filePath)
     const env: MarkdownParseEnvContext = {
-      filePath: filePath,
-      frontmatter: frontmatter,
+      app: this.app,
+      filePath,
+      frontmatter,
       tocList: []
     }
     const html = this.md.render(markdownContent, env)
