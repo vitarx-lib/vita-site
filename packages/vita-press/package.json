@@ -27,7 +27,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm test && tsc -p tsconfig.build.json",
+    "build": "pnpm test && tsc -p tsconfig.build.json && pnpm check:circular",
+    "check:circular": "madge --extensions js --circular dist --warning --exclude '.*\\.d\\.ts$'",
     "typecheck": "tsc --noEmit",
     "release": "pnpm dlx @vitarx/release-cli",
     "test": "vitest run",
@@ -54,7 +55,7 @@
     "@types/markdown-it": "^14.1.2",
     "typescript": "^6.0.2",
     "vitarx": "4.0.0-beta.14",
-    "vitarx-router": "^4.0.0-beta.16",
+    "vitarx-router": "^4.0.0-beta.17",
     "vite": "^8.0.8"
   }
 }
