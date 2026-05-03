@@ -23,3 +23,10 @@ declare module 'virtual:vitapress/runtime/nav' {
 
   export default navTree
 }
+
+declare module 'virtual:vitapress/runtime/site-data' {
+  type SiteData = import('./siteData').SiteData
+  const siteData: SiteData
+
+  export default siteData
+}

@@ -89,4 +89,12 @@ export interface VitaPressPlugin extends PluginHooks {
    * 模块应导出 ExtendedConfig 类型的默认导出。
    */
   clientConfig?: string
+  /**
+   * 插件提供的站点数据
+   *
+   * 值为可 JSON 序列化的对象，构建时通过虚拟模块注入客户端，
+   * 客户端可通过 useSiteData() 获取合并后的数据。
+   * 多个插件的 siteData 会进行浅合并，后注册插件的同名属性覆盖先注册的。
+   */
+  siteData?: Record<string, unknown>
 }

@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
   collectClientConfigs,
+  collectSiteData,
   generateClientConfigCode
 } from '../../src/build/plugin-vite/virtual.js'
 
@@ -27,6 +28,71 @@ describe('collectClientConfigs', () => {
   it('空插件列表应返回空数组', () => {
     const result = collectClientConfigs([])
     expect(result).toEqual([])
+  })
+})
+
+describe('collectSiteData', () => {
+  it('应从插件列表中收集并合并 siteData', () => {
+    const plugins = [
+      { name: 'plugin-a', siteData: { version: '1.0.0', author: 'Alice' } },
+      { name: 'plugin-b' },
+      { name: 'plugin-c', siteData: { repo: 'https://example.com' } }
+    ]
+    const result = collectSiteData(plugins)
+    expect(result).toEqual({
+      version: '1.0.0',
+      author: 'Alice',
+      repo: 'https://example.com'
+    })
+  })
+
+  it('后注册插件的同名属性应覆盖先注册的', () => {
+    const plugins = [
+      { name: 'plugin-a', siteData: { version: '1.0.0', theme: 'dark' } },
+      { name: 'plugin-b', siteData: { version: '2.0.0' } }
+    ]
+    const result = collectSiteData(plugins)
+    expect(result).toEqual({ version: '2.0.0', theme: 'dark' })
+  })
+
+  it('无 siteData 时应返回空对象', () => {
+    const result = collectSiteData([{}, {}])
+    expect(result).toEqual({})
+  })
+
+  it('空插件列表应返回空对象', () => {
+    const result = collectSiteData([])
+    expect(result).toEqual({})
+  })
+
+  it('应支持嵌套对象作为 siteData 的值', () => {
+    const plugins = [
+      {
+        name: 'plugin-a',
+        siteData: { social: { github: 'https://github.com/example' } }
+      }
+    ]
+    const result = collectSiteData(plugins)
+    expect(result).toEqual({
+      social: { github: 'https://github.com/example' }
+    })
+  })
+
+  it('嵌套对象应整体覆盖而非深度合并', () => {
+    const plugins = [
+      {
+        name: 'plugin-a',
+        siteData: { social: { github: 'https://github.com/a', twitter: 'a' } }
+      },
+      {
+        name: 'plugin-b',
+        siteData: { social: { github: 'https://github.com/b' } }
+      }
+    ]
+    const result = collectSiteData(plugins)
+    expect(result).toEqual({
+      social: { github: 'https://github.com/b' }
+    })
   })
 })
 

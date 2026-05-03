@@ -264,6 +264,24 @@ import navTree from 'virtual:vitapress/runtime/nav'
 // navTree: Record<string, NavEntry[]>
 ```
 
+### `virtual:vitapress/runtime/site-data`
+
+站点数据，由插件通过 `siteData` 字段提供，多个插件的数据浅合并。
+
+```tsx
+import siteData from 'virtual:vitapress/runtime/site-data'
+// siteData: Record<string, unknown>
+```
+
+也可使用 `useSiteData()` API 获取：
+
+```tsx
+import { useSiteData } from 'vitapress'
+
+const siteData = useSiteData()
+console.log(siteData.version)
+```
+
 ## 导航树
 
 VitaPress 自动从文档目录结构生成导航树，供侧边栏等组件消费。
@@ -551,6 +569,8 @@ interface VitaPressPlugin {
   enforce?: 'pre' | 'post' | number
   /** 客户端主题配置模块路径 */
   clientConfig?: string
+  /** 插件提供的站点数据，客户端可通过 useSiteData() 获取 */
+  siteData?: Record<string, unknown>
 
   // 配置钩子
   config?(config: UserConfig): void | UserConfig | Promise<void | UserConfig>
@@ -605,6 +625,11 @@ import type { VitaPressPlugin } from 'vitapress/server'
 
 const myPlugin: VitaPressPlugin = {
   name: 'my-plugin',
+
+  siteData: {
+    version: '1.0.0',
+    features: ['search', 'i18n']
+  },
 
   config(config) {
     return {

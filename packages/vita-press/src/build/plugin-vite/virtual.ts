@@ -9,10 +9,12 @@ import {
   RESOLVED_LOCALES_ID,
   RESOLVED_NAV_ID,
   RESOLVED_RUNTIME_ENTER_ID,
+  RESOLVED_SITE_DATA_ID,
   VIRTUAL_CLIENT_CONFIG_ID,
   VIRTUAL_LOCALES_ID,
   VIRTUAL_NAV_ID,
-  VIRTUAL_RUNTIME_ENTER_ID
+  VIRTUAL_RUNTIME_ENTER_ID,
+  VIRTUAL_SITE_DATA_ID
 } from '../common/constant.js'
 import {
   generateClientEnterCode,
@@ -34,6 +36,24 @@ export function collectClientConfigs(plugins: readonly { clientConfig?: string }
     }
   }
   return configs
+}
+
+/**
+ * 收集并合并所有插件的 siteData
+ *
+ * 多个插件的 siteData 进行浅合并，后注册插件的同名属性覆盖先注册的。
+ *
+ * @param plugins - 已注册的插件列表
+ * @returns 合并后的站点数据对象
+ */
+export function collectSiteData(plugins: readonly { siteData?: Record<string, unknown> }[]): Record<string, unknown> {
+  const merged: Record<string, unknown> = {}
+  for (const plugin of plugins) {
+    if (plugin.siteData) {
+      Object.assign(merged, plugin.siteData)
+    }
+  }
+  return merged
 }
 
 /**
@@ -104,6 +124,9 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === VIRTUAL_NAV_ID) {
         return RESOLVED_NAV_ID
       }
+      if (id === VIRTUAL_SITE_DATA_ID) {
+        return RESOLVED_SITE_DATA_ID
+      }
       if (id === VIRTUAL_ROUTES_ID) {
         return RESOLVED_ROUTES_ID
       }
@@ -136,6 +159,10 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === RESOLVED_CLIENT_CONFIG_ID) {
         const clientConfigs = collectClientConfigs(app.plugins)
         return generateClientConfigCode(app.clientConfigPath, clientConfigs)
+      }
+      if (id === RESOLVED_SITE_DATA_ID) {
+        const siteData = collectSiteData(app.plugins)
+        return `const siteData = ${JSON.stringify(siteData, null, 2)};\nexport default siteData`
       }
       return null
     },

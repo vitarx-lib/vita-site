@@ -28,3 +28,8 @@ export const RESOLVED_LOCALES_ID = '\0' + VIRTUAL_LOCALES_ID
 export const VIRTUAL_NAV_ID = 'virtual:vitapress/runtime/nav'
 /** 导航树虚拟模块解析后的 ID */
 export const RESOLVED_NAV_ID = '\0' + VIRTUAL_NAV_ID
+
+/** 站点数据虚拟模块 ID */
+export const VIRTUAL_SITE_DATA_ID = 'virtual:vitapress/runtime/site-data'
+/** 站点数据虚拟模块解析后的 ID */
+export const RESOLVED_SITE_DATA_ID = '\0' + VIRTUAL_SITE_DATA_ID
