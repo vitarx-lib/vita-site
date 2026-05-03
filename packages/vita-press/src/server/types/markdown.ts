@@ -9,18 +9,17 @@ import type { TocTree } from '../markdown/plugins/tocTree.js'
 import type { PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
 
-type PluginWithOptionsType<T> = {
+export type MarkdownItPluginWithOptionsType<T = {}> = {
   plugin: PluginWithOptions<T>
   options: T
 }
-type PluginWithParamsType = {
+
+export type MarkdownItPluginWithParamsType = {
   plugin: PluginWithParams
   options: any[]
 }
 
-type PluginSimpleType = PluginSimple
-
-export type MarkdownItPlugin = PluginSimpleType | PluginWithOptionsType<any> | PluginWithParamsType
+export type MarkdownItPlugin = PluginSimple
 
 /**
  * markdown-it配置
@@ -44,7 +43,7 @@ export interface MarkdownItConfig {
   /**
    * markdown-it插件
    */
-  plugins?: MarkdownItPlugin[]
+  plugins?: (MarkdownItPlugin | MarkdownItPluginWithOptionsType | MarkdownItPluginWithParamsType)[]
   /**
    * `@shikijs/markdown-it`插件的配置
    *
