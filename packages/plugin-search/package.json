@@ -1,5 +1,5 @@
 {
-  "name": "vita-press-plugin-search",
+  "name": "@vitapress/plugin-search",
   "version": "0.0.0",
   "description": "Local search plugin for VitaPress",
   "type": "module",
