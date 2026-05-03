@@ -199,15 +199,15 @@ export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
 /**
  * 合并所有扩展配置与用户配置，生成最终的运行时配置
  *
- * @param themes - 插件提供的主题配置数组（按注册顺序，后者优先级高于前者）
+ * @param extended - 插件提供的扩展配置数组（按注册顺序，后者优先级高于前者）
  * @param userConfig - 用户客户端配置（优先级最高）
  * @returns 最终的运行时配置
  */
 export function resolveClientConfig(
-  themes: ExtendedConfig[],
+  extended: ExtendedConfig[],
   userConfig: ClientConfig
 ): ClientConfig {
-  if (themes.length === 0) return userConfig
-  const mergedTheme = mergeExtendedConfig(themes)
+  if (extended.length === 0) return userConfig
+  const mergedTheme = mergeExtendedConfig(extended)
   return mergeClientConfig(mergedTheme, userConfig)
 }
