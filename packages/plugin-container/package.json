@@ -1,7 +1,7 @@
 {
   "name": "@vitapress/plugin-search",
   "version": "0.0.0",
-  "description": "Local search plugin for VitaPress",
+  "description": "markdown container plugin for VitaPress",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
