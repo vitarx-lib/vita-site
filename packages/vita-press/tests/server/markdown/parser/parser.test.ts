@@ -116,7 +116,10 @@ describe('MdParser', () => {
 
     it('frontmatter 中指定的语言应覆盖自动推断', async () => {
       const multiLangApp = await createTestApp(tempDir, {
-        locales: [{ id: 'zh-CN', name: '简体中文' }, { id: 'en-US', name: 'English' }]
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
       })
       const multiLangParser = new MdParser(md, multiLangApp)
 
@@ -298,11 +301,13 @@ describe('MdParser', () => {
       const pluginParser = new MdParser(md, pluginApp)
       const filePath = createMarkdownFile('docs/test.md', '# Test')
 
-      const result = pluginParser.parse(filePath, '# Test')
+      pluginParser.parse(filePath, '# Test')
 
       expect(afterParseMock).toHaveBeenCalled()
       expect(afterParseMock).toHaveBeenCalledWith(
-        expect.objectContaining({ meta: expect.objectContaining({ relativePath: 'docs/test.md' }) }),
+        expect.objectContaining({
+          meta: expect.objectContaining({ relativePath: 'docs/test.md' })
+        }),
         pluginApp
       )
     })

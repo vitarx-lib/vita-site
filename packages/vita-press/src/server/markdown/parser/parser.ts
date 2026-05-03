@@ -5,28 +5,10 @@ import path from 'node:path'
 import { VitaPressApp } from '../../app/index.js'
 import { invokeParallel, invokePipe } from '../../common/hooks.js'
 import { getVersion } from '../../common/utils.js'
-import type { MarkdownParseEnvContext } from '../../types/index.js'
+import type { MarkdownParseEnvContext, MdParseResult } from '../../types/index.js'
 import type { DocPageMetaData } from '../../types/page.js'
 import { CacheManager } from '../cache/index.js'
 import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
-
-/**
- * Markdown 解析结果
- *
- * 包含解析后的组件代码、文件路径和文档元数据
- */
-export interface MdParseResult {
-  /** 文档转换后的html内容 */
-  html: string
-  /** 去除 frontmatter 后的原始 Markdown 内容 */
-  content: string
-  /** 源文件的绝对路径 */
-  filePath: string
-  /** 文档页面的元数据信息 */
-  meta: DocPageMetaData
-  /** 文档页面的别名 */
-  alias: string | string[] | undefined
-}
 
 /**
  * Markdown 解析器

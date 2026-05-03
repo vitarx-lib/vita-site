@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import type { MdParseResult } from '../../../../src/server/index.js'
 import { CacheManager } from '../../../../src/server/markdown/cache/manager.js'
-import type { MdParseResult } from '../../../../src/server/markdown/parser/index.js'
 
 const mockParseResult = {
   html: '<p>test</p>',

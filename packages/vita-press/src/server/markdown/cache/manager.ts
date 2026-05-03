@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, unlinkSync } from 'node:fs
 import path from 'node:path'
 import { debug } from 'vitarx-router/file-router'
 import { writeCacheFileSync } from '../../common/utils.js'
-import type { MdParseResult } from '../parser/index.js'
+import type { MdParseResult } from '../../types/index.js'
 
 interface EntryInfo {
   hash: string

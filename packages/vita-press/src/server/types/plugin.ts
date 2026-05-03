@@ -1,8 +1,8 @@
 import type MarkdownItInstance from 'markdown-it'
 import type { RouteNode } from 'vitarx-router/file-router'
 import { VitaPressApp } from '../app/index.js'
-import type { MdParseResult } from '../markdown/index.js'
 import type { ResolvedConfig, UserConfig } from './config.js'
+import type { MdParseResult } from './markdown.js'
 
 /**
  * MarkdownIt 实例类型

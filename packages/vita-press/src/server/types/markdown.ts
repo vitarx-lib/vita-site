@@ -6,7 +6,7 @@ import type {
 } from 'markdown-it'
 import { VitaPressApp } from '../app/index.js'
 import type { TocTree } from '../markdown/plugins/tocTree.js'
-import type { PageMetaData } from './page.js'
+import type { DocPageMetaData, PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
 
 export type MarkdownItPluginWithOptionsType<T = {}> = {
@@ -71,4 +71,22 @@ export interface MarkdownParseEnvContext {
    * 目录列表
    */
   readonly tocList: TocTree[]
+}
+
+/**
+ * Markdown 解析结果
+ *
+ * 包含解析后的组件代码、文件路径和文档元数据
+ */
+export interface MdParseResult {
+  /** 文档转换后的html内容 */
+  html: string
+  /** 去除 frontmatter 后的原始 Markdown 内容 */
+  content: string
+  /** 源文件的绝对路径 */
+  filePath: string
+  /** 文档页面的元数据信息 */
+  meta: DocPageMetaData
+  /** 文档页面的别名 */
+  alias: string | string[] | undefined
 }
