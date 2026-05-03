@@ -42,7 +42,7 @@ export function collectClientConfigs(plugins: readonly { clientConfig?: string }
  * 策略：
  * - 收集所有插件的 clientConfig 模块路径并生成 import 语句
  * - 导入用户客户端配置文件
- * - 调用 resolveRuntimeConfig 合并为最终配置并导出
+ * - 调用 resolveClientConfig 合并为最终配置并导出
  *
  * @param clientConfigPath - 用户客户端配置文件路径
  * @param clientConfigs - 插件提供的客户端配置模块路径数组
