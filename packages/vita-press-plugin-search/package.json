@@ -1,0 +1,36 @@
+{
+  "name": "vita-press-plugin-search",
+  "version": "0.0.0",
+  "description": "Local search plugin for VitaPress",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "pnpm test && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "release": "pnpm dlx @vitarx/release-cli"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "vitapress": "^1.0.0",
+    "vitarx": "^4.0.0-0",
+    "vitarx-router": "^4.0.0-0"
+  },
+  "devDependencies": {
+    "vitapress": "workspace:*",
+    "vitarx": "4.0.0-beta.14",
+    "vitarx-router": "^4.0.0-beta.16",
+    "@vitarx/plugin-vite": "^0.0.1-beta.8"
+  }
+}
