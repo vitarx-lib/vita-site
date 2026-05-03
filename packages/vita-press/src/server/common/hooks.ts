@@ -5,7 +5,7 @@ import type { VitaPressPlugin } from '../../types/plugin.js'
  * 并行调用插件钩子（异步）
  *
  * 遍历所有插件，并行执行指定钩子函数，统一捕获异常并 warn。
- * 适用于无管道依赖的异步钩子（如 markdown、appCreated、configResolved）。
+ * 适用于无管道依赖的异步钩子（如 markdownIt、appCreated、configResolved）。
  *
  * @param plugins - 插件列表
  * @param hookName - 钩子名称

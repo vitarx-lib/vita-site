@@ -247,12 +247,12 @@ describe('VitaPressApp 端到端集成测试', () => {
       expect(app.plugins[0]!.name).toBe('test-plugin')
     })
 
-    it('应正确执行插件的 markdown 钩子', async () => {
+    it('应正确执行插件的 markdownIt 钩子', async () => {
       createProjectStructure({
         '.vitapress/config.ts': `
           const markdownPlugin = {
             name: 'markdown-plugin',
-            markdown(md) {
+            markdownIt(md) {
               md.use((md) => {
                 md.inline.ruler.push('custom_rule', () => false)
               })
@@ -428,7 +428,7 @@ describe('VitaPressApp 端到端集成测试', () => {
           plugins: [
             {
               name: 'test-plugin',
-              markdown(md) {
+              markdownIt(md) {
               }
             }
           ]

@@ -23,9 +23,9 @@ export interface PluginHooks {
    */
   configResolved?: (config: ResolvedConfig) => void | Promise<void>
   /**
-   * 配置 MarkdownIt 实例
+   * 扩展 MarkdownIt 实例
    */
-  markdown?: (md: MarkdownIt) => void | Promise<void>
+  markdownIt?: (md: MarkdownIt) => void | Promise<void>
   /**
    * 应用实例创建完成后调用
    *

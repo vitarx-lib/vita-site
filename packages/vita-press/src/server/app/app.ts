@@ -142,7 +142,7 @@ export class VitaPressApp {
     const configManager = await ConfigManager.create(root, config)
     const markdownIt = await createMarkdownIt(configManager.config.markdownIt)
 
-    await invokeParallel(configManager.plugins, 'markdown', markdownIt)
+    await invokeParallel(configManager.plugins, 'markdownIt', markdownIt)
 
     const app = new VitaPressApp({
       root,

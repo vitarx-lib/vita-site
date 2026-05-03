@@ -561,7 +561,7 @@ interface VitaPressPlugin {
   appCreated?(app: VitaPressApp): void | Promise<void>
 
   // Markdown 钩子
-  markdown?(md: MarkdownIt): void | Promise<void>
+  markdownIt?(md: MarkdownIt): void | Promise<void>
 
   beforeParse?(content: string, file: string, app: VitaPressApp): string | void
 
@@ -584,7 +584,7 @@ VitaPressApp.create()
   │
   ├── config()              // 配置解析前，可返回新配置
   ├── configResolved()      // 配置解析完成
-  ├── markdown()            // MarkdownIt 实例创建后
+  ├── markdownIt()           // MarkdownIt 实例创建后
   │
   ├── new VitaPressApp()    // 构造应用实例（路由器延迟扫描）
   ├── appCreated()          // 应用实例创建完成，可记录 app 引用
