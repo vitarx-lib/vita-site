@@ -1,12 +1,12 @@
 import MarkdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
+import type { ResolvedConfig, UserConfig } from '../types/index.js'
+import type { VitaPressPlugin } from '../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
 import { VitaPressRouter } from '../router/index.js'
-import type { ResolvedConfig, UserConfig } from '../types/index.js'
-import type { VitaPressPlugin } from '../types/plugin.js'
 
 export type CommandName = 'dev' | 'build' | 'preview'
 export interface VitaPressAppOptions {

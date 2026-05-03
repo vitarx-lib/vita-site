@@ -1,8 +1,8 @@
 import { relative } from 'node:path'
 import { FileRouter, type PageParseResult } from 'vitarx-router/file-router'
-import { invokeParallel, invokePipe } from '../common/hooks.js'
-import { VitaPressApp } from '../app/index.js'
 import type { NavTree } from '../types/nav.js'
+import { VitaPressApp } from '../app/index.js'
+import { invokeParallel, invokePipe } from '../common/hooks.js'
 import { buildNavTree } from './nav.js'
 
 /**
@@ -23,58 +23,64 @@ export class VitaPressRouter extends FileRouter {
   }
 
   constructor(app: VitaPressApp) {
-    super({
-      root: app.root,
-      pages: [app.config.docDir, ...app.config.pageDirs],
-      injectImports: [
-        `import { lazy } from "vitarx"`,
-        `import __runtimeConfig from "virtual:vitapress/runtime/config"`
-      ],
-      importMode: ({ importPath, filePath }) => {
-        if (filePath.endsWith('.md')) {
-          const cachePath = app.mdParser.cache.getCacheFilePath(relative(app.root, filePath), 'jsx')
-          return `lazy(() => import("${cachePath}"), __runtimeConfig.lazy)`
-        }
-        return `lazy(() => import(${importPath}), __runtimeConfig.lazy)`
-      },
-      pathStrategy: 'kebab',
-      dts: app.config.dts || false,
-      transform: (content: string, file: string) => {
-        if (file.endsWith('.md')) {
-          return app.mdParser.parse(file, content)
-        }
-        return content
-      },
-      pageParser: basename => {
-        const [path, viewName] = basename.split('@', 2) as [string, string]
-        const result: PageParseResult = { path, viewName }
-        let lang: string = app.lang
-
-        if (path.includes('.')) {
-          const parts = path.split('.')
-          const lastPart = parts.pop()!
-
-          if (app.langs.includes(lastPart)) {
-            lang = lastPart
-            result.path = parts.join('-') + '-' + lastPart
-          } else {
-            result.path = path.replace(/\./g, '-')
+    super(
+      {
+        root: app.root,
+        pages: [app.config.docDir, ...app.config.pageDirs],
+        injectImports: [
+          `import { lazy } from "vitarx"`,
+          `import __runtimeConfig from "virtual:vitapress/runtime/config"`
+        ],
+        importMode: ({ importPath, filePath }) => {
+          if (filePath.endsWith('.md')) {
+            const cachePath = app.mdParser.cache.getCacheFilePath(
+              relative(app.root, filePath),
+              'jsx'
+            )
+            return `lazy(() => import("${cachePath}"), __runtimeConfig.lazy)`
           }
-        }
+          return `lazy(() => import(${importPath}), __runtimeConfig.lazy)`
+        },
+        pathStrategy: 'kebab',
+        dts: app.config.dts || false,
+        transform: (content: string, file: string) => {
+          if (file.endsWith('.md')) {
+            return app.mdParser.parse(file, content)
+          }
+          return content
+        },
+        pageParser: basename => {
+          const [path, viewName] = basename.split('@', 2) as [string, string]
+          const result: PageParseResult = { path, viewName }
+          let lang: string = app.lang
 
-        result.options = {
-          meta: { lang }
+          if (path.includes('.')) {
+            const parts = path.split('.')
+            const lastPart = parts.pop()!
+
+            if (app.langs.includes(lastPart)) {
+              lang = lastPart
+              result.path = parts.join('-') + '-' + lastPart
+            } else {
+              result.path = path.replace(/\./g, '-')
+            }
+          }
+
+          result.options = {
+            meta: { lang }
+          }
+          return result
+        },
+        extendRoute: route => {
+          invokeParallel(app.plugins, 'extendRoute', route, app)
+        },
+        beforeWriteRoutes: routes => {
+          const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
+          this._navTree = buildNavTree(result, app.docDirPath, app.lang)
+          return result
         }
-        return result
       },
-      extendRoute: route => {
-        invokeParallel(app.plugins, 'extendRoute', route, app)
-      },
-      beforeWriteRoutes: routes => {
-        const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
-        this._navTree = buildNavTree(result, app.docDirPath, app.lang)
-        return result
-      }
-    }, false)
+      false
+    )
   }
 }

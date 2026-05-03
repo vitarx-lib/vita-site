@@ -5,9 +5,9 @@ import type { I18nMessages, I18nOptions } from './i18n.js'
 export type EnhanceApp = (app: App, router: Router) => void
 
 /**
- * 主题扩展配置
+ * 插件扩展配置
  */
-export interface ThemeExpandConfig {
+export interface ExtendedConfig {
   /**
    * 应用入口布局组件或视图对象
    *
@@ -53,7 +53,7 @@ export interface ThemeExpandConfig {
  * 由虚拟模块 virtual:vitapress/runtime/config 提供，
  * 已合并所有插件的主题配置，无需手动处理 theme 字段。
  */
-export interface RuntimeConfig {
+export interface ClientConfig {
   /**
    * 应用入口布局组件或视图对象
    *
@@ -106,11 +106,21 @@ export interface RuntimeConfig {
 }
 
 /**
- * 定义运行时配置
+ * 定义客户端运行时配置
  *
  * @param config - 运行时配置
- * @returns {RuntimeConfig} 运行时配置
+ * @returns {ClientConfig} 运行时配置
  */
-export function defineConfig(config: RuntimeConfig): RuntimeConfig {
+export function defineConfig<T extends ClientConfig>(config: T): T {
+  return config
+}
+
+/**
+ * 定义主题扩展配置
+ *
+ * @param config - 主题扩展配置
+ * @returns {ExtendedConfig} 主题扩展配置
+ */
+export function defineExtendedConfig<T extends ExtendedConfig>(config: T): T {
   return config
 }

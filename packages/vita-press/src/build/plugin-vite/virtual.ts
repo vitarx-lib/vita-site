@@ -53,7 +53,7 @@ export function generateClientConfigCode(
   clientConfigs: string[]
 ): string {
   const lines: string[] = []
-  lines.push("import { resolveRuntimeConfig } from 'vitapress'")
+  lines.push("import { resolveClientConfig } from 'vitapress'")
 
   for (let i = 0; i < clientConfigs.length; i++) {
     lines.push(`import __theme_${i} from '${clientConfigs[i]}'`)
@@ -66,12 +66,12 @@ export function generateClientConfigCode(
     const content = readFileSync(clientConfigPath, 'utf-8')
     if (content.includes('export default')) {
       lines.push(`import __userConfig from '${clientConfigPath}'`)
-      lines.push(`export default resolveRuntimeConfig(${themeArray}, __userConfig)`)
+      lines.push(`export default resolveClientConfig(${themeArray}, __userConfig)`)
     } else {
-      lines.push(`export default resolveRuntimeConfig(${themeArray}, {})`)
+      lines.push(`export default resolveClientConfig(${themeArray}, {})`)
     }
   } else {
-    lines.push(`export default resolveRuntimeConfig(${themeArray}, {})`)
+    lines.push(`export default resolveClientConfig(${themeArray}, {})`)
   }
 
   return lines.join('\n')

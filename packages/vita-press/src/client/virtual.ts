@@ -1,9 +1,9 @@
 declare module 'virtual:vitapress/runtime/config' {
-  type RuntimeConfig = import('./config').RuntimeConfig
+  type ClientConfig = import('./config').ClientConfig
 
-  export type { RuntimeConfig }
+  export type { ClientConfig }
 
-  const config: RuntimeConfig
+  const config: ClientConfig
 
   export default config
 }

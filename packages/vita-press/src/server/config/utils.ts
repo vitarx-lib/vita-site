@@ -1,5 +1,5 @@
-import { isPlainObject } from '../common/utils.js'
 import type { UserConfig } from '../types/index.js'
+import { isPlainObject } from '../common/utils.js'
 
 /**
  * 合并两个数组（支持 a / b 为 undefined），返回一个新数组

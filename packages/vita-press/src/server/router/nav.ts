@@ -12,9 +12,7 @@ import type { TocTree } from '../markdown/plugins/tocTree.js'
  */
 function inferTitleFromPath(path: string): string {
   const segment = path.split('/').pop() || path
-  return segment
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, c => c.toUpperCase())
+  return segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 /**

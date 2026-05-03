@@ -1,5 +1,5 @@
 import type { AfterCallback, NavigationGuard, RouterOptions } from 'vitarx-router'
-import type { EnhanceApp, RuntimeConfig, ThemeExpandConfig } from './config.js'
+import type { ClientConfig, EnhanceApp, ExtendedConfig } from './config.js'
 import type { I18nMessages, I18nOptions } from './i18n.js'
 
 /**
@@ -100,7 +100,7 @@ function mergeEnhanceApp(
 }
 
 /**
- * 将 ThemeExpandConfig 展开合并到 RuntimeConfig 中
+ * 将 ExtendedConfig 展开合并到 ClientConfig 中
  *
  * 合并策略：
  * - layout：override 覆盖 base
@@ -113,11 +113,8 @@ function mergeEnhanceApp(
  * @param override - 用户配置（优先级高）
  * @returns 合并后的运行时配置
  */
-export function mergeRuntimeConfig(
-  base: ThemeExpandConfig,
-  override: RuntimeConfig
-): RuntimeConfig {
-  const result: RuntimeConfig = {}
+export function mergeClientConfig(base: ExtendedConfig, override: ClientConfig): ClientConfig {
+  const result: ClientConfig = {}
 
   const layout = override.layout ?? base.layout
   if (layout != null) result.layout = layout
@@ -137,7 +134,7 @@ export function mergeRuntimeConfig(
   }
   const mergedHooks = mergeRouterHooks(baseHooks, overrideHooks)
   const { beforeEach: _bh, afterEach: _ah, missing: _m, ...routerRest } = override.router ?? {}
-  const router: NonNullable<RuntimeConfig['router']> = { ...routerRest }
+  const router: NonNullable<ClientConfig['router']> = { ...routerRest }
   if (mergedHooks.missing != null) router.missing = mergedHooks.missing
   if (mergedHooks.beforeEach != null) router.beforeEach = mergedHooks.beforeEach
   if (mergedHooks.afterEach != null) router.afterEach = mergedHooks.afterEach
@@ -158,18 +155,18 @@ export function mergeRuntimeConfig(
 }
 
 /**
- * 合并多个 ThemeExpandConfig 为一个
+ * 合并多个 ExtendedConfig 为一个
  *
  * 按数组顺序依次合并，后者覆盖前者。
  *
- * @param themes - 主题配置数组
+ * @param configs - 扩展配置数组
  * @returns 合并后的主题配置
  */
-export function mergeThemes(themes: ThemeExpandConfig[]): ThemeExpandConfig {
-  if (themes.length === 0) return {}
-  if (themes.length === 1) return { ...themes[0] }
-  return themes.reduce((acc, theme) => {
-    const result: ThemeExpandConfig = {}
+export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
+  if (configs.length === 0) return {}
+  if (configs.length === 1) return { ...configs[0] }
+  return configs.reduce((acc, theme) => {
+    const result: ExtendedConfig = {}
     const layout = theme.layout ?? acc.layout
     if (layout != null) result.layout = layout
     const lazy = theme.lazy ?? acc.lazy
@@ -200,17 +197,17 @@ export function mergeThemes(themes: ThemeExpandConfig[]): ThemeExpandConfig {
 }
 
 /**
- * 合并所有主题配置与用户配置，生成最终的运行时配置
+ * 合并所有扩展配置与用户配置，生成最终的运行时配置
  *
  * @param themes - 插件提供的主题配置数组（按注册顺序，后者优先级高于前者）
  * @param userConfig - 用户客户端配置（优先级最高）
  * @returns 最终的运行时配置
  */
-export function resolveRuntimeConfig(
-  themes: ThemeExpandConfig[],
-  userConfig: RuntimeConfig
-): RuntimeConfig {
+export function resolveClientConfig(
+  themes: ExtendedConfig[],
+  userConfig: ClientConfig
+): ClientConfig {
   if (themes.length === 0) return userConfig
-  const mergedTheme = mergeThemes(themes)
-  return mergeRuntimeConfig(mergedTheme, userConfig)
+  const mergedTheme = mergeExtendedConfig(themes)
+  return mergeClientConfig(mergedTheme, userConfig)
 }

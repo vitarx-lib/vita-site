@@ -190,9 +190,7 @@ function validateLocales(config: UserConfig): void {
   for (let i = 0; i < config.locales.length; i++) {
     const locale = config.locales[i]
     if (!locale || typeof locale !== 'object') {
-      throw new ConfigValidationError(
-        `locales[${i}] 必须是对象类型，当前类型: ${typeof locale}`
-      )
+      throw new ConfigValidationError(`locales[${i}] 必须是对象类型，当前类型: ${typeof locale}`)
     }
     if (!locale.id) {
       throw new ConfigValidationError(`locales[${i}] 必须有 id 属性`)
