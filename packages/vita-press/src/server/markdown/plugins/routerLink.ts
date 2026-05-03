@@ -1,14 +1,5 @@
 import MarkdownIt from 'markdown-it'
-
-/**
- * 判断是否为外部链接
- *
- * @param href - 链接地址
- * @returns 是否为外部链接
- */
-function isExternalLink(href: string): boolean {
-  return href.startsWith('http://') || href.startsWith('https://')
-}
+import { isExternalLink } from '../utils/index.js'
 
 /**
  * 将 `<a>` 标签替换为 `<RouterLink>`

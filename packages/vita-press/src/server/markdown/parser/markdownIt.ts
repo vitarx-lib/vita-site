@@ -5,6 +5,7 @@ import { codeImport } from '../plugins/codeImport.js'
 import { extractTitle } from '../plugins/extractTitle.js'
 import { fenceTranslator } from '../plugins/fenceTranslator.js'
 import { jsxComponentParser } from '../plugins/jsxComponentParser.js'
+import { linkResolver } from '../plugins/linkResolver.js'
 import { routerLink } from '../plugins/routerLink.js'
 import { createShikiHighlighter } from '../plugins/shik.js'
 import { tocTree } from '../plugins/tocTree.js'
@@ -29,6 +30,7 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
     shikiPlugin,
     codeImport,
     tocTree,
+    linkResolver,
     routerLink,
     bracketTranslator,
     fenceTranslator,
