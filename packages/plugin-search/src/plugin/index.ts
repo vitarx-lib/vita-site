@@ -49,7 +49,7 @@ export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugi
   let appRef: VitaPressApp | null = null
 
   return {
-    name: 'vita-press-plugin-search',
+    name: 'vitapress-plugin-search',
 
     /**
      * 配置钩子
@@ -64,7 +64,7 @@ export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugi
         vite: {
           plugins: [
             {
-              name: 'vita-press-plugin-search-vite',
+              name: 'vitapress-plugin-search-vite',
               resolveId(id: string): string | null {
                 if (id === VIRTUAL_SEARCH_INDEX_ID) {
                   return RESOLVED_SEARCH_INDEX_ID
