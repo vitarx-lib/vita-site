@@ -1,6 +1,6 @@
 {
   "name": "vitapress",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A simple static site generator for writing technical documentation with markdown.",
   "keywords": [
     "vita-press"
@@ -27,9 +27,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "pnpm clean && pnpm test && tsc -p tsconfig.build.json",
-    "clean": "rm -rf dist *.tsbuildinfo",
+    "build": "pnpm test && tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
+    "release": "pnpm dlx @vitarx/release-cli",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -52,8 +52,9 @@
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/markdown-it": "^14.1.2",
-    "vitarx": "4.0.0-beta.13",
-    "vitarx-router": "^4.0.0-beta.14",
+    "typescript": "^6.0.2",
+    "vitarx": "4.0.0-beta.14",
+    "vitarx-router": "^4.0.0-beta.16",
     "vite": "^8.0.8"
   }
 }

@@ -1,5 +1,5 @@
 import { warn } from 'vitarx-router/file-router'
-import type { VitaPressPlugin } from '../types/plugin.js'
+import type { VitaPressPlugin } from '../../types/plugin.js'
 
 /**
  * 并行调用插件钩子（异步）

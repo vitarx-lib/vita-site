@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { loadConfigFromFile } from 'vite'
-import type { UserConfig } from '../types/config.js'
+import type { UserConfig } from '../../types/config.js'
 import { validateConfig } from './validator.js'
 
 /**

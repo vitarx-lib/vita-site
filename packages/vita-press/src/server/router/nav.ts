@@ -1,5 +1,5 @@
 import type { RouteNode } from 'vitarx-router/file-router'
-import type { NavEntry, NavGroup, NavItem, NavTree } from '../types/nav.js'
+import type { NavEntry, NavGroup, NavItem, NavTree } from '../../types/nav.js'
 import type { TocTree } from '../markdown/plugins/tocTree.js'
 
 /**

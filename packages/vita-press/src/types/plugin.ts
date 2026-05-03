@@ -1,6 +1,6 @@
 import type MarkdownItInstance from 'markdown-it'
 import type { RouteNode } from 'vitarx-router/file-router'
-import { VitaPressApp } from '../app/index.js'
+import { VitaPressApp } from '../server/app/index.js'
 import type { ResolvedConfig, UserConfig } from './config.js'
 import type { MdParseResult } from './markdown.js'
 

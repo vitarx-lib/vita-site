@@ -1,6 +1,6 @@
 import { relative } from 'node:path'
 import { FileRouter, type PageParseResult } from 'vitarx-router/file-router'
-import type { NavTree } from '../types/nav.js'
+import type { NavTree } from '../../types/nav.js'
 import { VitaPressApp } from '../app/index.js'
 import { invokeParallel, invokePipe } from '../common/hooks.js'
 import { buildNavTree } from './nav.js'

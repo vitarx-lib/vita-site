@@ -1,5 +1,5 @@
 import MarkdownIt from 'markdown-it'
-import type { MarkdownItConfig } from '../../types/index.js'
+import type { MarkdownItConfig } from '../../../types/index.js'
 import { bracketTranslator } from '../plugins/bracketTranslator.js'
 import { codeImport } from '../plugins/codeImport.js'
 import { extractTitle } from '../plugins/extractTitle.js'

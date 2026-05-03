@@ -1,5 +1,5 @@
-import type { TocTree } from '../markdown/plugins/tocTree.js'
-import type { GitCommitInfo } from '../markdown/utils/index.js'
+import type { TocTree } from '../server/markdown/plugins/tocTree.js'
+import type { GitCommitInfo } from '../server/markdown/utils/index.js'
 import type { SiteOptions } from './config.js'
 
 /**

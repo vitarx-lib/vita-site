@@ -2,7 +2,7 @@ import { fromHighlighter } from '@shikijs/markdown-it/core'
 import type { PluginSimple } from 'markdown-it'
 import { type BundledLanguage, bundledLanguages, createOnigurumaEngine } from 'shiki'
 import { createHighlighterCore } from 'shiki/core'
-import type { ShikiConfig } from '../../types/index.js'
+import type { ShikiConfig } from '../../../types/index.js'
 import { mergeConfig } from '../../config/index.js'
 
 // 默认配置

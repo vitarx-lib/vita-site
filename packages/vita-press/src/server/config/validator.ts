@@ -1,8 +1,8 @@
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { PageDirOptions } from 'vitarx-router/file-router'
-import type { UserConfig } from '../types/config.js'
-import type { VitaPressPlugin } from '../types/index.js'
+import type { UserConfig } from '../../types/config.js'
+import type { VitaPressPlugin } from '../../types/index.js'
 
 /**
  * 配置验证错误

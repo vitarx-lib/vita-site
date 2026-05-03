@@ -9,7 +9,7 @@ declare module 'virtual:vitapress/runtime/config' {
 }
 
 declare module 'virtual:vitapress/runtime/locales' {
-  type Locale = import('../server/types/config').Locale
+  type Locale = import('../types/config').Locale
 
   const locales: Locale[]
 
@@ -17,7 +17,7 @@ declare module 'virtual:vitapress/runtime/locales' {
 }
 
 declare module 'virtual:vitapress/runtime/nav' {
-  type NavTree = import('../server/types/nav').NavTree
+  type NavTree = import('../types/nav').NavTree
 
   const navTree: NavTree
 

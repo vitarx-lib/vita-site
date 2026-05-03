@@ -3,7 +3,7 @@ import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
 import { warn } from 'vitarx-router/file-router'
-import type { MarkdownParseEnvContext } from '../../types/index.js'
+import type { MarkdownParseEnvContext } from '../../../types/index.js'
 import { getLineContent } from '../utils/index.js'
 
 /**

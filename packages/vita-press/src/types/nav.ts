@@ -1,4 +1,4 @@
-import type { TocTree } from '../markdown/plugins/tocTree.js'
+import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 
 export type { TocTree }
 

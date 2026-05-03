@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ConfigValidationError, validateConfig } from '../../../src/server/config/validator.js'
-import type { UserConfig } from '../../../src/server/types/index.js'
+import type { UserConfig } from '../../../src/types/index.js'
 
 describe('ConfigValidationError', () => {
   it('应正确创建错误实例', () => {

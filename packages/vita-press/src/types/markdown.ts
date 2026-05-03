@@ -4,8 +4,8 @@ import type {
   PluginWithOptions,
   PluginWithParams
 } from 'markdown-it'
-import { VitaPressApp } from '../app/index.js'
-import type { TocTree } from '../markdown/plugins/tocTree.js'
+import { VitaPressApp } from '../server/app/index.js'
+import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 import type { DocPageMetaData, PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
 

@@ -1,4 +1,4 @@
-export type * from '../server/types/index.js'
+export type * from '../types/index.js'
 export * from './config.js'
 export { resolveClientConfig } from './merge.js'
 export * from './app.js'

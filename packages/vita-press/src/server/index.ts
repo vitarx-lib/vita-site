@@ -1,4 +1,4 @@
-export type * from './types/index.js'
+export type * from '../types/index.js'
 export * from './app/index.js'
 export { loadUserConfig } from './config/loader.js'
 export { mergeConfig, defineConfig } from './config/utils.js'

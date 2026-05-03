@@ -1,4 +1,4 @@
-import type { ResolvedConfig } from '../types/index.js'
+import type { ResolvedConfig } from '../../types/index.js'
 
 export const DEFAULT_CONFIG: ResolvedConfig = {
   dts: false,

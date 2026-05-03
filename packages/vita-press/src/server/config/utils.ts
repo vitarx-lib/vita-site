@@ -1,4 +1,4 @@
-import type { UserConfig } from '../types/index.js'
+import type { UserConfig } from '../../types/index.js'
 import { isPlainObject } from '../common/utils.js'
 
 /**
