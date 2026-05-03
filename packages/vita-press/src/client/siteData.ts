@@ -10,6 +10,6 @@ export type SiteData = Record<string, any>
  *
  * @returns 合并后的站点数据
  */
-export function useSiteData(): Readonly<SiteData> {
-  return siteData
+export function useSiteData<T extends SiteData = SiteData>(): Readonly<T> {
+  return siteData as unknown as Readonly<T>
 }
