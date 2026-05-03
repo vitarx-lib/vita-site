@@ -1,5 +1,5 @@
 {
-  "name": "@vitapress/plugin-search",
+  "name": "@vitapress/plugin-container",
   "version": "0.0.0",
   "description": "markdown container plugin for VitaPress",
   "type": "module",
