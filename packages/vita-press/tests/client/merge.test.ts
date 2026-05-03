@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import type { ClientConfig, ExtendedConfig } from '../../src/client/config.js'
 import {
   concatHook,
-  mergeRuntimeConfig,
-  mergeThemes,
-  resolveRuntimeConfig
+  mergeClientConfig,
+  mergeExtendedConfig,
+  resolveClientConfig
 } from '../../src/client/merge.js'
-import type { ThemeExpandConfig, RuntimeConfig } from '../../src/client/config.js'
 
 describe('concatHook', () => {
   it('current 为 undefined 时应返回 incoming', () => {
@@ -50,7 +50,7 @@ describe('concatHook', () => {
 
 describe('mergeRuntimeConfig', () => {
   it('空 theme 和空 user 应返回空配置', () => {
-    const result = mergeRuntimeConfig({}, {})
+    const result = mergeClientConfig({}, {})
     expect(result.layout).toBeUndefined()
     expect(result.enhanceApp).toBeUndefined()
     expect(result.app).toBeUndefined()
@@ -59,20 +59,20 @@ describe('mergeRuntimeConfig', () => {
   it('layout: user 覆盖 theme', () => {
     const themeLayout = {} as any
     const userLayout = {} as any
-    const result = mergeRuntimeConfig({ layout: themeLayout }, { layout: userLayout })
+    const result = mergeClientConfig({ layout: themeLayout }, { layout: userLayout })
     expect(result.layout).toBe(userLayout)
   })
 
   it('layout: user 缺失时回退到 theme', () => {
     const themeLayout = {} as any
-    const result = mergeRuntimeConfig({ layout: themeLayout }, {})
+    const result = mergeClientConfig({ layout: themeLayout }, {})
     expect(result.layout).toBe(themeLayout)
   })
 
   it('missing: user.router.missing 覆盖 theme.missing', () => {
     const themeMissing = {} as any
     const userMissing = {} as any
-    const result = mergeRuntimeConfig(
+    const result = mergeClientConfig(
       { missing: themeMissing },
       { router: { missing: userMissing } }
     )
@@ -81,14 +81,14 @@ describe('mergeRuntimeConfig', () => {
 
   it('missing: user 缺失时回退到 theme', () => {
     const themeMissing = {} as any
-    const result = mergeRuntimeConfig({ missing: themeMissing }, {})
+    const result = mergeClientConfig({ missing: themeMissing }, {})
     expect(result.router?.missing).toBe(themeMissing)
   })
 
   it('beforeEach: 按 theme → user 顺序追加', () => {
     const themeGuard = (() => {}) as any
     const userGuard = (() => {}) as any
-    const result = mergeRuntimeConfig(
+    const result = mergeClientConfig(
       { beforeEach: themeGuard },
       { router: { beforeEach: userGuard } }
     )
@@ -100,13 +100,13 @@ describe('mergeRuntimeConfig', () => {
 
   it('beforeEach: 仅 theme 有时保留', () => {
     const themeGuard = (() => {}) as any
-    const result = mergeRuntimeConfig({ beforeEach: themeGuard }, {})
+    const result = mergeClientConfig({ beforeEach: themeGuard }, {})
     expect(result.router?.beforeEach).toBe(themeGuard)
   })
 
   it('beforeEach: 仅 user 有时保留', () => {
     const userGuard = (() => {}) as any
-    const result = mergeRuntimeConfig({}, { router: { beforeEach: userGuard } })
+    const result = mergeClientConfig({}, { router: { beforeEach: userGuard } })
     expect(result.router?.beforeEach).toBe(userGuard)
   })
 
@@ -114,10 +114,7 @@ describe('mergeRuntimeConfig', () => {
     const g1 = (() => {}) as any
     const g2 = (() => {}) as any
     const g3 = (() => {}) as any
-    const result = mergeRuntimeConfig(
-      { beforeEach: [g1, g2] },
-      { router: { beforeEach: g3 } }
-    )
+    const result = mergeClientConfig({ beforeEach: [g1, g2] }, { router: { beforeEach: g3 } })
     const guards = result.router?.beforeEach as any[]
     expect(guards).toHaveLength(3)
     expect(guards[0]).toBe(g1)
@@ -128,10 +125,7 @@ describe('mergeRuntimeConfig', () => {
   it('afterEach: 按 theme → user 顺序追加', () => {
     const themeCb = (() => {}) as any
     const userCb = (() => {}) as any
-    const result = mergeRuntimeConfig(
-      { afterEach: themeCb },
-      { router: { afterEach: userCb } }
-    )
+    const result = mergeClientConfig({ afterEach: themeCb }, { router: { afterEach: userCb } })
     const callbacks = result.router?.afterEach as any[]
     expect(callbacks).toHaveLength(2)
     expect(callbacks[0]).toBe(themeCb)
@@ -139,7 +133,7 @@ describe('mergeRuntimeConfig', () => {
   })
 
   it('messages: 深度合并，user 覆盖同 key', () => {
-    const result = mergeRuntimeConfig(
+    const result = mergeClientConfig(
       {
         messages: {
           'zh-CN': { 'nav.home': '首页', 'nav.guide': '指南' },
@@ -162,15 +156,12 @@ describe('mergeRuntimeConfig', () => {
   })
 
   it('messages: user 缺失时使用 theme', () => {
-    const result = mergeRuntimeConfig(
-      { messages: { 'zh-CN': { 'nav.home': '首页' } } },
-      {}
-    )
+    const result = mergeClientConfig({ messages: { 'zh-CN': { 'nav.home': '首页' } } }, {})
     expect(result.i18n?.messages).toEqual({ 'zh-CN': { 'nav.home': '首页' } })
   })
 
   it('messages: theme 缺失时使用 user', () => {
-    const result = mergeRuntimeConfig(
+    const result = mergeClientConfig(
       {},
       { i18n: { messages: { 'zh-CN': { 'nav.home': '首页' } } } }
     )
@@ -178,17 +169,14 @@ describe('mergeRuntimeConfig', () => {
   })
 
   it('messages: 两者都缺失时无 i18n', () => {
-    const result = mergeRuntimeConfig({}, {})
+    const result = mergeClientConfig({}, {})
     expect(result.i18n).toBeUndefined()
   })
 
   it('enhanceApp: 按 theme → user 顺序合并', () => {
     const themeEnhance = (() => {}) as any
     const userEnhance = (() => {}) as any
-    const result = mergeRuntimeConfig(
-      { enhanceApp: themeEnhance },
-      { enhanceApp: userEnhance }
-    )
+    const result = mergeClientConfig({ enhanceApp: themeEnhance }, { enhanceApp: userEnhance })
     const fns = result.enhanceApp as any[]
     expect(fns).toHaveLength(2)
     expect(fns[0]).toBe(themeEnhance)
@@ -197,13 +185,13 @@ describe('mergeRuntimeConfig', () => {
 
   it('enhanceApp: 仅 theme 有时保留', () => {
     const themeEnhance = (() => {}) as any
-    const result = mergeRuntimeConfig({ enhanceApp: themeEnhance }, {})
+    const result = mergeClientConfig({ enhanceApp: themeEnhance }, {})
     expect(result.enhanceApp).toBe(themeEnhance)
   })
 
   it('enhanceApp: 仅 user 有时保留', () => {
     const userEnhance = (() => {}) as any
-    const result = mergeRuntimeConfig({}, { enhanceApp: userEnhance })
+    const result = mergeClientConfig({}, { enhanceApp: userEnhance })
     expect(result.enhanceApp).toBe(userEnhance)
   })
 
@@ -212,10 +200,7 @@ describe('mergeRuntimeConfig', () => {
     const fn2 = (() => {}) as any
     const fn3 = (() => {}) as any
     const fn4 = (() => {}) as any
-    const result = mergeRuntimeConfig(
-      { enhanceApp: [fn1, fn2] },
-      { enhanceApp: [fn3, fn4] }
-    )
+    const result = mergeClientConfig({ enhanceApp: [fn1, fn2] }, { enhanceApp: [fn3, fn4] })
     const fns = result.enhanceApp as any[]
     expect(fns).toHaveLength(4)
     expect(fns[0]).toBe(fn1)
@@ -224,15 +209,12 @@ describe('mergeRuntimeConfig', () => {
 
   it('app: 应保留 user.app', () => {
     const appConfig = { root: '#app' } as any
-    const result = mergeRuntimeConfig({}, { app: appConfig })
+    const result = mergeClientConfig({}, { app: appConfig })
     expect(result.app).toBe(appConfig)
   })
 
   it('router: 应保留 user.router 中除钩子外的字段', () => {
-    const result = mergeRuntimeConfig(
-      {},
-      { router: { mode: 'hash', base: '/docs' } as any }
-    )
+    const result = mergeClientConfig({}, { router: { mode: 'hash', base: '/docs' } as any })
     expect(result.router?.mode).toBe('hash')
     expect(result.router?.base).toBe('/docs')
   })
@@ -248,19 +230,19 @@ describe('mergeRuntimeConfig', () => {
     const userCb = (() => {}) as any
     const userEnhance = (() => {}) as any
 
-    const result = mergeRuntimeConfig(
+    const result = mergeClientConfig(
       {
         layout: themeLayout,
         missing: themeMissing,
         beforeEach: themeGuard,
         afterEach: themeCb,
-        messages: { 'zh-CN': { 'a': '1', 'b': '2' } },
+        messages: { 'zh-CN': { a: '1', b: '2' } },
         enhanceApp: themeEnhance
       },
       {
         layout: userLayout,
         router: { beforeEach: userGuard, afterEach: userCb, mode: 'hash' } as any,
-        i18n: { messages: { 'zh-CN': { 'a': 'override' } } },
+        i18n: { messages: { 'zh-CN': { a: 'override' } } },
         enhanceApp: userEnhance,
         app: {} as any
       }
@@ -269,37 +251,37 @@ describe('mergeRuntimeConfig', () => {
     expect(result.layout).toBe(userLayout)
     expect(result.router?.mode).toBe('hash')
     expect(result.router?.missing).toBe(themeMissing)
-    expect((result.router?.beforeEach as any[])).toHaveLength(2)
-    expect((result.router?.afterEach as any[])).toHaveLength(2)
-    expect(result.i18n?.messages?.['zh-CN']).toEqual({ 'a': 'override', 'b': '2' })
-    expect((result.enhanceApp as any[])).toHaveLength(2)
+    expect(result.router?.beforeEach as any[]).toHaveLength(2)
+    expect(result.router?.afterEach as any[]).toHaveLength(2)
+    expect(result.i18n?.messages?.['zh-CN']).toEqual({ a: 'override', b: '2' })
+    expect(result.enhanceApp as any[]).toHaveLength(2)
     expect(result.app).toBeDefined()
   })
 })
 
 describe('mergeThemes', () => {
   it('空数组应返回空对象', () => {
-    expect(mergeThemes([])).toEqual({})
+    expect(mergeExtendedConfig([])).toEqual({})
   })
 
   it('单个主题应返回其副本', () => {
-    const theme: ThemeExpandConfig = {
+    const theme: ExtendedConfig = {
       messages: { 'zh-CN': { 'nav.home': '首页' } }
     }
-    const result = mergeThemes([theme])
+    const result = mergeExtendedConfig([theme])
     expect(result.messages).toEqual(theme.messages)
   })
 
   it('多个主题应按顺序合并，后者覆盖前者', () => {
-    const theme1: ThemeExpandConfig = {
+    const theme1: ExtendedConfig = {
       layout: {} as any,
       messages: { 'zh-CN': { 'nav.home': '首页', 'nav.guide': '指南' } }
     }
-    const theme2: ThemeExpandConfig = {
+    const theme2: ExtendedConfig = {
       layout: {} as any,
       messages: { 'zh-CN': { 'nav.home': '主页' } }
     }
-    const result = mergeThemes([theme1, theme2])
+    const result = mergeExtendedConfig([theme1, theme2])
     expect(result.layout).toBe(theme2.layout)
     expect(result.messages).toEqual({ 'zh-CN': { 'nav.home': '主页', 'nav.guide': '指南' } })
   })
@@ -307,10 +289,7 @@ describe('mergeThemes', () => {
   it('应合并多个主题的 enhanceApp', () => {
     const fn1 = (() => {}) as any
     const fn2 = (() => {}) as any
-    const result = mergeThemes([
-      { enhanceApp: fn1 },
-      { enhanceApp: fn2 }
-    ])
+    const result = mergeExtendedConfig([{ enhanceApp: fn1 }, { enhanceApp: fn2 }])
     const fns = result.enhanceApp as any[]
     expect(fns).toHaveLength(2)
     expect(fns[0]).toBe(fn1)
@@ -322,66 +301,63 @@ describe('mergeThemes', () => {
     const g2 = (() => {}) as any
     const c1 = (() => {}) as any
     const c2 = (() => {}) as any
-    const result = mergeThemes([
+    const result = mergeExtendedConfig([
       { beforeEach: g1, afterEach: c1 },
       { beforeEach: g2, afterEach: c2 }
     ])
-    expect((result.beforeEach as any[])).toHaveLength(2)
-    expect((result.afterEach as any[])).toHaveLength(2)
+    expect(result.beforeEach as any[]).toHaveLength(2)
+    expect(result.afterEach as any[]).toHaveLength(2)
   })
 
   it('三个主题依次合并', () => {
-    const result = mergeThemes([
-      { messages: { 'zh-CN': { 'a': '1' } } },
-      { messages: { 'zh-CN': { 'b': '2' } } },
-      { messages: { 'zh-CN': { 'a': 'override' } } }
+    const result = mergeExtendedConfig([
+      { messages: { 'zh-CN': { a: '1' } } },
+      { messages: { 'zh-CN': { b: '2' } } },
+      { messages: { 'zh-CN': { a: 'override' } } }
     ])
-    expect(result.messages).toEqual({ 'zh-CN': { 'a': 'override', 'b': '2' } })
+    expect(result.messages).toEqual({ 'zh-CN': { a: 'override', b: '2' } })
   })
 
   it('缺失字段应从前面主题继承', () => {
     const layout = {} as any
-    const result = mergeThemes([
-      { layout },
-      { messages: { 'zh-CN': { 'a': '1' } } }
-    ])
+    const result = mergeExtendedConfig([{ layout }, { messages: { 'zh-CN': { a: '1' } } }])
     expect(result.layout).toBe(layout)
-    expect(result.messages).toEqual({ 'zh-CN': { 'a': '1' } })
+    expect(result.messages).toEqual({ 'zh-CN': { a: '1' } })
   })
 })
 
-describe('resolveRuntimeConfig', () => {
+describe('resolveClientConfig', () => {
   it('无主题时应直接返回用户配置', () => {
-    const userConfig: RuntimeConfig = { layout: {} as any }
-    const result = resolveRuntimeConfig([], userConfig)
+    const userConfig: ClientConfig = { layout: {} as any }
+    const result = resolveClientConfig([], userConfig)
     expect(result).toEqual(userConfig)
   })
 
   it('有主题时应合并主题和用户配置', () => {
-    const theme: ThemeExpandConfig = {
+    const theme: ExtendedConfig = {
       layout: {} as any,
       messages: { 'zh-CN': { 'nav.home': '首页' } }
     }
     const userLayout = {} as any
-    const userConfig: RuntimeConfig = { layout: userLayout }
-    const result = resolveRuntimeConfig([theme], userConfig)
+    const userConfig: ClientConfig = { layout: userLayout }
+    const result = resolveClientConfig([theme], userConfig)
     expect(result.layout).toBe(userLayout)
     expect(result.i18n?.messages).toEqual({ 'zh-CN': { 'nav.home': '首页' } })
   })
 
   it('多个主题应先合并再与用户配置合并', () => {
-    const theme1: ThemeExpandConfig = {
-      messages: { 'zh-CN': { 'a': '1' } }
+    const theme1: ExtendedConfig = {
+      messages: { 'zh-CN': { a: '1' } }
     }
-    const theme2: ThemeExpandConfig = {
-      messages: { 'zh-CN': { 'b': '2' } }
+    const theme2: ExtendedConfig = {
+      messages: { 'zh-CN': { b: '2' } }
     }
-    const userConfig: RuntimeConfig = {
-      i18n: { messages: { 'zh-CN': { 'a': 'override' } } }
+    const userConfig: ClientConfig = {
+      i18n: { messages: { 'zh-CN': { a: 'override' } } }
     }
-    const result = resolveRuntimeConfig([theme1, theme2], userConfig)
+    const result = resolveClientConfig([theme1, theme2], userConfig)
     expect(result.i18n?.messages).toEqual({
-      'zh-CN': { 'a': 'override', 'b': '2' }
+      'zh-CN': { a: 'override', b: '2' }
     })
   })
 })

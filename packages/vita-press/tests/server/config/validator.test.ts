@@ -195,9 +195,7 @@ describe('validateConfig', () => {
     it('应拒绝非数组类型的 locales', () => {
       const config = { locales: 'zh-CN' }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'locales 必须是数组类型'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('locales 必须是数组类型')
     })
 
     it('应拒绝 locales 数组中包含非对象元素', () => {
@@ -209,17 +207,13 @@ describe('validateConfig', () => {
     it('应拒绝 locales 中缺少 id 属性', () => {
       const config = { locales: [{ name: '简体中文' }] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'locales[0] 必须有 id 属性'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('locales[0] 必须有 id 属性')
     })
 
     it('应拒绝 locales 中缺少 name 属性', () => {
       const config = { locales: [{ id: 'zh-CN' }] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'locales[0] 必须有 name 属性'
-      )
+      expect(() => validateConfig(config as any, tempDir)).toThrow('locales[0] 必须有 name 属性')
     })
   })
 

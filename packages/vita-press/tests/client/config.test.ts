@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { defineConfig, type RuntimeConfig, type ThemeExpandConfig } from '../../src/client/config.js'
+import { type ClientConfig, defineConfig, type ExtendedConfig } from '../../src/client/config.js'
 
 describe('defineConfig', () => {
   it('应原样返回配置对象', () => {
-    const config: RuntimeConfig = {
+    const config: ClientConfig = {
       layout: {} as any,
       app: {} as any,
       router: { mode: 'hash' } as any,
@@ -29,7 +29,7 @@ describe('defineConfig', () => {
 
 describe('ThemeExpandConfig', () => {
   it('ThemeExpandConfig 应包含所有主题扩展字段', () => {
-    const theme: ThemeExpandConfig = {
+    const theme: ExtendedConfig = {
       layout: {} as any,
       messages: { 'zh-CN': { 'nav.home': '首页' } },
       enhanceApp: () => {},
@@ -46,14 +46,14 @@ describe('ThemeExpandConfig', () => {
   })
 
   it('ThemeExpandConfig enhanceApp 应支持数组', () => {
-    const theme: ThemeExpandConfig = {
+    const theme: ExtendedConfig = {
       enhanceApp: [() => {}, () => {}]
     }
     expect(Array.isArray(theme.enhanceApp)).toBe(true)
   })
 
   it('ThemeExpandConfig beforeEach/afterEach 应支持数组', () => {
-    const theme: ThemeExpandConfig = {
+    const theme: ExtendedConfig = {
       beforeEach: [() => true as any, () => true as any],
       afterEach: [() => {}, () => {}]
     }

@@ -1,7 +1,10 @@
-import { describe, expect, it } from 'vitest'
-import { writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { collectClientConfigs, generateClientConfigCode } from '../../src/build/plugin-vite/virtual.js'
+import { describe, expect, it } from 'vitest'
+import {
+  collectClientConfigs,
+  generateClientConfigCode
+} from '../../src/build/plugin-vite/virtual.js'
 
 const FIXTURES_DIR = join(import.meta.url.replace('file://', ''), '..', '..', 'fixtures', 'virtual')
 
@@ -30,15 +33,15 @@ describe('collectClientConfigs', () => {
 describe('generateClientConfigCode', () => {
   it('无主题无用户配置时应生成仅 merge 空对象的代码', () => {
     const code = generateClientConfigCode(null, [])
-    expect(code).toContain("import { resolveRuntimeConfig } from 'vitapress'")
-    expect(code).toContain('export default resolveRuntimeConfig([], {})')
+    expect(code).toContain("import { resolveClientConfig } from 'vitapress'")
+    expect(code).toContain('export default resolveClientConfig([], {})')
   })
 
   it('有主题时应生成 import 语句', () => {
     const code = generateClientConfigCode(null, ['my-theme/client', 'other-theme/client'])
     expect(code).toContain("import __theme_0 from 'my-theme/client'")
     expect(code).toContain("import __theme_1 from 'other-theme/client'")
-    expect(code).toContain('export default resolveRuntimeConfig([__theme_0, __theme_1], {})')
+    expect(code).toContain('export default resolveClientConfig([__theme_0, __theme_1], {})')
   })
 
   it('用户配置文件无默认导出时应使用空对象', () => {
@@ -48,7 +51,7 @@ describe('generateClientConfigCode', () => {
     try {
       const code = generateClientConfigCode(noDefaultPath, [])
       expect(code).not.toContain('import __userConfig')
-      expect(code).toContain('export default resolveRuntimeConfig([], {})')
+      expect(code).toContain('export default resolveClientConfig([], {})')
     } finally {
       rmSync(FIXTURES_DIR, { recursive: true, force: true })
     }
@@ -61,7 +64,7 @@ describe('generateClientConfigCode', () => {
     try {
       const code = generateClientConfigCode(hasDefaultPath, [])
       expect(code).toContain(`import __userConfig from '${hasDefaultPath}'`)
-      expect(code).toContain('export default resolveRuntimeConfig([], __userConfig)')
+      expect(code).toContain('export default resolveClientConfig([], __userConfig)')
     } finally {
       rmSync(FIXTURES_DIR, { recursive: true, force: true })
     }
@@ -75,7 +78,7 @@ describe('generateClientConfigCode', () => {
       const code = generateClientConfigCode(configPath, ['my-theme/client'])
       expect(code).toContain("import __theme_0 from 'my-theme/client'")
       expect(code).toContain(`import __userConfig from '${configPath}'`)
-      expect(code).toContain('export default resolveRuntimeConfig([__theme_0], __userConfig)')
+      expect(code).toContain('export default resolveClientConfig([__theme_0], __userConfig)')
     } finally {
       rmSync(FIXTURES_DIR, { recursive: true, force: true })
     }
@@ -83,6 +86,6 @@ describe('generateClientConfigCode', () => {
 
   it('用户配置文件不存在时应使用空对象', () => {
     const code = generateClientConfigCode('/nonexistent/path.ts', [])
-    expect(code).toContain('export default resolveRuntimeConfig([], {})')
+    expect(code).toContain('export default resolveClientConfig([], {})')
   })
 })
