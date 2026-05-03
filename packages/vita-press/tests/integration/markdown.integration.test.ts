@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { VitaPressPlugin } from '../../src/server/index.js'
 import { createTestApp } from '../testUtils.js'
 
@@ -395,7 +395,10 @@ This is a danger
   describe('多语言支持', () => {
     it('frontmatter 中的语言应覆盖自动检测', async () => {
       const app = await createTestApp(tempDir, {
-        locales: [{ id: 'zh-CN', name: '简体中文' }, { id: 'en-US', name: 'English' }]
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
       })
       const parser = app.mdParser
 
@@ -460,7 +463,9 @@ lang: en-US
 
       expect(afterParseMock).toHaveBeenCalled()
       expect(afterParseMock).toHaveBeenCalledWith(
-        expect.objectContaining({ meta: expect.objectContaining({ relativePath: 'docs/test.md' }) }),
+        expect.objectContaining({
+          meta: expect.objectContaining({ relativePath: 'docs/test.md' })
+        }),
         app
       )
     })
