@@ -8,6 +8,8 @@
 - 📝 **Markdown 优先** - 使用 Markdown 编写文档，支持 Frontmatter
 - 🎨 **代码高亮** - 内置 Shiki 语法高亮，支持多种主题
 - 📖 **目录生成** - 自动生成文档目录树（TOC）
+- 🧭 **导航树** - 自动从目录结构生成导航数据，支持排序和隐藏
+- 🔍 **搜索功能** - 提供本地搜索插件，支持全文检索
 - 🌍 **多语言支持** - 内置国际化支持
 - 🔌 **插件系统** - 灵活的插件机制，可扩展功能
 - 📦 **零配置** - 开箱即用，无需复杂配置
@@ -34,17 +36,23 @@ yarn add -D vitapress
 ```
 my-docs/
 ├── docs/
-│   ├── index.md
 │   ├── guide/
+│   │   ├── _config.ts # guide 分组配置
+│   │   ├── index.md
 │   │   ├── getting-started.md
 │   │   └── advanced.md
 │   └── api/
-│       └── overview.md
+│   │    ├── _config.ts # api 分组配置
+│   │    └── overview.md
+│   └── _layout.tsx # 文档布局组件
+├── pages/
+│   └── index.tsx
 └── .vitapress/
-    └── config.ts
+    ├── config.ts
+    └── config.client.ts
 ```
 
-### 2. 创建配置文件
+### 2. 创建服务端配置文件
 
 在项目根目录创建 `.vitapress/config.ts`：
 
@@ -54,11 +62,23 @@ import { defineConfig } from 'vitapress/server'
 export default defineConfig({
   title: '我的文档',
   description: '一个基于 VitaPress 的文档站点',
-  lang: 'zh-CN'
+  locales: [{ id: 'zh-CN', name: '简体中文' }]
 })
 ```
 
-### 3. 启动开发服务器
+### 3. 创建客户端配置文件
+
+创建 `.vitapress/config.client.ts`：
+
+```tsx
+import { defineConfig } from 'vitapress'
+
+export default defineConfig({
+  layout: () => <CustomLayout />
+})
+```
+
+### 4. 启动开发服务器
 
 ```bash
 npx vitapress dev
@@ -121,7 +141,7 @@ VitaPress 支持以下配置文件格式：
 - `.vitapress/config.server.mjs`
 - `.vitapress/config.server.mts`
 
-### 配置选项
+### 服务端配置选项
 
 ```typescript
 import { defineConfig } from 'vitapress/server'
@@ -131,15 +151,17 @@ export default defineConfig({
   title: '网站标题',
   description: '网站描述',
   keywords: '关键字',
-  lang: 'zh-CN',
 
   // 多语言配置
-  langDirs: ['zh-CN', 'en-US'],
+  locales: [
+    { id: 'zh-CN', name: '简体中文' },
+    { id: 'en-US', name: 'English' }
+  ],
 
   // 文档目录配置
   docDir: {
     dir: 'docs',
-    patterns: ['**/*.{tsx,jsx,md}', '!.*'],
+    include: ['**/*.md'],
     exclude: ['**/.*'],
     prefix: '/',
     group: true
@@ -171,7 +193,7 @@ export default defineConfig({
   plugins: [],
 
   // Vite 配置
-  viteConfig: {}
+  vite: {}
 })
 ```
 
@@ -180,11 +202,20 @@ export default defineConfig({
 创建 `.vitapress/config.client.ts` 配置客户端应用：
 
 ```tsx
-import { defineClientConfig } from 'vitapress'
+import { defineConfig } from 'vitapress'
+import Loading from './components/Loading.tsx'
 
-export default defineClientConfig({
+export default defineConfig({
   // 自定义布局
   layout: () => <CustomLayout />,
+
+  // 惰性加载配置
+  lazy: {
+    loading: () => Loading,
+    delay: 300,
+    timeout: 10000,
+    onError: (e) => <div>加载失败: {String(e)}</div>
+  },
 
   // 应用配置
   app: {},
@@ -202,6 +233,167 @@ export default defineClientConfig({
 })
 ```
 
+## 虚拟模块
+
+VitaPress 通过虚拟模块在客户端访问构建时生成的数据：
+
+### `virtual:vitapress/runtime/config`
+
+运行时配置，合并了所有主题配置和用户配置。
+
+```tsx
+import config from 'virtual:vitapress/runtime/config'
+// config: RuntimeConfig
+```
+
+### `virtual:vitapress/runtime/locales`
+
+多语言配置列表。
+
+```tsx
+import locales from 'virtual:vitapress/runtime/locales'
+// locales: Locale[]
+```
+
+### `virtual:vitapress/runtime/nav`
+
+导航树数据，按语言分组。
+
+```tsx
+import navTree from 'virtual:vitapress/runtime/nav'
+// navTree: Record<string, NavEntry[]>
+```
+
+## 导航树
+
+VitaPress 自动从文档目录结构生成导航树，供侧边栏等组件消费。
+
+### 目录结构与导航的对应关系
+
+```
+docs/
+├── guide/
+│   ├── _config.ts           # navTitle: '指南', navOrder: 10
+│   ├── index.md             # 分组简介页
+│   ├── getting-started.md   # navOrder: 1
+│   └── advanced.md          # navOrder: 2
+├── api/
+│   ├── _config.ts           # navTitle: 'API', navOrder: 20
+│   └── rest.md              # navOrder: 1
+└── changelog.md             # 扁平文件（独立 NavItem）
+```
+
+生成结果：
+
+```json
+{
+  "zh-CN": [
+    {
+      "type": "group",
+      "title": "指南",
+      "path": "/guide",
+      "order": 10,
+      "items": [
+        {
+          "type": "item",
+          "path": "/guide/getting-started",
+          "title": "快速开始",
+          "tocList": [],
+          "order": 1
+        },
+        {
+          "type": "item",
+          "path": "/guide/advanced",
+          "title": "进阶",
+          "tocList": [],
+          "order": 2
+        }
+      ]
+    },
+    {
+      "type": "group",
+      "title": "API",
+      "order": 20,
+      "items": [
+        {
+          "type": "item",
+          "path": "/api/rest",
+          "title": "REST API",
+          "tocList": [],
+          "order": 1
+        }
+      ]
+    },
+    {
+      "type": "item",
+      "path": "/changelog",
+      "title": "更新日志",
+      "tocList": [],
+      "order": 0
+    }
+  ]
+}
+```
+
+### 导航类型
+
+```typescript
+interface NavItem {
+  type: 'item'
+  path: string
+  title: string
+  tocList: TocTree[]
+  order: number
+}
+
+interface NavGroup {
+  type: 'group'
+  title: string
+  path?: string       // 有 index 页面时存在，可点击跳转
+  order: number
+  items: NavItem[]
+}
+
+type NavEntry = NavGroup | NavItem
+type NavTree = Record<string, NavEntry[]>
+```
+
+### 导航配置
+
+通过 frontmatter 或 `_config.ts` 配置导航行为：
+
+| 字段          | 说明                      | 默认值     |
+|-------------|-------------------------|---------|
+| `navTitle`  | 导航标题，缺省取 `title` 或从路径推断 | -       |
+| `navOrder`  | 排序权重，数值越小越靠前            | `0`     |
+| `navHidden` | 是否在导航中隐藏                | `false` |
+
+**分组标题优先级**：`_config.ts` 的 `navTitle` > `index.md` 的 `navTitle` > 目录名推断
+
+**分组 path 规则**：当目录下存在 `index.md` 时，分组具有 `path` 属性（可点击跳转简介页），否则无 `path`（纯标签）。
+
+#### 目录级配置（`_config.ts`）
+
+```typescript
+// docs/guide/_config.ts
+definePage({
+  meta: {
+    navTitle: '指南',
+    navOrder: 10
+  }
+})
+```
+
+#### 页面级配置（frontmatter）
+
+```yaml
+---
+navTitle: 快速开始
+navOrder: 1
+navHidden: false
+---
+```
+
 ## Markdown 功能
 
 ### Frontmatter
@@ -213,6 +405,9 @@ export default defineClientConfig({
 title: 页面标题
 description: 页面描述
 keywords: 关键字1, 关键字2
+navTitle: 导航标题
+navOrder: 1
+navHidden: false
 ---
 
 # 页面标题
@@ -230,7 +425,7 @@ keywords: 关键字1, 关键字2
 
 ### 代码高亮
 
-使用 Shiki 提供语法高亮：
+使用 Shiki 提供语法高亮。
 
 ### 路由链接
 
@@ -239,80 +434,6 @@ keywords: 关键字1, 关键字2
 ```markdown
 [快速开始](./getting-started.md)
 ```
-
-## 插件系统
-
-VitaPress 提供了强大的插件系统，可以通过插件扩展功能。
-
-### 插件接口
-
-```typescript
-interface VitaPressPlugin {
-  name: string
-  enforce?: 'pre' | 'post' | number
-
-  // 配置钩子
-  config?(config: UserConfig): void | UserConfig | Promise<void | UserConfig>
-
-  configResolved?(config: ResolvedConfig): void | Promise<void>
-
-  // Markdown 钩子
-  markdown?(md: MarkdownIt): void | Promise<void>
-
-  beforeParse?(content: string, file: string): string | void
-
-  afterParse?(res: MdParseResult): MdParseResult | void
-
-  // 路由钩子
-  extendRoute?(route: RouteNode, parsed: ParsedNode, app: VitaPressApp): void
-}
-```
-
-### 插件示例
-
-```typescript
-import type { VitaPressPlugin } from 'vitapress/server'
-
-const myPlugin: VitaPressPlugin = {
-  name: 'my-plugin',
-
-  config(config) {
-    // 修改配置
-    return {
-      ...config,
-      title: config.title || 'Default Title'
-    }
-  },
-
-  beforeParse(content, file) {
-    // 在解析前处理内容
-    return content.replace(/foo/g, 'bar')
-  },
-
-  afterParse(result) {
-    // 在解析后处理结果
-    result.meta.customField = 'value'
-    return result
-  }
-}
-
-export default myPlugin
-```
-
-### 使用插件
-
-```typescript
-import { defineConfig } from 'vitapress/server'
-import myPlugin from './plugins/my-plugin'
-
-export default defineConfig({
-  plugins: [myPlugin]
-})
-```
-
-## 内置 Markdown 插件
-
-VitaPress 内置了以下 Markdown 插件：
 
 ### 代码导入
 
@@ -351,13 +472,12 @@ VitaPress 内置了以下 Markdown 插件：
 VitaPress 会自动扫描文档目录并生成路由：
 
 ```text
-
 docs/
 ├── index.md → /
 ├── guide/
-│ ├── index.md → /guide
-│ └── quick-start.md → /guide/quick-start
-
+│   ├── index.md → /guide
+│   ├── _config.ts → 目录级路由配置
+│   └── quick-start.md → /guide/quick-start
 ```
 
 ### 路由元数据
@@ -366,16 +486,28 @@ docs/
 
 ```typescript
 interface DocPageMetaData {
+  // 站点信息
   title: string
   description: string
   keywords: string
   lang: string
+
+  // 导航配置
+  navTitle?: string
+  navOrder?: number
+  navHidden?: boolean
+
+  // 文档信息
   relativePath: string
   tocList: TocTree[]
+
+  // Git 信息
   authors: string[]
   createdAt: string
   lastUpdateAt: string
-  // ... frontmatter 中的其他字段
+
+  // frontmatter 中的其他字段
+  [key: string]: any
 }
 ```
 
@@ -389,6 +521,158 @@ alias: /old-path/
 ---
 
 # 页面内容
+```
+
+### 目录级路由配置（`_config.ts`）
+
+在目录下创建 `_config.ts` 文件，使用 `definePage` 配置该目录的路由属性：
+
+```typescript
+// docs/guide/_config.ts
+definePage({
+  meta: {
+    navTitle: '指南',
+    navOrder: 10
+  }
+})
+```
+
+## 插件系统
+
+VitaPress 提供了强大的插件系统，可以通过插件扩展功能。
+
+### 插件接口
+
+```typescript
+interface VitaPressPlugin {
+  /** 插件名称 */
+  name: string
+  /** 插件优先级 */
+  enforce?: 'pre' | 'post' | number
+  /** 客户端主题配置模块路径 */
+  clientConfig?: string
+
+  // 配置钩子
+  config?(config: UserConfig): void | UserConfig | Promise<void | UserConfig>
+
+  configResolved?(config: ResolvedConfig): void | Promise<void>
+
+  // 应用钩子
+  appCreated?(app: VitaPressApp): void | Promise<void>
+
+  // Markdown 钩子
+  markdown?(md: MarkdownIt): void | Promise<void>
+
+  beforeParse?(content: string, file: string, app: VitaPressApp): string | void
+
+  afterParse?(res: MdParseResult, app: VitaPressApp): void
+
+  // 路由钩子
+  extendRoute?(route: RouteNode, app: VitaPressApp): void
+
+  beforeWriteRoutes?(routes: RouteNode[], app: VitaPressApp): RouteNode[] | void
+
+  // 构建钩子
+  buildEnd?(app: VitaPressApp): void | Promise<void>
+}
+```
+
+### 钩子调用时序
+
+```
+VitaPressApp.create()
+  │
+  ├── config()              // 配置解析前，可返回新配置
+  ├── configResolved()      // 配置解析完成
+  ├── markdown()            // MarkdownIt 实例创建后
+  │
+  ├── new VitaPressApp()    // 构造应用实例（路由器延迟扫描）
+  ├── appCreated()          // 应用实例创建完成，可记录 app 引用
+  ├── router.reload()       // 触发路由扫描
+  │   ├── beforeParse()     // 每个 Markdown 文件解析前
+  │   ├── afterParse()      // 每个 Markdown 文件解析后
+  │   ├── extendRoute()     // 每个路由节点解析后
+  │   └── beforeWriteRoutes() // 路由写入前（导航树在此阶段生成）
+  │
+  └── 构建阶段
+      └── buildEnd()        // 构建完成，所有 HTML 已生成
+```
+
+### 插件示例
+
+```typescript
+import type { VitaPressPlugin } from 'vitapress/server'
+
+const myPlugin: VitaPressPlugin = {
+  name: 'my-plugin',
+
+  config(config) {
+    return {
+      ...config,
+      title: config.title || 'Default Title'
+    }
+  },
+
+  appCreated(app) {
+    // 记录 app 实例引用，供后续钩子使用
+    // 此时 app.router 尚未扫描，不可访问路由数据
+  },
+
+  beforeParse(content, file, app) {
+    return content.replace(/foo/g, 'bar')
+  },
+
+  afterParse(result, app) {
+    // result.html - 渲染后的 HTML
+    // result.content - 去除 frontmatter 后的原始 Markdown
+    // result.meta - 文档元数据
+    // app - 应用实例，可访问 app.lang 等配置
+    result.meta.customField = 'value'
+  },
+
+  buildEnd(app) {
+    // 构建完成后执行，如生成搜索索引
+  }
+}
+
+export default myPlugin
+```
+
+### 使用插件
+
+```typescript
+import { defineConfig } from 'vitapress/server'
+import myPlugin from './plugins/my-plugin'
+
+export default defineConfig({
+  plugins: [myPlugin]
+})
+```
+
+### 插件客户端配置
+
+插件通过 `clientConfig` 字段提供客户端主题配置，构建时自动与用户配置合并：
+
+```typescript
+const myThemePlugin: VitaPressPlugin = {
+  name: 'my-theme',
+  clientConfig: 'my-theme/client.ts'
+}
+```
+
+```typescript
+// my-theme/client.ts
+import Layout from './components/Layout.tsx'
+import NotFound from './components/NotFound.tsx'
+
+export default {
+  layout: Layout,
+  missing: NotFound,
+  messages: { 'zh-CN': { 'nav.home': '首页' } },
+  enhanceApp(app, router) {
+    // 注册全局组件
+  }
+}
 ```
 
 ## 缓存机制
