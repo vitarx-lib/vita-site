@@ -108,6 +108,8 @@ export interface ClientConfig {
 /**
  * 定义客户端运行时配置
  *
+ * 注意：此辅助函数仅限于客户端配置文件使用，在服务端配置文件中使用导入路径，请使用 `import { defineConfig } from 'vitapress/server'`。
+ *
  * @param config - 运行时配置
  * @returns {ClientConfig} 运行时配置
  */
