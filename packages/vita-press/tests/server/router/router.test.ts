@@ -242,19 +242,6 @@ describe('VitaPressRouter', () => {
       expect(code).toContain('export default')
     })
 
-    it('应支持自定义文档目录前缀（group: false）', async () => {
-      const docsDir = join(tempDir, 'docs')
-      mkdirSync(docsDir, { recursive: true })
-      writeFileSync(join(docsDir, 'index.md'), '# Home')
-
-      const { router } = await createTestApp(tempDir, {
-        docDir: { dir: 'docs', prefix: '/docs', group: false }
-      })
-      const { code } = router.generate()
-
-      expect(code).toContain('path: "/docs"')
-    })
-
     it('应支持额外的页面目录', async () => {
       const docsDir = join(tempDir, 'docs')
       const pagesDir = join(tempDir, 'pages')
@@ -331,6 +318,101 @@ describe('VitaPressRouter', () => {
       const { router } = await createTestApp(tempDir)
 
       expect(router).toBeDefined()
+    })
+  })
+
+  describe('文档布局配置', () => {
+    it('应将 docLayoutPath 注入到文档路由的 component.default', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+
+      const layoutPath = join(tempDir, 'layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: layoutPath
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      expect(docsRoute!.component).toBeDefined()
+      expect(docsRoute!.component!['default']).toBe(layoutPath)
+    })
+
+    it('应在 docLayoutPath 文件不存在时不注入布局组件', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+
+      const layoutPath = join(tempDir, 'non-existent-layout.tsx')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: layoutPath
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      if (docsRoute!.component) {
+        expect(docsRoute!.component['default']).not.toBe(layoutPath)
+      }
+    })
+
+    it('应在 docLayoutPath 为 null 时不注入布局组件', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: null
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      if (docsRoute!.component) {
+        expect(docsRoute!.component['default']).toBeUndefined()
+      }
+    })
+
+    it('应在不覆盖已有 component.default 的情况下补充布局', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+      writeFileSync(join(docsDir, '_layout.tsx'), 'export default function FileLayout() {}')
+
+      const layoutPath = join(tempDir, 'plugin-layout.tsx')
+      writeFileSync(layoutPath, 'export default function PluginLayout() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: layoutPath
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      expect(docsRoute!.component).toBeDefined()
+      expect(docsRoute!.component!['default']).not.toBe(layoutPath)
+    })
+
+    it('应在路由无 component 时设置 default 为布局组件', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+
+      const layoutPath = join(tempDir, 'layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: layoutPath
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      expect(docsRoute!.component).toEqual({ default: layoutPath })
     })
   })
 

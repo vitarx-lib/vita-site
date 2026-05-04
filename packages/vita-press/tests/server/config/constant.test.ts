@@ -8,6 +8,7 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('title')
     expect(DEFAULT_CONFIG).toHaveProperty('description')
     expect(DEFAULT_CONFIG).toHaveProperty('keywords')
+    expect(DEFAULT_CONFIG).toHaveProperty('docLayoutPath')
     expect(DEFAULT_CONFIG).toHaveProperty('docDir')
     expect(DEFAULT_CONFIG).toHaveProperty('injectBody')
     expect(DEFAULT_CONFIG).toHaveProperty('injectCode')
@@ -37,6 +38,10 @@ describe('DEFAULT_CONFIG', () => {
 
     it('keywords 应为空字符串', () => {
       expect(DEFAULT_CONFIG.keywords).toBe('')
+    })
+
+    it('docLayoutPath 应为 null', () => {
+      expect(DEFAULT_CONFIG.docLayoutPath).toBeNull()
     })
 
     it('injectBody 应为空数组', () => {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync } from 'node:fs'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ConfigValidationError, validateConfig } from '../../../src/server/config/validator.js'
@@ -273,6 +273,56 @@ describe('validateConfig', () => {
       const config = { dts: 123 }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow('dts 必须是布尔值或字符串类型')
+    })
+  })
+
+  describe('docLayoutPath 配置验证', () => {
+    it('应接受字符串类型且文件存在的 docLayoutPath', () => {
+      const layoutPath = join(tempDir, 'layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+
+      const config: UserConfig = { docLayoutPath: layoutPath }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受 null 类型的 docLayoutPath', () => {
+      const config: UserConfig = { docLayoutPath: null }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受 undefined 的 docLayoutPath', () => {
+      const config: UserConfig = { docLayoutPath: undefined as any }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非字符串或 null 类型的 docLayoutPath', () => {
+      const config = { docLayoutPath: 123 }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'docLayoutPath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝对象类型的 docLayoutPath', () => {
+      const config = { docLayoutPath: { path: '/layout.tsx' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'docLayoutPath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝数组类型的 docLayoutPath', () => {
+      const config = { docLayoutPath: ['/layout.tsx'] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'docLayoutPath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝文件不存在的 docLayoutPath', () => {
+      const config: UserConfig = { docLayoutPath: '/non/existent/layout.tsx' }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow('docLayoutPath 文件不存在')
     })
   })
 

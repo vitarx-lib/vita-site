@@ -167,6 +167,10 @@ export default defineConfig({
     group: true
   },
 
+  // 文档布局组件路径
+  // 通常由插件提供，优先级低于 docDir/_layout.{tsx,jsx}
+  docLayoutPath: null,
+
   // 页面目录配置
   pageDirs: [],
 

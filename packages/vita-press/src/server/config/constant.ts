@@ -5,6 +5,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   title: '',
   description: '',
   keywords: '',
+  docLayoutPath: null,
   locales: [],
   docDir: {
     dir: 'docs',

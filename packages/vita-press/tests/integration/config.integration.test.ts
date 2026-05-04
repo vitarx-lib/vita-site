@@ -419,6 +419,58 @@ describe('配置系统端到端集成测试', () => {
     })
   })
 
+  describe('docLayoutPath 配置', () => {
+    it('默认 docLayoutPath 应为 null', async () => {
+      createConfigFile(`export default {}`)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.docLayoutPath).toBeNull()
+    })
+
+    it('应支持字符串类型的 docLayoutPath', async () => {
+      const layoutPath = join(tempDir, 'layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+
+      createConfigFile(`
+        export default {
+          docLayoutPath: '${layoutPath}'
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.docLayoutPath).toBe(layoutPath)
+    })
+
+    it('应支持 null 类型的 docLayoutPath', async () => {
+      createConfigFile(`
+        export default {
+          docLayoutPath: null
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.docLayoutPath).toBeNull()
+    })
+
+    it('用户配置应覆盖默认 docLayoutPath', async () => {
+      const layoutPath = join(tempDir, 'custom-layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+
+      createConfigFile(`
+        export default {
+          docLayoutPath: '${layoutPath}'
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.docLayoutPath).toBe(layoutPath)
+    })
+  })
+
   describe('配置文件热更新', () => {
     it('应支持重新加载配置', async () => {
       createConfigFile(`

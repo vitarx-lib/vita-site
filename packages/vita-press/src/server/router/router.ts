@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
 import { FileRouter, type PageParseResult } from 'vitarx-router/file-router'
 import type { NavTree } from '../../types/nav.js'
@@ -12,7 +13,7 @@ import { buildNavTree } from './nav.js'
  */
 export class VitaPressRouter extends FileRouter {
   private _navTree: NavTree | null = null
-
+  private layoutComponentPath: string | null = null
   /**
    * 获取导航树
    *
@@ -75,6 +76,19 @@ export class VitaPressRouter extends FileRouter {
           invokeParallel(app.plugins, 'extendRoute', route, app)
         },
         beforeWriteRoutes: routes => {
+          // 在文档路由中添加布局组件
+          if (this.layoutComponentPath) {
+            const docsRoute = routes.find(route => route.filePath === app.docDirPath)
+            if (docsRoute) {
+              if (!docsRoute.component) {
+                docsRoute.component = {
+                  default: this.layoutComponentPath
+                }
+              } else if (!docsRoute.component['default']) {
+                docsRoute.component['default'] = this.layoutComponentPath
+              }
+            }
+          }
           const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
           this._navTree = buildNavTree(result, app.docDirPath, app.lang)
           return result
@@ -82,5 +96,9 @@ export class VitaPressRouter extends FileRouter {
       },
       false
     )
+    // 添加文档布局组件路径
+    if (app.config.docLayoutPath && existsSync(app.config.docLayoutPath)) {
+      this.layoutComponentPath = app.config.docLayoutPath
+    }
   }
 }

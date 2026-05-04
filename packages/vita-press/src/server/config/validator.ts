@@ -24,6 +24,7 @@ export class ConfigValidationError extends Error {
 export function validateConfig(config: UserConfig, root: string): void {
   validateBasicFields(config)
   validateInjectOptions(config)
+  validateDocLayoutPath(config)
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLocales(config)
@@ -241,6 +242,26 @@ function validateMarkdownIt(config: UserConfig): void {
         `markdownIt.shikiConfig 必须是对象类型，当前类型: ${typeof config.markdownIt.shikiConfig}`
       )
     }
+  }
+}
+
+/**
+ * 验证 docLayoutPath 配置
+ *
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} docLayoutPath 配置无效时抛出
+ */
+function validateDocLayoutPath(config: UserConfig): void {
+  if (config.docLayoutPath === undefined || config.docLayoutPath === null) return
+
+  if (typeof config.docLayoutPath !== 'string') {
+    throw new ConfigValidationError(
+      `docLayoutPath 必须是字符串或 null 类型，当前类型: ${typeof config.docLayoutPath}`
+    )
+  }
+
+  if (!existsSync(config.docLayoutPath)) {
+    throw new ConfigValidationError(`docLayoutPath 文件不存在: ${config.docLayoutPath}`)
   }
 }
 

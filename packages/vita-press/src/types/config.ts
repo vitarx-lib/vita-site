@@ -86,6 +86,9 @@ export interface Locale {
   name: string
 }
 
+/**
+ * VitaPress用户配置
+ */
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions, PluginOptions {
   /**
    * 是否生成路由 dts 文件
@@ -97,6 +100,17 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    * @default false
    */
   dts?: string | boolean
+  /**
+   * 文档布局组件
+   *
+   * 通常由插件提供（如：@vitapress/theme-default 提供了默认的文档布局组件），
+   * 优先级低于 'docDir/_layout.{tsx,jsx}'
+   *
+   * 注意：必须是绝对路径，否则会抛出异常
+   *
+   * @default null
+   */
+  docLayoutPath?: string | null
   /**
    * 多语言配置
    *
