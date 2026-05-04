@@ -133,8 +133,7 @@ export class I18n {
    */
   t(key: string, params?: Record<string, string | number>): string {
     const ms = this.#currentMessages.value
-    let text = ms[key] || key
-
+    let text = ms[key] || this.#messages[this.defaultLang]?.[key] || key
     if (params) {
       for (const [paramKey, value] of Object.entries(params)) {
         text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(value))
