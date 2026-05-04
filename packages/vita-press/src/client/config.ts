@@ -10,14 +10,10 @@ export type EnhanceApp = (app: App, router: Router) => void
 export interface ExtendedConfig {
   /**
    * 应用入口布局组件或视图对象
-   *
-   * 优先级低于 RuntimeConfig.layout
    */
   layout?: View | Component
   /**
    * 惰性加载配置选项
-   *
-   * 优先级低于 RuntimeConfig.lazy
    */
   lazy?: LazyLoadOptions
   /**
