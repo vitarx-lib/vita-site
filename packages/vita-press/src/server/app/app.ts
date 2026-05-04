@@ -155,7 +155,8 @@ export class VitaPressApp {
     await invokeParallel(app.plugins, 'appCreated', app)
 
     app.router.reload()
-
+    // 确保触发路由写入前钩子
+    app.router.generate()
     return app
   }
 }
