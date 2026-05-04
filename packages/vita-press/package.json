@@ -55,7 +55,7 @@
     "@types/markdown-it": "^14.1.2",
     "typescript": "^6.0.2",
     "vitarx": "4.0.0-beta.14",
-    "vitarx-router": "^4.0.0-beta.17",
+    "vitarx-router": "^4.0.0-beta.19",
     "vite": "^8.0.8"
   }
 }
