@@ -80,10 +80,6 @@ describe('DEFAULT_CONFIG', () => {
     it('prefix 应为 /', () => {
       expect(DEFAULT_CONFIG.docDir.prefix).toBe('/')
     })
-
-    it('group 应为 true', () => {
-      expect(DEFAULT_CONFIG.docDir.group).toBe(true)
-    })
   })
 
   describe('vite 配置', () => {

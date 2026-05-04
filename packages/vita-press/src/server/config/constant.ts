@@ -10,8 +10,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
     dir: 'docs',
     include: [],
     exclude: [],
-    prefix: '/',
-    group: true
+    prefix: '/'
   },
   injectBody: [],
   injectCode: [],

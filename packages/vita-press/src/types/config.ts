@@ -35,12 +35,14 @@ export interface InjectOptions {
    */
   injectCode?: string[]
 }
+
 export interface MarkdownOptions {
   /**
    * markdown 解析器相关配置
    */
   markdownIt?: MarkdownItConfig
 }
+
 export interface SiteOptions {
   /**
    * 网站标题
@@ -61,12 +63,14 @@ export interface SiteOptions {
    */
   keywords?: string
 }
+
 export interface PluginOptions {
   /**
    * 插件列表
    */
   plugins?: VitaPressPlugin[]
 }
+
 export interface Locale {
   /**
    * 语言标识，如：zh-CN、en-US
@@ -81,6 +85,7 @@ export interface Locale {
    */
   name: string
 }
+
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions, PluginOptions {
   /**
    * 是否生成路由 dts 文件
@@ -111,9 +116,9 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
   /**
    * 文档目录
    *
-   * @default { dir: 'docs', include: ['**\/*.md'], exclude: ['**\/.*'], prefix:'/', group: true }
+   * @default { dir: 'docs', include: ['**\/*.md'], exclude: ['**\/.*'], prefix:'/' }
    */
-  docDir?: PageDirOptions
+  docDir?: Omit<PageDirOptions, 'group'>
   /**
    * 页面目录
    */
@@ -123,4 +128,5 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    */
   vite?: ViteUserConfig
 }
+
 export type ResolvedConfig = DeepReadonly<Required<UserConfig>>

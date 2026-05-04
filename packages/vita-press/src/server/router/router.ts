@@ -26,7 +26,7 @@ export class VitaPressRouter extends FileRouter {
     super(
       {
         root: app.root,
-        pages: [app.config.docDir, ...app.config.pageDirs],
+        pages: [{ ...app.config.docDir, group: true }, ...app.config.pageDirs],
         injectImports: [
           `import { lazy } from "vitarx"`,
           `import __runtimeConfig from "virtual:vitapress/runtime/config"`
