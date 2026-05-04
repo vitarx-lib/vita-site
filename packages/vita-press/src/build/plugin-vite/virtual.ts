@@ -6,11 +6,13 @@ import { VitaPressApp } from '../../server/index.js'
 import {
   BODY_CONTENT_PLACEHOLDER,
   RESOLVED_CLIENT_CONFIG_ID,
+  RESOLVED_I18N_MESSAGES_ID,
   RESOLVED_LOCALES_ID,
   RESOLVED_NAV_ID,
   RESOLVED_RUNTIME_ENTER_ID,
   RESOLVED_SITE_DATA_ID,
   VIRTUAL_CLIENT_CONFIG_ID,
+  VIRTUAL_I18N_MESSAGES_ID,
   VIRTUAL_LOCALES_ID,
   VIRTUAL_NAV_ID,
   VIRTUAL_RUNTIME_ENTER_ID,
@@ -46,7 +48,9 @@ export function collectClientConfigs(plugins: readonly { clientConfig?: string }
  * @param plugins - 已注册的插件列表
  * @returns 合并后的站点数据对象
  */
-export function collectSiteData(plugins: readonly { siteData?: Record<string, unknown> }[]): Record<string, unknown> {
+export function collectSiteData(
+  plugins: readonly { siteData?: Record<string, unknown> }[]
+): Record<string, unknown> {
   const merged: Record<string, unknown> = {}
   for (const plugin of plugins) {
     if (plugin.siteData) {
@@ -127,6 +131,9 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === VIRTUAL_SITE_DATA_ID) {
         return RESOLVED_SITE_DATA_ID
       }
+      if (id === VIRTUAL_I18N_MESSAGES_ID) {
+        return RESOLVED_I18N_MESSAGES_ID
+      }
       if (id === VIRTUAL_ROUTES_ID) {
         return RESOLVED_ROUTES_ID
       }
@@ -163,6 +170,10 @@ export function virtualModulePlugin(app: VitaPressApp): Plugin {
       if (id === RESOLVED_SITE_DATA_ID) {
         const siteData = collectSiteData(app.plugins)
         return `const siteData = ${JSON.stringify(siteData, null, 2)};\nexport default siteData`
+      }
+      if (id === RESOLVED_I18N_MESSAGES_ID) {
+        const i18nMessages = app.config.i18nMessages
+        return `const i18nMessages = ${JSON.stringify(i18nMessages, null, 2)};\nexport default i18nMessages`
       }
       return null
     },

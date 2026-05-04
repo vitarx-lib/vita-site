@@ -2,6 +2,10 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import {
+  RESOLVED_I18N_MESSAGES_ID,
+  VIRTUAL_I18N_MESSAGES_ID
+} from '../../src/build/common/constant.js'
+import {
   collectClientConfigs,
   collectSiteData,
   generateClientConfigCode
@@ -153,5 +157,15 @@ describe('generateClientConfigCode', () => {
   it('用户配置文件不存在时应使用空对象', () => {
     const code = generateClientConfigCode('/nonexistent/path.ts', [])
     expect(code).toContain('export default resolveClientConfig([], {})')
+  })
+})
+
+describe('i18nMessages 虚拟模块常量', () => {
+  it('VIRTUAL_I18N_MESSAGES_ID 应为正确的虚拟模块 ID', () => {
+    expect(VIRTUAL_I18N_MESSAGES_ID).toBe('virtual:vitapress/runtime/i18n-messages')
+  })
+
+  it('RESOLVED_I18N_MESSAGES_ID 应以 \\0 前缀开头', () => {
+    expect(RESOLVED_I18N_MESSAGES_ID).toBe('\0' + VIRTUAL_I18N_MESSAGES_ID)
   })
 })

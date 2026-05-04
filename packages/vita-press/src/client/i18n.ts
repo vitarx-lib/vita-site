@@ -1,30 +1,10 @@
 import { type App, type Computed, computed, getApp } from 'vitarx'
 import { cloneRouteLocation, type RouteLocation, type Router } from 'vitarx-router'
 import type { Locale } from '../server/index.js'
+import { useI18nMessages } from './i18nMessages.js'
 import { locales } from './locales.js'
 
 export type I18nMessages = Record<string, Record<string, string>>
-
-export interface I18nOptions {
-  /**
-   * 翻译消息
-   *
-   * @example
-   * ```ts
-   * {
-   *   'zh-CN': {
-   *     'nav.home': '首页',
-   *     'nav.guide': '指南'
-   *   },
-   *   'en-US': {
-   *     'nav.home': 'Home',
-   *     'nav.guide': 'Guide'
-   *   }
-   * }
-   * ```
-   */
-  messages?: I18nMessages
-}
 
 /**
  * i18n 注入键
@@ -66,12 +46,9 @@ export class I18n {
    */
   readonly #currentMessages: Computed<Record<string, string>>
 
-  constructor(
-    private readonly router: Router,
-    options: I18nOptions = {}
-  ) {
+  constructor(private readonly router: Router) {
     this.defaultLang = locales[0]!.id
-    this.#messages = options.messages || {}
+    this.#messages = useI18nMessages()
     this.lang = computed((prevLang): string => {
       return router.route.meta['lang'] || prevLang || this.defaultLang
     })

@@ -17,6 +17,7 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('markdownIt')
     expect(DEFAULT_CONFIG).toHaveProperty('pageDirs')
     expect(DEFAULT_CONFIG).toHaveProperty('plugins')
+    expect(DEFAULT_CONFIG).toHaveProperty('i18nMessages')
     expect(DEFAULT_CONFIG).toHaveProperty('vite')
   })
 
@@ -67,6 +68,10 @@ describe('DEFAULT_CONFIG', () => {
 
     it('plugins 应为空数组', () => {
       expect(DEFAULT_CONFIG.plugins).toEqual([])
+    })
+
+    it('i18nMessages 应为空对象', () => {
+      expect(DEFAULT_CONFIG.i18nMessages).toEqual({})
     })
 
     it('markdownIt 应为空对象', () => {

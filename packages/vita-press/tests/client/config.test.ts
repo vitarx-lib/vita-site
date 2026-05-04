@@ -7,7 +7,6 @@ describe('defineConfig', () => {
       layout: {} as any,
       app: {} as any,
       router: { mode: 'hash' } as any,
-      i18n: { messages: { 'zh-CN': { 'nav.home': '首页' } } },
       enhanceApp: () => {}
     }
     const result = defineConfig(config)
@@ -31,14 +30,12 @@ describe('ExtendedConfig', () => {
   it('ExtendedConfig 应包含所有扩展字段', () => {
     const theme: ExtendedConfig = {
       layout: {} as any,
-      messages: { 'zh-CN': { 'nav.home': '首页' } },
       enhanceApp: () => {},
       missing: {} as any,
       beforeEach: () => true as any,
       afterEach: () => {}
     }
     expect(theme.layout).toBeDefined()
-    expect(theme.messages).toBeDefined()
     expect(theme.enhanceApp).toBeDefined()
     expect(theme.missing).toBeDefined()
     expect(theme.beforeEach).toBeDefined()

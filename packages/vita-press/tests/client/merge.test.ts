@@ -132,47 +132,6 @@ describe('mergeRuntimeConfig', () => {
     expect(callbacks[1]).toBe(userCb)
   })
 
-  it('messages: 深度合并，user 覆盖同 key', () => {
-    const result = mergeClientConfig(
-      {
-        messages: {
-          'zh-CN': { 'nav.home': '首页', 'nav.guide': '指南' },
-          'en-US': { 'nav.home': 'Home' }
-        }
-      },
-      {
-        i18n: {
-          messages: {
-            'zh-CN': { 'nav.home': '主页' },
-            'ja-JP': { 'nav.home': 'ホーム' }
-          }
-        }
-      }
-    )
-    const messages = result.i18n?.messages!
-    expect(messages['zh-CN']).toEqual({ 'nav.home': '主页', 'nav.guide': '指南' })
-    expect(messages['en-US']).toEqual({ 'nav.home': 'Home' })
-    expect(messages['ja-JP']).toEqual({ 'nav.home': 'ホーム' })
-  })
-
-  it('messages: user 缺失时使用 theme', () => {
-    const result = mergeClientConfig({ messages: { 'zh-CN': { 'nav.home': '首页' } } }, {})
-    expect(result.i18n?.messages).toEqual({ 'zh-CN': { 'nav.home': '首页' } })
-  })
-
-  it('messages: theme 缺失时使用 user', () => {
-    const result = mergeClientConfig(
-      {},
-      { i18n: { messages: { 'zh-CN': { 'nav.home': '首页' } } } }
-    )
-    expect(result.i18n?.messages).toEqual({ 'zh-CN': { 'nav.home': '首页' } })
-  })
-
-  it('messages: 两者都缺失时无 i18n', () => {
-    const result = mergeClientConfig({}, {})
-    expect(result.i18n).toBeUndefined()
-  })
-
   it('enhanceApp: 按 theme → user 顺序合并', () => {
     const themeEnhance = (() => {}) as any
     const userEnhance = (() => {}) as any
@@ -236,13 +195,11 @@ describe('mergeRuntimeConfig', () => {
         missing: themeMissing,
         beforeEach: themeGuard,
         afterEach: themeCb,
-        messages: { 'zh-CN': { a: '1', b: '2' } },
         enhanceApp: themeEnhance
       },
       {
         layout: userLayout,
         router: { beforeEach: userGuard, afterEach: userCb, mode: 'hash' } as any,
-        i18n: { messages: { 'zh-CN': { a: 'override' } } },
         enhanceApp: userEnhance,
         app: {} as any
       }
@@ -253,7 +210,6 @@ describe('mergeRuntimeConfig', () => {
     expect(result.router?.missing).toBe(themeMissing)
     expect(result.router?.beforeEach as any[]).toHaveLength(2)
     expect(result.router?.afterEach as any[]).toHaveLength(2)
-    expect(result.i18n?.messages?.['zh-CN']).toEqual({ a: 'override', b: '2' })
     expect(result.enhanceApp as any[]).toHaveLength(2)
     expect(result.app).toBeDefined()
   })
@@ -266,24 +222,23 @@ describe('mergeThemes', () => {
 
   it('单个主题应返回其副本', () => {
     const theme: ExtendedConfig = {
-      messages: { 'zh-CN': { 'nav.home': '首页' } }
+      enhanceApp: () => {}
     }
     const result = mergeExtendedConfig([theme])
-    expect(result.messages).toEqual(theme.messages)
+    expect(result.enhanceApp).toBe(theme.enhanceApp)
   })
 
   it('多个主题应按顺序合并，后者覆盖前者', () => {
     const theme1: ExtendedConfig = {
       layout: {} as any,
-      messages: { 'zh-CN': { 'nav.home': '首页', 'nav.guide': '指南' } }
+      missing: {} as any
     }
     const theme2: ExtendedConfig = {
-      layout: {} as any,
-      messages: { 'zh-CN': { 'nav.home': '主页' } }
+      layout: {} as any
     }
     const result = mergeExtendedConfig([theme1, theme2])
     expect(result.layout).toBe(theme2.layout)
-    expect(result.messages).toEqual({ 'zh-CN': { 'nav.home': '主页', 'nav.guide': '指南' } })
+    expect(result.missing).toBe(theme1.missing)
   })
 
   it('应合并多个主题的 enhanceApp', () => {
@@ -309,20 +264,11 @@ describe('mergeThemes', () => {
     expect(result.afterEach as any[]).toHaveLength(2)
   })
 
-  it('三个主题依次合并', () => {
-    const result = mergeExtendedConfig([
-      { messages: { 'zh-CN': { a: '1' } } },
-      { messages: { 'zh-CN': { b: '2' } } },
-      { messages: { 'zh-CN': { a: 'override' } } }
-    ])
-    expect(result.messages).toEqual({ 'zh-CN': { a: 'override', b: '2' } })
-  })
-
   it('缺失字段应从前面主题继承', () => {
     const layout = {} as any
-    const result = mergeExtendedConfig([{ layout }, { messages: { 'zh-CN': { a: '1' } } }])
+    const result = mergeExtendedConfig([{ layout }, { missing: {} as any }])
     expect(result.layout).toBe(layout)
-    expect(result.messages).toEqual({ 'zh-CN': { a: '1' } })
+    expect(result.missing).toBeDefined()
   })
 })
 
@@ -336,28 +282,26 @@ describe('resolveClientConfig', () => {
   it('有主题时应合并主题和用户配置', () => {
     const theme: ExtendedConfig = {
       layout: {} as any,
-      messages: { 'zh-CN': { 'nav.home': '首页' } }
+      enhanceApp: () => {}
     }
     const userLayout = {} as any
     const userConfig: ClientConfig = { layout: userLayout }
     const result = resolveClientConfig([theme], userConfig)
     expect(result.layout).toBe(userLayout)
-    expect(result.i18n?.messages).toEqual({ 'zh-CN': { 'nav.home': '首页' } })
+    expect(result.enhanceApp).toBe(theme.enhanceApp)
   })
 
   it('多个主题应先合并再与用户配置合并', () => {
     const theme1: ExtendedConfig = {
-      messages: { 'zh-CN': { a: '1' } }
+      missing: {} as any
     }
     const theme2: ExtendedConfig = {
-      messages: { 'zh-CN': { b: '2' } }
+      enhanceApp: () => {}
     }
-    const userConfig: ClientConfig = {
-      i18n: { messages: { 'zh-CN': { a: 'override' } } }
-    }
+    const userConfig: ClientConfig = { layout: {} as any }
     const result = resolveClientConfig([theme1, theme2], userConfig)
-    expect(result.i18n?.messages).toEqual({
-      'zh-CN': { a: 'override', b: '2' }
-    })
+    expect(result.router?.missing).toBe(theme1.missing)
+    expect(result.enhanceApp).toBe(theme2.enhanceApp)
+    expect(result.layout).toBeDefined()
   })
 })

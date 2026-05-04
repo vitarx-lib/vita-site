@@ -1,6 +1,5 @@
 import type { App, AppConfig, Component, LazyLoadOptions, View } from 'vitarx'
 import type { AfterCallback, NavigationGuard, Router, RouterOptions } from 'vitarx-router'
-import type { I18nMessages, I18nOptions } from './i18n.js'
 
 export type EnhanceApp = (app: App, router: Router) => void
 
@@ -16,10 +15,6 @@ export interface ExtendedConfig {
    * 惰性加载配置选项
    */
   lazy?: LazyLoadOptions
-  /**
-   * i18n 翻译消息
-   */
-  messages?: I18nMessages
   /**
    * 拓展应用
    *
@@ -86,10 +81,6 @@ export interface ClientConfig {
    * 路由配置
    */
   router?: Omit<RouterOptions, 'routes'>
-  /**
-   * i18n 配置
-   */
-  i18n?: I18nOptions
   /**
    * 拓展应用
    *

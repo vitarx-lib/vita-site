@@ -33,3 +33,8 @@ export const RESOLVED_NAV_ID = '\0' + VIRTUAL_NAV_ID
 export const VIRTUAL_SITE_DATA_ID = 'virtual:vitapress/runtime/site-data'
 /** 站点数据虚拟模块解析后的 ID */
 export const RESOLVED_SITE_DATA_ID = '\0' + VIRTUAL_SITE_DATA_ID
+
+/** i18n 翻译消息虚拟模块 ID */
+export const VIRTUAL_I18N_MESSAGES_ID = 'virtual:vitapress/runtime/i18n-messages'
+/** i18n 翻译消息虚拟模块解析后的 ID */
+export const RESOLVED_I18N_MESSAGES_ID = '\0' + VIRTUAL_I18N_MESSAGES_ID

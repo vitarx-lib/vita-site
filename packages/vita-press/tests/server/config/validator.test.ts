@@ -407,6 +407,91 @@ describe('validateConfig', () => {
     })
   })
 
+  describe('i18nMessages 配置验证', () => {
+    it('应接受有效的 i18nMessages', () => {
+      const config: UserConfig = {
+        i18nMessages: {
+          'zh-CN': { 'nav.home': '首页', 'nav.guide': '指南' },
+          'en-US': { 'nav.home': 'Home', 'nav.guide': 'Guide' }
+        }
+      }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受空对象的 i18nMessages', () => {
+      const config: UserConfig = { i18nMessages: {} }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受 undefined 的 i18nMessages', () => {
+      const config: UserConfig = {}
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝 null 类型的 i18nMessages', () => {
+      const config = { i18nMessages: null }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('i18nMessages 必须是对象类型')
+    })
+
+    it('应拒绝数组类型的 i18nMessages', () => {
+      const config = { i18nMessages: [] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('i18nMessages 必须是对象类型')
+    })
+
+    it('应拒绝字符串类型的 i18nMessages', () => {
+      const config = { i18nMessages: 'invalid' }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('i18nMessages 必须是对象类型')
+    })
+
+    it('应拒绝语言对应的值为 null', () => {
+      const config = { i18nMessages: { 'zh-CN': null } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        "i18nMessages['zh-CN'] 必须是对象类型"
+      )
+    })
+
+    it('应拒绝语言对应的值为数组', () => {
+      const config = { i18nMessages: { 'zh-CN': [] } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        "i18nMessages['zh-CN'] 必须是对象类型"
+      )
+    })
+
+    it('应拒绝语言对应的值为字符串', () => {
+      const config = { i18nMessages: { 'zh-CN': 'invalid' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        "i18nMessages['zh-CN'] 必须是对象类型"
+      )
+    })
+
+    it('应拒绝翻译值为非字符串类型', () => {
+      const config = { i18nMessages: { 'zh-CN': { 'nav.home': 123 } } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        "i18nMessages['zh-CN']['nav.home'] 必须是字符串类型"
+      )
+    })
+
+    it('应拒绝翻译值为 null', () => {
+      const config = { i18nMessages: { 'zh-CN': { 'nav.home': null } } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        "i18nMessages['zh-CN']['nav.home'] 必须是字符串类型"
+      )
+    })
+
+    it('应接受空语言消息对象', () => {
+      const config: UserConfig = { i18nMessages: { 'zh-CN': {} } }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+  })
+
   describe('空配置', () => {
     it('应接受空配置对象', () => {
       expect(() => validateConfig({}, tempDir)).not.toThrow()

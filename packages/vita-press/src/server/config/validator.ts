@@ -29,6 +29,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLocales(config)
+  validateI18nMessages(config)
   validateMarkdownIt(config)
   validateDts(config)
   validatePlugins(config, 'plugins')
@@ -199,6 +200,41 @@ function validateLocales(config: UserConfig): void {
     }
     if (!locale.name) {
       throw new ConfigValidationError(`locales[${i}] 必须有 name 属性`)
+    }
+  }
+}
+
+/**
+ * 验证 i18nMessages 配置
+ *
+ * i18nMessages 结构为 Record<string, Record<string, string>>，
+ * 外层 key 为语言标识，内层 key 为翻译键，value 为翻译文本。
+ *
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} i18nMessages 配置无效时抛出
+ */
+function validateI18nMessages(config: UserConfig): void {
+  if (config.i18nMessages === undefined) return
+
+  if (typeof config.i18nMessages !== 'object' || config.i18nMessages === null || Array.isArray(config.i18nMessages)) {
+    throw new ConfigValidationError(
+      `i18nMessages 必须是对象类型，当前类型: ${typeof config.i18nMessages}`
+    )
+  }
+
+  for (const [lang, messages] of Object.entries(config.i18nMessages)) {
+    if (typeof messages !== 'object' || messages === null || Array.isArray(messages)) {
+      throw new ConfigValidationError(
+        `i18nMessages['${lang}'] 必须是对象类型，当前类型: ${typeof messages}`
+      )
+    }
+
+    for (const [key, value] of Object.entries(messages)) {
+      if (typeof value !== 'string') {
+        throw new ConfigValidationError(
+          `i18nMessages['${lang}']['${key}'] 必须是字符串类型，当前类型: ${typeof value}`
+        )
+      }
     }
   }
 }

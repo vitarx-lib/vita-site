@@ -1,6 +1,7 @@
 import type { DeepReadonly } from 'vitarx'
 import type { PageDirOptions } from 'vitarx-router/file-router'
 import type { UserConfig as ViteUserConfig } from 'vite'
+import type { I18nMessages } from '../client/index.js'
 import type { MarkdownItConfig } from './markdown.js'
 import type { VitaPressPlugin } from './plugin.js'
 
@@ -138,6 +139,10 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    * @default [{ id: 'zh-CN', name: '简体中文' }]
    */
   locales?: Locale[]
+  /**
+   * 多语言配置
+   */
+  i18nMessages?: I18nMessages
   /**
    * 文档目录
    *

@@ -1,6 +1,5 @@
 import type { AfterCallback, NavigationGuard, RouterOptions } from 'vitarx-router'
 import type { ClientConfig, EnhanceApp, ExtendedConfig } from './config.js'
-import type { I18nMessages, I18nOptions } from './i18n.js'
 
 /**
  * 将钩子追加到现有钩子配置，兼容单函数或数组
@@ -17,44 +16,6 @@ export function concatHook<T>(current: T | T[] | undefined, incoming: T | T[]): 
     return current
   }
   return [current, ...hooks]
-}
-
-/**
- * 深度合并 i18n messages（两层 Record 结构）
- *
- * @param base - 基础翻译（优先级低）
- * @param override - 覆盖翻译（优先级高）
- * @returns 合并后的翻译
- */
-function mergeMessages(base: I18nMessages, override: I18nMessages): I18nMessages {
-  const merged: I18nMessages = { ...base }
-  for (const lang of Object.keys(override)) {
-    merged[lang] = Object.assign({}, base[lang], override[lang])
-  }
-  return merged
-}
-
-/**
- * 合并 i18n 配置
- *
- * @param base - 基础配置（优先级低）
- * @param override - 覆盖配置（优先级高）
- * @returns 合并后的 i18n 配置
- */
-function mergeI18nOptions(
-  base: I18nOptions | undefined,
-  override: I18nOptions | undefined
-): I18nOptions {
-  if (base == null && override == null) return {}
-  if (base == null) return { ...override }
-  if (override == null) return { ...base }
-  const result: I18nOptions = { ...override }
-  if (base.messages && override.messages) {
-    result.messages = mergeMessages(base.messages, override.messages)
-  } else if (base.messages) {
-    result.messages = base.messages
-  }
-  return result
 }
 
 interface MergedRouterHooks {
@@ -106,7 +67,6 @@ function mergeEnhanceApp(
  * - layout：override 覆盖 base
  * - missing：override 覆盖 base
  * - beforeEach / afterEach：base 先追加，override 后追加
- * - messages：深度合并，override 覆盖同 key
  * - enhanceApp：base 先执行，override 后执行
  *
  * @param base - 主题配置（优先级低）
@@ -140,12 +100,6 @@ export function mergeClientConfig(base: ExtendedConfig, override: ClientConfig):
   if (mergedHooks.afterEach != null) router.afterEach = mergedHooks.afterEach
   result.router = router
 
-  const i18n = mergeI18nOptions(
-    base.messages ? { messages: base.messages } : undefined,
-    override.i18n
-  )
-  if (Object.keys(i18n).length > 0) result.i18n = i18n
-
   const enhanceApp = mergeEnhanceApp(base.enhanceApp, override.enhanceApp)
   if (enhanceApp != null) result.enhanceApp = enhanceApp
 
@@ -173,11 +127,6 @@ export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
     if (lazy != null) result.lazy = lazy
     const missing = theme.missing ?? acc.missing
     if (missing != null) result.missing = missing
-    const messages =
-      acc.messages && theme.messages
-        ? mergeMessages(acc.messages, theme.messages)
-        : (theme.messages ?? acc.messages)
-    if (messages != null) result.messages = messages
     const beforeEach = mergeEnhanceApp(
       acc.beforeEach as EnhanceApp | EnhanceApp[] | undefined,
       theme.beforeEach as EnhanceApp | EnhanceApp[] | undefined

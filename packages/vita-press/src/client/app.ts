@@ -53,7 +53,7 @@ function applyEnhanceApp(
  */
 function setupPlugins(app: App, router: Router): void {
   app.use(router)
-  const i18n = new I18n(router, config.i18n)
+  const i18n = new I18n(router)
   app.use(i18n)
   applyEnhanceApp(config.enhanceApp, app, router)
 }
