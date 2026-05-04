@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { relative } from 'node:path'
-import { FileRouter, type PageParseResult } from 'vitarx-router/file-router'
+import { FileRouter, findRoute, type PageParseResult } from 'vitarx-router/file-router'
 import type { NavTree } from '../../types/nav.js'
 import type { VitaPressApp } from '../app/index.js'
 import { invokeParallel, invokePipe } from '../common/hooks.js'
@@ -14,6 +14,7 @@ import { buildNavTree } from './nav.js'
 export class VitaPressRouter extends FileRouter {
   private _navTree: NavTree | null = null
   private layoutComponentPath: string | null = null
+  private homeComponentPath: string | null = null
   /**
    * 获取导航树
    *
@@ -76,7 +77,6 @@ export class VitaPressRouter extends FileRouter {
           invokeParallel(app.plugins, 'extendRoute', route, app)
         },
         beforeWriteRoutes: routes => {
-          // 在文档路由中添加布局组件
           if (this.layoutComponentPath) {
             const docsRoute = routes.find(route => route.filePath === app.docDirPath)
             if (docsRoute) {
@@ -86,6 +86,24 @@ export class VitaPressRouter extends FileRouter {
                 }
               } else if (!docsRoute.component['default']) {
                 docsRoute.component['default'] = this.layoutComponentPath
+              }
+            }
+          }
+          if (this.homeComponentPath) {
+            for (const langId of app.langs) {
+              const langSegment = langId.toLowerCase()
+              const langPath = langId === app.lang ? '/' : `/index-${langSegment}`
+              if (!findRoute(routes, langPath)) {
+                routes.push({
+                  filePath: this.homeComponentPath,
+                  fullPath: langPath,
+                  isGroup: false,
+                  path: `index-${langSegment}`,
+                  component: {
+                    default: this.homeComponentPath
+                  },
+                  meta: { lang: langId }
+                })
               }
             }
           }
@@ -99,6 +117,9 @@ export class VitaPressRouter extends FileRouter {
     // 添加文档布局组件路径
     if (app.config.docLayoutPath && existsSync(app.config.docLayoutPath)) {
       this.layoutComponentPath = app.config.docLayoutPath
+    }
+    if (app.config.homePath && existsSync(app.config.homePath)) {
+      this.homeComponentPath = app.config.homePath
     }
   }
 }

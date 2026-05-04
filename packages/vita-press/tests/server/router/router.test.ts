@@ -416,6 +416,209 @@ describe('VitaPressRouter', () => {
     })
   })
 
+  describe('首页组件配置', () => {
+    it('应在根路径未被占用时添加首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, { homePath })
+      const { routes } = router.generate()
+
+      const homeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
+      expect(homeRoute).toBeDefined()
+      expect(homeRoute!.component).toBeDefined()
+      expect(homeRoute!.component!['default']).toBe(homePath)
+    })
+
+    it('应在根路径被 docs/index.md 占用时不添加首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'index.md'), '# Home')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, { homePath })
+      const { routes } = router.generate()
+
+      const homeRoute = routes.find(
+        route => route.fullPath === '/' && !route.isGroup && route.filePath === homePath
+      )
+      expect(homeRoute).toBeUndefined()
+    })
+
+    it('应在根路径被 pages/index.tsx 占用时不添加首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      const pagesDir = join(tempDir, 'pages')
+      mkdirSync(docsDir, { recursive: true })
+      mkdirSync(pagesDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+      writeFileSync(join(pagesDir, 'index.tsx'), 'export default function Page() {}')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        homePath,
+        pageDirs: [{ dir: 'pages', prefix: '/', include: ['**/*.tsx'] }]
+      })
+      const { routes } = router.generate()
+
+      const homeRoute = routes.find(
+        route => route.fullPath === '/' && !route.isGroup && route.filePath === homePath
+      )
+      expect(homeRoute).toBeUndefined()
+    })
+
+    it('应在 homePath 为 null 时不添加首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const { router } = await createTestApp(tempDir, { homePath: null })
+      const { routes } = router.generate()
+
+      const homeRoute = routes.find(
+        route => !route.isGroup && route.path === '/' && route.meta?.['lang']
+      )
+      expect(homeRoute).toBeUndefined()
+    })
+
+    it('应在 homePath 文件不存在时不添加首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const homePath = join(tempDir, 'non-existent-home.tsx')
+
+      const { router } = await createTestApp(tempDir, { homePath })
+      const { routes } = router.generate()
+
+      const homeRoute = routes.find(
+        route => !route.isGroup && route.path === '/' && route.filePath === homePath
+      )
+      expect(homeRoute).toBeUndefined()
+    })
+
+    it('应同时支持 docLayoutPath 和 homePath', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const layoutPath = join(tempDir, 'layout.tsx')
+      writeFileSync(layoutPath, 'export default function Layout() {}')
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        docLayoutPath: layoutPath,
+        homePath
+      })
+      const { routes } = router.generate()
+
+      const docsRoute = routes.find(route => route.filePath === join(tempDir, 'docs'))
+      expect(docsRoute).toBeDefined()
+      expect(docsRoute!.component!['default']).toBe(layoutPath)
+
+      const homeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
+      expect(homeRoute).toBeDefined()
+      expect(homeRoute!.component!['default']).toBe(homePath)
+    })
+
+    it('应为多语言配置添加非默认语言的首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        homePath,
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      const { routes } = router.generate()
+
+      const defaultHomeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
+      expect(defaultHomeRoute).toBeDefined()
+      expect(defaultHomeRoute!.component!['default']).toBe(homePath)
+      expect(defaultHomeRoute!.meta!['lang']).toBe('zh-CN')
+
+      const enHomeRoute = routes.find(route => route.fullPath === '/index-en-us' && !route.isGroup)
+      expect(enHomeRoute).toBeDefined()
+      expect(enHomeRoute!.component!['default']).toBe(homePath)
+      expect(enHomeRoute!.meta!['lang']).toBe('en-US')
+    })
+
+    it('应在多语言时非默认语言的首页路径被占用时不添加该语言路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      const pagesDir = join(tempDir, 'pages')
+      mkdirSync(docsDir, { recursive: true })
+      mkdirSync(pagesDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+      writeFileSync(join(pagesDir, 'index-en-US.tsx'), 'export default function Page() {}')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        homePath,
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ],
+        pageDirs: [{ dir: 'pages', prefix: '/', include: ['**/*.tsx'] }]
+      })
+      const { routes } = router.generate()
+
+      const defaultHomeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
+      expect(defaultHomeRoute).toBeDefined()
+
+      const enHomeRoute = routes.find(
+        route => route.fullPath === '/index-en-us' && !route.isGroup && route.filePath === homePath
+      )
+      expect(enHomeRoute).toBeUndefined()
+    })
+
+    it('应为三个以上的语言配置添加所有非默认语言的首页路由', async () => {
+      const docsDir = join(tempDir, 'docs')
+      mkdirSync(docsDir, { recursive: true })
+      writeFileSync(join(docsDir, 'guide.md'), '# Guide')
+
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const { router } = await createTestApp(tempDir, {
+        homePath,
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' },
+          { id: 'ja-JP', name: '日本語' }
+        ]
+      })
+      const { routes } = router.generate()
+
+      const defaultHomeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
+      expect(defaultHomeRoute).toBeDefined()
+      expect(defaultHomeRoute!.meta!['lang']).toBe('zh-CN')
+
+      const enHomeRoute = routes.find(route => route.fullPath === '/index-en-us' && !route.isGroup)
+      expect(enHomeRoute).toBeDefined()
+      expect(enHomeRoute!.meta!['lang']).toBe('en-US')
+
+      const jaHomeRoute = routes.find(route => route.fullPath === '/index-ja-jp' && !route.isGroup)
+      expect(jaHomeRoute).toBeDefined()
+      expect(jaHomeRoute!.meta!['lang']).toBe('ja-JP')
+    })
+  })
+
   describe('边界情况', () => {
     it('应处理没有插件的情况', async () => {
       const docsDir = join(tempDir, 'docs')

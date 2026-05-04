@@ -471,6 +471,58 @@ describe('配置系统端到端集成测试', () => {
     })
   })
 
+  describe('homePath 配置', () => {
+    it('默认 homePath 应为 null', async () => {
+      createConfigFile(`export default {}`)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.homePath).toBeNull()
+    })
+
+    it('应支持字符串类型的 homePath', async () => {
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      createConfigFile(`
+        export default {
+          homePath: '${homePath}'
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.homePath).toBe(homePath)
+    })
+
+    it('应支持 null 类型的 homePath', async () => {
+      createConfigFile(`
+        export default {
+          homePath: null
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.homePath).toBeNull()
+    })
+
+    it('用户配置应覆盖默认 homePath', async () => {
+      const homePath = join(tempDir, 'custom-home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      createConfigFile(`
+        export default {
+          homePath: '${homePath}'
+        }
+      `)
+
+      const manager = await ConfigManager.create(tempDir)
+
+      expect(manager.config.homePath).toBe(homePath)
+    })
+  })
+
   describe('配置文件热更新', () => {
     it('应支持重新加载配置', async () => {
       createConfigFile(`

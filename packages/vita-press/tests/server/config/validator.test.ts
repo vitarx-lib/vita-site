@@ -326,6 +326,56 @@ describe('validateConfig', () => {
     })
   })
 
+  describe('homePath 配置验证', () => {
+    it('应接受字符串类型且文件存在的 homePath', () => {
+      const homePath = join(tempDir, 'home.tsx')
+      writeFileSync(homePath, 'export default function Home() {}')
+
+      const config: UserConfig = { homePath }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受 null 类型的 homePath', () => {
+      const config: UserConfig = { homePath: null }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应接受 undefined 的 homePath', () => {
+      const config: UserConfig = { homePath: undefined as any }
+      expect(() => validateConfig(config, tempDir)).not.toThrow()
+    })
+
+    it('应拒绝非字符串或 null 类型的 homePath', () => {
+      const config = { homePath: 123 }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'homePath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝对象类型的 homePath', () => {
+      const config = { homePath: { path: '/home.tsx' } }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'homePath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝数组类型的 homePath', () => {
+      const config = { homePath: ['/home.tsx'] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow(
+        'homePath 必须是字符串或 null 类型'
+      )
+    })
+
+    it('应拒绝文件不存在的 homePath', () => {
+      const config: UserConfig = { homePath: '/non/existent/home.tsx' }
+      expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config, tempDir)).toThrow('homePath 文件不存在')
+    })
+  })
+
   describe('插件配置验证', () => {
     it('应接受有效的插件配置', () => {
       const config: UserConfig = {

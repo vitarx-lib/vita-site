@@ -101,7 +101,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    */
   dts?: string | boolean
   /**
-   * 文档布局组件
+   * 文档布局组件文件路径
    *
    * 通常由插件提供（如：@vitapress/theme-default 提供了默认的文档布局组件），
    * 优先级低于 'docDir/_layout.{tsx,jsx}'
@@ -111,6 +111,17 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    * @default null
    */
   docLayoutPath?: string | null
+  /**
+   * 首页组件文件路径
+   *
+   * 通常由插件提供（如：@vitapress/theme-default 提供了默认的首页组件），
+   * 优先级低于 'pageDir/index.{tsx,jsx}'
+   *
+   * 注意：必须是绝对路径，否则会抛出异常
+   *
+   * @default null
+   */
+  homePath?: string | null
   /**
    * 多语言配置
    *

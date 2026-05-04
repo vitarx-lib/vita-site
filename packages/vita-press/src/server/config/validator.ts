@@ -25,6 +25,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateBasicFields(config)
   validateInjectOptions(config)
   validateDocLayoutPath(config)
+  validateHomePath(config)
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLocales(config)
@@ -262,6 +263,26 @@ function validateDocLayoutPath(config: UserConfig): void {
 
   if (!existsSync(config.docLayoutPath)) {
     throw new ConfigValidationError(`docLayoutPath 文件不存在: ${config.docLayoutPath}`)
+  }
+}
+
+/**
+ * 验证 homePath 配置
+ *
+ * @param config - 用户配置对象
+ * @throws {ConfigValidationError} homePath 配置无效时抛出
+ */
+function validateHomePath(config: UserConfig): void {
+  if (config.homePath === undefined || config.homePath === null) return
+
+  if (typeof config.homePath !== 'string') {
+    throw new ConfigValidationError(
+      `homePath 必须是字符串或 null 类型，当前类型: ${typeof config.homePath}`
+    )
+  }
+
+  if (!existsSync(config.homePath)) {
+    throw new ConfigValidationError(`homePath 文件不存在: ${config.homePath}`)
   }
 }
 
