@@ -31,7 +31,7 @@ export function containerPlugin(): VitaPressPlugin {
               // 开始标签
               const parts = token.info.trim().slice(type.length).trim().split(':')
               const title = parts[1] || type.toUpperCase()
-              return `<div class="v-container ${type}"><div class="v-container-title-wrapper"><svg width="18" height="18" viewBox="64 64 896 896" class="icon">${ICONS[type]}</svg><h4 class="title">${title}</h4></div>\n`
+              return `<div class="v-state-container ${type}"><div class="v-state-container-header"><svg width="18" height="18" viewBox="64 64 896 896" class="icon">${ICONS[type]}</svg><h4 class="title">${title}</h4></div>\n`
             } else {
               // 结束标签
               return '</div>\n'

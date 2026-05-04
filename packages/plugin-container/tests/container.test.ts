@@ -29,7 +29,7 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: info\n内容\n:::')
 
-      expect(result).toContain('class="v-container info"')
+      expect(result).toContain('class="v-state-container info"')
       expect(result).toContain('<h4 class="title">INFO</h4>')
       expect(result).toContain('<svg')
       expect(result).toContain('内容')
@@ -48,7 +48,7 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: success\n内容\n:::')
 
-      expect(result).toContain('class="v-container success"')
+      expect(result).toContain('class="v-state-container success"')
       expect(result).toContain('<h4 class="title">SUCCESS</h4>')
     })
 
@@ -65,7 +65,7 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: warning\n内容\n:::')
 
-      expect(result).toContain('class="v-container warning"')
+      expect(result).toContain('class="v-state-container warning"')
       expect(result).toContain('<h4 class="title">WARNING</h4>')
     })
 
@@ -82,7 +82,7 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: error\n内容\n:::')
 
-      expect(result).toContain('class="v-container error"')
+      expect(result).toContain('class="v-state-container error"')
       expect(result).toContain('<h4 class="title">ERROR</h4>')
     })
 
@@ -106,14 +106,14 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: info\n内容\n:::')
 
-      expect(result).toContain('class="v-container-title-wrapper"')
+      expect(result).toContain('class="v-state-container-header"')
     })
 
     it('开始标签与结束标签应正确配对', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: info\n内容\n:::')
 
-      const openCount = (result.match(/class="v-container info"/g) || []).length
+      const openCount = (result.match(/class="v-state-container info"/g) || []).length
       const closeCount = (result.match(/<\/div>/g) || []).length
 
       expect(openCount).toBe(1)
@@ -142,14 +142,14 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: unknown\n内容\n:::')
 
-      expect(result).not.toContain('class="v-container unknown"')
+      expect(result).not.toContain('class="v-state-container unknown"')
     })
 
     it('应识别以类型关键字开头的容器', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: info-extra\n内容\n:::')
 
-      expect(result).toContain('class="v-container info"')
+      expect(result).toContain('class="v-state-container info"')
     })
   })
 
@@ -174,7 +174,7 @@ describe('containerPlugin', () => {
       const md = createMdWithPlugin()
       const result = md.render('::: info\n:::')
 
-      expect(result).toContain('class="v-container info"')
+      expect(result).toContain('class="v-state-container info"')
       expect(result).toContain('<h4 class="title">INFO</h4>')
     })
   })

@@ -83,49 +83,49 @@ export default defineConfig({
 ### 样式参考
 
 ```css
-.v-container {
+.v-state-container {
   padding: 16px;
   border-radius: 8px;
   margin: 16px 0;
   border: 1px solid;
 }
 
-.v-container-title-wrapper {
+.v-state-container-header {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.v-container .icon {
+.v-state-container-header .icon {
   flex-shrink: 0;
 }
 
-.v-container .title {
+.v-state-container-header .title {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
 }
 
-.v-container.info {
+.v-state-container.info {
   background-color: #f0f5ff;
   border-color: #adc6ff;
   color: #2f54eb;
 }
 
-.v-container.success {
+.v-state-container.success {
   background-color: #f6ffed;
   border-color: #b7eb8f;
   color: #52c41a;
 }
 
-.v-container.warning {
+.v-state-container.warning {
   background-color: #fffbe6;
   border-color: #ffe58f;
   color: #faad14;
 }
 
-.v-container.error {
+.v-state-container.error {
   background-color: #fff2f0;
   border-color: #ffccc7;
   color: #ff4d4f;
