@@ -1,5 +1,5 @@
 import { type App, type Computed, computed, getApp } from 'vitarx'
-import { cloneRouteLocation, type RouteLocation, type Router } from 'vitarx-router'
+import { type RoutePath, type Router } from 'vitarx-router'
 import type { Locale } from '../server/index.js'
 import { useI18nMessages } from './i18nMessages.js'
 import { locales } from './locales.js'
@@ -12,7 +12,7 @@ export type I18nMessages = Record<string, Record<string, string>>
 export const __I18N_INJECT_KEY__ = Symbol.for('__vitapress_i18n__')
 
 interface PageLocale extends Locale {
-  route: RouteLocation | null
+  path: RoutePath | null
 }
 
 /**
@@ -68,10 +68,7 @@ export class I18n {
       return locales.map(item => {
         return {
           ...item,
-          route:
-            item.id === currentLang
-              ? cloneRouteLocation(currentRoute)
-              : this.matchRoute(path, item.id)
+          path: item.id === currentLang ? currentRoute.path : this.matchRoute(path, item.id)
         }
       })
     })
@@ -95,10 +92,10 @@ export class I18n {
     if (!locale) {
       throw new Error(`[i18n] Invalid language: ${newLang}`)
     }
-    if (!locale.route) {
+    if (!locale.path) {
       throw new Error(`[i18n] Currently, there are no matching routes for the ${newLang} language`)
     }
-    this.router.push(locale.route)
+    this.router.push(locale.path)
   }
 
   /**
@@ -127,7 +124,7 @@ export class I18n {
    * @returns {boolean} 是否支持该语言
    */
   has(targetLang: string): boolean {
-    return this.locales.value.some(l => l.id === targetLang && l.route)
+    return this.locales.value.some(l => l.id === targetLang && l.path)
   }
 
   /**
@@ -144,13 +141,16 @@ export class I18n {
    * @param newLang
    * @private
    */
-  private matchRoute(path: string, newLang: string) {
+  private matchRoute(path: string, newLang: string): RoutePath | null {
     if (path === '/') {
       path = newLang === this.defaultLang ? path : `/index-${newLang}`
     } else {
       path = newLang === this.defaultLang ? path : `${path}-${newLang}`
     }
-    return this.router.matchRoute({ index: path })
+    if (this.router.manager.findByPath(path as RoutePath)) {
+      return path as RoutePath
+    }
+    return null
   }
 }
 
