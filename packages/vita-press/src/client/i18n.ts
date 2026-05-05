@@ -12,7 +12,14 @@ export type I18nMessages = Record<string, Record<string, string>>
 export const __I18N_INJECT_KEY__ = Symbol.for('__vitapress_i18n__')
 
 interface PageLocale extends Locale {
-  path: RoutePath | null
+  /**
+   * 路由路径
+   *
+   * 可用于路由导航，但不保证百分百匹配，
+   * 因为当前页面可能不存在该语言的版本，
+   * 可通过 `router.manager.findByPath(path)` 判断当前页面是否存在特定语言版本
+   */
+  path: RoutePath
 }
 
 /**
@@ -46,7 +53,7 @@ export class I18n {
    */
   readonly #currentMessages: Computed<Record<string, string>>
 
-  constructor(private readonly router: Router) {
+  constructor(public readonly router: Router) {
     this.defaultLang = locales[0]!.id
     this.#messages = useI18nMessages()
     this.lang = computed((prevLang): string => {
@@ -58,17 +65,17 @@ export class I18n {
       const currentLang = this.lang.value
       if (currentLang === lastComputedLang && oldValue) return oldValue
       lastComputedLang = currentLang
-      let path: string
+      let path: RoutePath
       if (currentLang === this.defaultLang) {
         path = currentRoute.path
       } else {
-        path = currentRoute.path.replace(`-${currentLang}`, '')
+        path = currentRoute.path.replace(`-${currentLang}`, '') as RoutePath
         if (path === '/index') path = '/'
       }
       return locales.map(item => {
         return {
           ...item,
-          path: item.id === currentLang ? currentRoute.path : this.matchRoute(path, item.id)
+          path: item.id === currentLang ? currentRoute.path : this.buildPath(path, item.id)
         }
       })
     })
@@ -141,16 +148,13 @@ export class I18n {
    * @param newLang
    * @private
    */
-  private matchRoute(path: string, newLang: string): RoutePath | null {
+  private buildPath(path: RoutePath, newLang: string): RoutePath {
     if (path === '/') {
       path = newLang === this.defaultLang ? path : `/index-${newLang}`
     } else {
       path = newLang === this.defaultLang ? path : `${path}-${newLang}`
     }
-    if (this.router.manager.findByPath(path as RoutePath)) {
-      return path as RoutePath
-    }
-    return null
+    return path
   }
 }
 
