@@ -22,7 +22,11 @@ import { concatHook } from './merge.js'
 function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
   const layout = config.layout ?? createComponentView(RouterView)
   const app = createSSRApp(layout, config.app)
-  const routerOptions: RouterOptions = Object.assign({}, { routes, mode: 'path' }, config.router)
+  const routerOptions: RouterOptions = Object.assign(
+    {},
+    { routes, mode: 'path', suffix: '.html' },
+    config.router
+  )
   return { app, routerOptions }
 }
 
