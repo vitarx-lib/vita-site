@@ -427,107 +427,107 @@ describe('配置系统端到端集成测试', () => {
     })
   })
 
-  describe('docLayoutPath 配置', () => {
-    it('默认 docLayoutPath 应为 null', async () => {
+  describe('docLayoutFile 配置', () => {
+    it('默认 docLayoutFile 应为 null', async () => {
       createConfigFile(`export default {}`)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.docLayoutPath).toBeNull()
+      expect(manager.config.docLayoutFile).toBeNull()
     })
 
-    it('应支持字符串类型的 docLayoutPath', async () => {
+    it('应支持字符串类型的 docLayoutFile', async () => {
       const layoutPath = join(tempDir, 'layout.tsx')
       writeFileSync(layoutPath, 'export default function Layout() {}')
 
       createConfigFile(`
         export default {
-          docLayoutPath: '${layoutPath}'
+          docLayoutFile: '${layoutPath}'
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.docLayoutPath).toBe(layoutPath)
+      expect(manager.config.docLayoutFile).toBe(layoutPath)
     })
 
-    it('应支持 null 类型的 docLayoutPath', async () => {
+    it('应支持 null 类型的 docLayoutFile', async () => {
       createConfigFile(`
         export default {
-          docLayoutPath: null
+          docLayoutFile: null
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.docLayoutPath).toBeNull()
+      expect(manager.config.docLayoutFile).toBeNull()
     })
 
-    it('用户配置应覆盖默认 docLayoutPath', async () => {
+    it('用户配置应覆盖默认 docLayoutFile', async () => {
       const layoutPath = join(tempDir, 'custom-layout.tsx')
       writeFileSync(layoutPath, 'export default function Layout() {}')
 
       createConfigFile(`
         export default {
-          docLayoutPath: '${layoutPath}'
+          docLayoutFile: '${layoutPath}'
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.docLayoutPath).toBe(layoutPath)
+      expect(manager.config.docLayoutFile).toBe(layoutPath)
     })
   })
 
-  describe('homePath 配置', () => {
-    it('默认 homePath 应为 null', async () => {
+  describe('homeFile 配置', () => {
+    it('默认 homeFile 应为 null', async () => {
       createConfigFile(`export default {}`)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.homePath).toBeNull()
+      expect(manager.config.homeFile).toBeNull()
     })
 
-    it('应支持字符串类型的 homePath', async () => {
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+    it('应支持字符串类型的 homeFile', async () => {
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       createConfigFile(`
         export default {
-          homePath: '${homePath}'
+          homeFile: '${homeFile}'
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.homePath).toBe(homePath)
+      expect(manager.config.homeFile).toBe(homeFile)
     })
 
-    it('应支持 null 类型的 homePath', async () => {
+    it('应支持 null 类型的 homeFile', async () => {
       createConfigFile(`
         export default {
-          homePath: null
+          homeFile: null
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.homePath).toBeNull()
+      expect(manager.config.homeFile).toBeNull()
     })
 
-    it('用户配置应覆盖默认 homePath', async () => {
-      const homePath = join(tempDir, 'custom-home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+    it('用户配置应覆盖默认 homeFile', async () => {
+      const homeFile = join(tempDir, 'custom-home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       createConfigFile(`
         export default {
-          homePath: '${homePath}'
+          homeFile: '${homeFile}'
         }
       `)
 
       const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
-      expect(manager.config.homePath).toBe(homePath)
+      expect(manager.config.homeFile).toBe(homeFile)
     })
   })
 

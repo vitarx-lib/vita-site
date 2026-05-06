@@ -167,14 +167,14 @@ export default defineConfig({
     group: true
   },
 
-  // 文档布局组件路径
+  // 文档布局组件文件
   // 通常由插件提供，优先级低于 docDir/_layout.{tsx,jsx}
-  docLayoutPath: null,
+  docLayoutFile: null,
 
-  // 首页组件路径
+  // 首页组件文件
   // 通常由插件提供，当根路径 / 未被其他路由占用时生效
-  // 注意：如果存在 docs/index.md 或 pages/index.tsx 则 homePath 不会生效
-  homePath: null,
+  // 注意：如果存在 docs/index.md 或 pages/index.tsx 则 homeFile 不会生效
+  homeFile: null,
 
   // 页面目录配置
   pageDirs: [],

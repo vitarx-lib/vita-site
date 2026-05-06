@@ -111,7 +111,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    *
    * @default null
    */
-  docLayoutPath?: string | null
+  docLayoutFile?: string | null
   /**
    * 首页组件文件路径
    *
@@ -122,7 +122,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
    *
    * @default null
    */
-  homePath?: string | null
+  homeFile?: string | null
   /**
    * 多语言配置
    *

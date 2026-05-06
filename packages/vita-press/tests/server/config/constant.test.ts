@@ -8,8 +8,8 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('title')
     expect(DEFAULT_CONFIG).toHaveProperty('description')
     expect(DEFAULT_CONFIG).toHaveProperty('keywords')
-    expect(DEFAULT_CONFIG).toHaveProperty('docLayoutPath')
-    expect(DEFAULT_CONFIG).toHaveProperty('homePath')
+    expect(DEFAULT_CONFIG).toHaveProperty('docLayoutFile')
+    expect(DEFAULT_CONFIG).toHaveProperty('homeFile')
     expect(DEFAULT_CONFIG).toHaveProperty('docDir')
     expect(DEFAULT_CONFIG).toHaveProperty('injectBody')
     expect(DEFAULT_CONFIG).toHaveProperty('injectCode')
@@ -42,12 +42,12 @@ describe('DEFAULT_CONFIG', () => {
       expect(DEFAULT_CONFIG.keywords).toBe('')
     })
 
-    it('docLayoutPath 应为 null', () => {
-      expect(DEFAULT_CONFIG.docLayoutPath).toBeNull()
+    it('docLayoutFile 应为 null', () => {
+      expect(DEFAULT_CONFIG.docLayoutFile).toBeNull()
     })
 
-    it('homePath 应为 null', () => {
-      expect(DEFAULT_CONFIG.homePath).toBeNull()
+    it('homeFile 应为 null', () => {
+      expect(DEFAULT_CONFIG.homeFile).toBeNull()
     })
 
     it('injectBody 应为空数组', () => {

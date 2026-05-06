@@ -115,11 +115,11 @@ export class VitaPressRouter extends FileRouter {
       false
     )
     // 添加文档布局组件路径
-    if (app.config.docLayoutPath && existsSync(app.config.docLayoutPath)) {
-      this.layoutComponentPath = app.config.docLayoutPath
+    if (app.config.docLayoutFile && existsSync(app.config.docLayoutFile)) {
+      this.layoutComponentPath = app.config.docLayoutFile
     }
-    if (app.config.homePath && existsSync(app.config.homePath)) {
-      this.homeComponentPath = app.config.homePath
+    if (app.config.homeFile && existsSync(app.config.homeFile)) {
+      this.homeComponentPath = app.config.homeFile
     }
   }
 }

@@ -24,8 +24,8 @@ export class ConfigValidationError extends Error {
 export function validateConfig(config: UserConfig, root: string): void {
   validateBasicFields(config)
   validateInjectOptions(config)
-  validateDocLayoutPath(config)
-  validateHomePath(config)
+  validateDocLayoutFile(config)
+  validateHomeFile(config)
   validateDocsDir(config, root)
   validatePagesDir(config, root)
   validateLocales(config)
@@ -283,42 +283,42 @@ function validateMarkdownIt(config: UserConfig): void {
 }
 
 /**
- * 验证 docLayoutPath 配置
+ * 验证 docLayoutFile 配置
  *
  * @param config - 用户配置对象
- * @throws {ConfigValidationError} docLayoutPath 配置无效时抛出
+ * @throws {ConfigValidationError} docLayoutFile 配置无效时抛出
  */
-function validateDocLayoutPath(config: UserConfig): void {
-  if (config.docLayoutPath === undefined || config.docLayoutPath === null) return
+function validateDocLayoutFile(config: UserConfig): void {
+  if (config.docLayoutFile === undefined || config.docLayoutFile === null) return
 
-  if (typeof config.docLayoutPath !== 'string') {
+  if (typeof config.docLayoutFile !== 'string') {
     throw new ConfigValidationError(
-      `docLayoutPath 必须是字符串或 null 类型，当前类型: ${typeof config.docLayoutPath}`
+      `docLayoutFile 必须是字符串或 null 类型，当前类型: ${typeof config.docLayoutFile}`
     )
   }
 
-  if (!existsSync(config.docLayoutPath)) {
-    throw new ConfigValidationError(`docLayoutPath 文件不存在: ${config.docLayoutPath}`)
+  if (!existsSync(config.docLayoutFile)) {
+    throw new ConfigValidationError(`docLayoutFile 文件不存在: ${config.docLayoutFile}`)
   }
 }
 
 /**
- * 验证 homePath 配置
+ * 验证 homeFile 配置
  *
  * @param config - 用户配置对象
- * @throws {ConfigValidationError} homePath 配置无效时抛出
+ * @throws {ConfigValidationError} homeFile 配置无效时抛出
  */
-function validateHomePath(config: UserConfig): void {
-  if (config.homePath === undefined || config.homePath === null) return
+function validateHomeFile(config: UserConfig): void {
+  if (config.homeFile === undefined || config.homeFile === null) return
 
-  if (typeof config.homePath !== 'string') {
+  if (typeof config.homeFile !== 'string') {
     throw new ConfigValidationError(
-      `homePath 必须是字符串或 null 类型，当前类型: ${typeof config.homePath}`
+      `homeFile 必须是字符串或 null 类型，当前类型: ${typeof config.homeFile}`
     )
   }
 
-  if (!existsSync(config.homePath)) {
-    throw new ConfigValidationError(`homePath 文件不存在: ${config.homePath}`)
+  if (!existsSync(config.homeFile)) {
+    throw new ConfigValidationError(`homeFile 文件不存在: ${config.homeFile}`)
   }
 }
 

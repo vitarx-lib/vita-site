@@ -5,8 +5,8 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   title: '',
   description: '',
   keywords: '',
-  docLayoutPath: null,
-  homePath: null,
+  docLayoutFile: null,
+  homeFile: null,
   i18nMessages: {},
   locales: [],
   docDir: {

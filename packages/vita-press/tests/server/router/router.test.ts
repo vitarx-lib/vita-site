@@ -322,7 +322,7 @@ describe('VitaPressRouter', () => {
   })
 
   describe('文档布局配置', () => {
-    it('应将 docLayoutPath 注入到文档路由的 component.default', async () => {
+    it('应将 docLayoutFile 注入到文档路由的 component.default', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
@@ -331,7 +331,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(layoutPath, 'export default function Layout() {}')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: layoutPath
+        docLayoutFile: layoutPath
       })
       const { routes } = router.generate()
 
@@ -341,7 +341,7 @@ describe('VitaPressRouter', () => {
       expect(docsRoute!.component!['default']).toBe(layoutPath)
     })
 
-    it('应在 docLayoutPath 文件不存在时不注入布局组件', async () => {
+    it('应在 docLayoutFile 文件不存在时不注入布局组件', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
@@ -349,7 +349,7 @@ describe('VitaPressRouter', () => {
       const layoutPath = join(tempDir, 'non-existent-layout.tsx')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: layoutPath
+        docLayoutFile: layoutPath
       })
       const { routes } = router.generate()
 
@@ -360,13 +360,13 @@ describe('VitaPressRouter', () => {
       }
     })
 
-    it('应在 docLayoutPath 为 null 时不注入布局组件', async () => {
+    it('应在 docLayoutFile 为 null 时不注入布局组件', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: null
+        docLayoutFile: null
       })
       const { routes } = router.generate()
 
@@ -387,7 +387,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(layoutPath, 'export default function PluginLayout() {}')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: layoutPath
+        docLayoutFile: layoutPath
       })
       const { routes } = router.generate()
 
@@ -406,7 +406,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(layoutPath, 'export default function Layout() {}')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: layoutPath
+        docLayoutFile: layoutPath
       })
       const { routes } = router.generate()
 
@@ -422,16 +422,16 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
-      const { router } = await createTestApp(tempDir, { homePath })
+      const { router } = await createTestApp(tempDir, { homeFile })
       const { routes } = router.generate()
 
       const homeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
       expect(homeRoute).toBeDefined()
       expect(homeRoute!.component).toBeDefined()
-      expect(homeRoute!.component!['default']).toBe(homePath)
+      expect(homeRoute!.component!['default']).toBe(homeFile)
     })
 
     it('应在根路径被 docs/index.md 占用时不添加首页路由', async () => {
@@ -439,14 +439,14 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
-      const { router } = await createTestApp(tempDir, { homePath })
+      const { router } = await createTestApp(tempDir, { homeFile })
       const { routes } = router.generate()
 
       const homeRoute = routes.find(
-        route => route.fullPath === '/' && !route.isGroup && route.filePath === homePath
+        route => route.fullPath === '/' && !route.isGroup && route.filePath === homeFile
       )
       expect(homeRoute).toBeUndefined()
     })
@@ -459,27 +459,27 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
       writeFileSync(join(pagesDir, 'index.tsx'), 'export default function Page() {}')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       const { router } = await createTestApp(tempDir, {
-        homePath,
+        homeFile,
         pageDirs: [{ dir: 'pages', prefix: '/', include: ['**/*.tsx'] }]
       })
       const { routes } = router.generate()
 
       const homeRoute = routes.find(
-        route => route.fullPath === '/' && !route.isGroup && route.filePath === homePath
+        route => route.fullPath === '/' && !route.isGroup && route.filePath === homeFile
       )
       expect(homeRoute).toBeUndefined()
     })
 
-    it('应在 homePath 为 null 时不添加首页路由', async () => {
+    it('应在 homeFile 为 null 时不添加首页路由', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const { router } = await createTestApp(tempDir, { homePath: null })
+      const { router } = await createTestApp(tempDir, { homeFile: null })
       const { routes } = router.generate()
 
       const homeRoute = routes.find(
@@ -488,35 +488,35 @@ describe('VitaPressRouter', () => {
       expect(homeRoute).toBeUndefined()
     })
 
-    it('应在 homePath 文件不存在时不添加首页路由', async () => {
+    it('应在 homeFile 文件不存在时不添加首页路由', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const homePath = join(tempDir, 'non-existent-home.tsx')
+      const homeFile = join(tempDir, 'non-existent-home.tsx')
 
-      const { router } = await createTestApp(tempDir, { homePath })
+      const { router } = await createTestApp(tempDir, { homeFile })
       const { routes } = router.generate()
 
       const homeRoute = routes.find(
-        route => !route.isGroup && route.path === '/' && route.filePath === homePath
+        route => !route.isGroup && route.path === '/' && route.filePath === homeFile
       )
       expect(homeRoute).toBeUndefined()
     })
 
-    it('应同时支持 docLayoutPath 和 homePath', async () => {
+    it('应同时支持 docLayoutFile 和 homeFile', async () => {
       const docsDir = join(tempDir, 'docs')
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
       const layoutPath = join(tempDir, 'layout.tsx')
       writeFileSync(layoutPath, 'export default function Layout() {}')
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       const { router } = await createTestApp(tempDir, {
-        docLayoutPath: layoutPath,
-        homePath
+        docLayoutFile: layoutPath,
+        homeFile
       })
       const { routes } = router.generate()
 
@@ -526,7 +526,7 @@ describe('VitaPressRouter', () => {
 
       const homeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
       expect(homeRoute).toBeDefined()
-      expect(homeRoute!.component!['default']).toBe(homePath)
+      expect(homeRoute!.component!['default']).toBe(homeFile)
     })
 
     it('应为多语言配置添加非默认语言的首页路由', async () => {
@@ -534,11 +534,11 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       const { router } = await createTestApp(tempDir, {
-        homePath,
+        homeFile,
         locales: [
           { id: 'zh-CN', name: '简体中文' },
           { id: 'en-US', name: 'English' }
@@ -548,12 +548,12 @@ describe('VitaPressRouter', () => {
 
       const defaultHomeRoute = routes.find(route => route.fullPath === '/' && !route.isGroup)
       expect(defaultHomeRoute).toBeDefined()
-      expect(defaultHomeRoute!.component!['default']).toBe(homePath)
+      expect(defaultHomeRoute!.component!['default']).toBe(homeFile)
       expect(defaultHomeRoute!.meta!['lang']).toBe('zh-CN')
 
       const enHomeRoute = routes.find(route => route.fullPath === '/index-en-us' && !route.isGroup)
       expect(enHomeRoute).toBeDefined()
-      expect(enHomeRoute!.component!['default']).toBe(homePath)
+      expect(enHomeRoute!.component!['default']).toBe(homeFile)
       expect(enHomeRoute!.meta!['lang']).toBe('en-US')
     })
 
@@ -565,11 +565,11 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
       writeFileSync(join(pagesDir, 'index-en-US.tsx'), 'export default function Page() {}')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       const { router } = await createTestApp(tempDir, {
-        homePath,
+        homeFile,
         locales: [
           { id: 'zh-CN', name: '简体中文' },
           { id: 'en-US', name: 'English' }
@@ -582,7 +582,7 @@ describe('VitaPressRouter', () => {
       expect(defaultHomeRoute).toBeDefined()
 
       const enHomeRoute = routes.find(
-        route => route.fullPath === '/index-en-us' && !route.isGroup && route.filePath === homePath
+        route => route.fullPath === '/index-en-us' && !route.isGroup && route.filePath === homeFile
       )
       expect(enHomeRoute).toBeUndefined()
     })
@@ -592,11 +592,11 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'guide.md'), '# Guide')
 
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
       const { router } = await createTestApp(tempDir, {
-        homePath,
+        homeFile,
         locales: [
           { id: 'zh-CN', name: '简体中文' },
           { id: 'en-US', name: 'English' },

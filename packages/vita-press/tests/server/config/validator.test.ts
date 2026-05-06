@@ -276,103 +276,103 @@ describe('validateConfig', () => {
     })
   })
 
-  describe('docLayoutPath 配置验证', () => {
-    it('应接受字符串类型且文件存在的 docLayoutPath', () => {
+  describe('docLayoutFile 配置验证', () => {
+    it('应接受字符串类型且文件存在的 docLayoutFile', () => {
       const layoutPath = join(tempDir, 'layout.tsx')
       writeFileSync(layoutPath, 'export default function Layout() {}')
 
-      const config: UserConfig = { docLayoutPath: layoutPath }
+      const config: UserConfig = { docLayoutFile: layoutPath }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应接受 null 类型的 docLayoutPath', () => {
-      const config: UserConfig = { docLayoutPath: null }
+    it('应接受 null 类型的 docLayoutFile', () => {
+      const config: UserConfig = { docLayoutFile: null }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应接受 undefined 的 docLayoutPath', () => {
-      const config: UserConfig = { docLayoutPath: undefined as any }
+    it('应接受 undefined 的 docLayoutFile', () => {
+      const config: UserConfig = { docLayoutFile: undefined as any }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应拒绝非字符串或 null 类型的 docLayoutPath', () => {
-      const config = { docLayoutPath: 123 }
+    it('应拒绝非字符串或 null 类型的 docLayoutFile', () => {
+      const config = { docLayoutFile: 123 }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'docLayoutPath 必须是字符串或 null 类型'
+        'docLayoutFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝对象类型的 docLayoutPath', () => {
-      const config = { docLayoutPath: { path: '/layout.tsx' } }
+    it('应拒绝对象类型的 docLayoutFile', () => {
+      const config = { docLayoutFile: { path: '/layout.tsx' } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'docLayoutPath 必须是字符串或 null 类型'
+        'docLayoutFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝数组类型的 docLayoutPath', () => {
-      const config = { docLayoutPath: ['/layout.tsx'] }
+    it('应拒绝数组类型的 docLayoutFile', () => {
+      const config = { docLayoutFile: ['/layout.tsx'] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'docLayoutPath 必须是字符串或 null 类型'
+        'docLayoutFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝文件不存在的 docLayoutPath', () => {
-      const config: UserConfig = { docLayoutPath: '/non/existent/layout.tsx' }
+    it('应拒绝文件不存在的 docLayoutFile', () => {
+      const config: UserConfig = { docLayoutFile: '/non/existent/layout.tsx' }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow('docLayoutPath 文件不存在')
+      expect(() => validateConfig(config, tempDir)).toThrow('docLayoutFile 文件不存在')
     })
   })
 
-  describe('homePath 配置验证', () => {
-    it('应接受字符串类型且文件存在的 homePath', () => {
-      const homePath = join(tempDir, 'home.tsx')
-      writeFileSync(homePath, 'export default function Home() {}')
+  describe('homeFile 配置验证', () => {
+    it('应接受字符串类型且文件存在的 homeFile', () => {
+      const homeFile = join(tempDir, 'home.tsx')
+      writeFileSync(homeFile, 'export default function Home() {}')
 
-      const config: UserConfig = { homePath }
+      const config: UserConfig = { homeFile }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应接受 null 类型的 homePath', () => {
-      const config: UserConfig = { homePath: null }
+    it('应接受 null 类型的 homeFile', () => {
+      const config: UserConfig = { homeFile: null }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应接受 undefined 的 homePath', () => {
-      const config: UserConfig = { homePath: undefined as any }
+    it('应接受 undefined 的 homeFile', () => {
+      const config: UserConfig = { homeFile: undefined as any }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
-    it('应拒绝非字符串或 null 类型的 homePath', () => {
-      const config = { homePath: 123 }
+    it('应拒绝非字符串或 null 类型的 homeFile', () => {
+      const config = { homeFile: 123 }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'homePath 必须是字符串或 null 类型'
+        'homeFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝对象类型的 homePath', () => {
-      const config = { homePath: { path: '/home.tsx' } }
+    it('应拒绝对象类型的 homeFile', () => {
+      const config = { homeFile: { path: '/home.tsx' } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'homePath 必须是字符串或 null 类型'
+        'homeFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝数组类型的 homePath', () => {
-      const config = { homePath: ['/home.tsx'] }
+    it('应拒绝数组类型的 homeFile', () => {
+      const config = { homeFile: ['/home.tsx'] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'homePath 必须是字符串或 null 类型'
+        'homeFile 必须是字符串或 null 类型'
       )
     })
 
-    it('应拒绝文件不存在的 homePath', () => {
-      const config: UserConfig = { homePath: '/non/existent/home.tsx' }
+    it('应拒绝文件不存在的 homeFile', () => {
+      const config: UserConfig = { homeFile: '/non/existent/home.tsx' }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config, tempDir)).toThrow('homePath 文件不存在')
+      expect(() => validateConfig(config, tempDir)).toThrow('homeFile 文件不存在')
     })
   })
 
