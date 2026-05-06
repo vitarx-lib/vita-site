@@ -53,7 +53,7 @@ export class I18n {
    */
   readonly #currentMessages: Computed<Record<string, string>>
 
-  constructor(public readonly router: Router) {
+  constructor(private readonly router: Router) {
     this.defaultLang = locales[0]!.id
     this.#messages = useI18nMessages()
     this.lang = computed((prevLang): string => {
@@ -167,12 +167,12 @@ export class I18n {
 export function useI18n(): I18n {
   const app = getApp()
   if (!app) {
-    throw new Error('[i18n] useI18n must be called in the context of the VitarxApp.')
+    throw new Error('[vitapress] useI18n must be called in the context of the VitarxApp.')
   } else {
     const instance = app.inject(__I18N_INJECT_KEY__)
     if (!(instance instanceof I18n)) {
       throw new Error(
-        '[i18n] failing to get an i18n instance from the app context, have you already called app.use(i18n)?'
+        '[vitapress] failing to get an i18n instance from the app context, have you already called app.use(i18n)?'
       )
     }
     return instance
