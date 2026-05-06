@@ -95,7 +95,7 @@ export interface VitaPressPlugin extends PluginHooks {
    * 客户端主题配置的模块路径
    *
    * 构建时自动 import 并与用户客户端配置合并，优先级低于用户配置。
-   * 模块应导出 ExtendedConfig 类型的默认导出。
+   * 模块应导出 PluginClientConfig 类型的默认导出。
    */
   clientConfig?: string
   /**

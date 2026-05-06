@@ -1,5 +1,5 @@
 import type { AfterCallback, NavigationGuard, RouterOptions } from 'vitarx-router'
-import type { ClientConfig, EnhanceApp, ExtendedConfig } from './config.js'
+import type { ClientConfig, EnhanceApp, PluginClientConfig } from './config.js'
 
 /**
  * 将钩子追加到现有钩子配置，兼容单函数或数组
@@ -61,7 +61,7 @@ function mergeEnhanceApp(
 }
 
 /**
- * 将 ExtendedConfig 展开合并到 ClientConfig 中
+ * 将 PluginClientConfig 展开合并到 ClientConfig 中
  *
  * 合并策略：
  * - layout：override 覆盖 base
@@ -73,7 +73,7 @@ function mergeEnhanceApp(
  * @param override - 用户配置（优先级高）
  * @returns 合并后的运行时配置
  */
-export function mergeClientConfig(base: ExtendedConfig, override: ClientConfig): ClientConfig {
+export function mergeClientConfig(base: PluginClientConfig, override: ClientConfig): ClientConfig {
   const result: ClientConfig = {}
 
   const layout = override.layout ?? base.layout
@@ -109,18 +109,18 @@ export function mergeClientConfig(base: ExtendedConfig, override: ClientConfig):
 }
 
 /**
- * 合并多个 ExtendedConfig 为一个
+ * 合并多个 PluginClientConfig 为一个
  *
  * 按数组顺序依次合并，后者覆盖前者。
  *
- * @param configs - 扩展配置数组
- * @returns 合并后的扩展配置
+ * @param configs - 插件客户端配置数组
+ * @returns 合并后的插件客户端配置
  */
-export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
+export function mergePluginClientConfig(configs: PluginClientConfig[]): PluginClientConfig {
   if (configs.length === 0) return {}
   if (configs.length === 1) return { ...configs[0] }
   return configs.reduce((acc, theme) => {
-    const result: ExtendedConfig = {}
+    const result: PluginClientConfig = {}
     const layout = theme.layout ?? acc.layout
     if (layout != null) result.layout = layout
     const lazy = theme.lazy ?? acc.lazy
@@ -146,17 +146,17 @@ export function mergeExtendedConfig(configs: ExtendedConfig[]): ExtendedConfig {
 }
 
 /**
- * 合并所有扩展配置与用户配置，生成最终的运行时配置
+ * 合并所有插件客户端配置与用户配置，生成最终的运行时配置
  *
- * @param extended - 插件提供的扩展配置数组（按注册顺序，后者优先级高于前者）
+ * @param extended - 插件提供的客户端配置数组（按注册顺序，后者优先级高于前者）
  * @param userConfig - 用户客户端配置（优先级最高）
  * @returns 最终的运行时配置
  */
 export function resolveClientConfig(
-  extended: ExtendedConfig[],
+  extended: PluginClientConfig[],
   userConfig: ClientConfig
 ): ClientConfig {
   if (extended.length === 0) return userConfig
-  const mergedTheme = mergeExtendedConfig(extended)
+  const mergedTheme = mergePluginClientConfig(extended)
   return mergeClientConfig(mergedTheme, userConfig)
 }

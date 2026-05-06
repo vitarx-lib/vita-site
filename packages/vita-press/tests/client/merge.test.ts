@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { ClientConfig, ExtendedConfig } from '../../src/client/config.js'
+import type { ClientConfig, PluginClientConfig } from '../../src/client/config.js'
 import {
   concatHook,
   mergeClientConfig,
-  mergeExtendedConfig,
+  mergePluginClientConfig,
   resolveClientConfig
 } from '../../src/client/merge.js'
 
@@ -217,26 +217,26 @@ describe('mergeRuntimeConfig', () => {
 
 describe('mergeThemes', () => {
   it('空数组应返回空对象', () => {
-    expect(mergeExtendedConfig([])).toEqual({})
+    expect(mergePluginClientConfig([])).toEqual({})
   })
 
   it('单个主题应返回其副本', () => {
-    const theme: ExtendedConfig = {
+    const theme: PluginClientConfig = {
       enhanceApp: () => {}
     }
-    const result = mergeExtendedConfig([theme])
+    const result = mergePluginClientConfig([theme])
     expect(result.enhanceApp).toBe(theme.enhanceApp)
   })
 
   it('多个主题应按顺序合并，后者覆盖前者', () => {
-    const theme1: ExtendedConfig = {
+    const theme1: PluginClientConfig = {
       layout: {} as any,
       missing: {} as any
     }
-    const theme2: ExtendedConfig = {
+    const theme2: PluginClientConfig = {
       layout: {} as any
     }
-    const result = mergeExtendedConfig([theme1, theme2])
+    const result = mergePluginClientConfig([theme1, theme2])
     expect(result.layout).toBe(theme2.layout)
     expect(result.missing).toBe(theme1.missing)
   })
@@ -244,7 +244,7 @@ describe('mergeThemes', () => {
   it('应合并多个主题的 enhanceApp', () => {
     const fn1 = (() => {}) as any
     const fn2 = (() => {}) as any
-    const result = mergeExtendedConfig([{ enhanceApp: fn1 }, { enhanceApp: fn2 }])
+    const result = mergePluginClientConfig([{ enhanceApp: fn1 }, { enhanceApp: fn2 }])
     const fns = result.enhanceApp as any[]
     expect(fns).toHaveLength(2)
     expect(fns[0]).toBe(fn1)
@@ -256,7 +256,7 @@ describe('mergeThemes', () => {
     const g2 = (() => {}) as any
     const c1 = (() => {}) as any
     const c2 = (() => {}) as any
-    const result = mergeExtendedConfig([
+    const result = mergePluginClientConfig([
       { beforeEach: g1, afterEach: c1 },
       { beforeEach: g2, afterEach: c2 }
     ])
@@ -266,7 +266,7 @@ describe('mergeThemes', () => {
 
   it('缺失字段应从前面主题继承', () => {
     const layout = {} as any
-    const result = mergeExtendedConfig([{ layout }, { missing: {} as any }])
+    const result = mergePluginClientConfig([{ layout }, { missing: {} as any }])
     expect(result.layout).toBe(layout)
     expect(result.missing).toBeDefined()
   })
@@ -280,7 +280,7 @@ describe('resolveClientConfig', () => {
   })
 
   it('有主题时应合并主题和用户配置', () => {
-    const theme: ExtendedConfig = {
+    const theme: PluginClientConfig = {
       layout: {} as any,
       enhanceApp: () => {}
     }
@@ -292,10 +292,10 @@ describe('resolveClientConfig', () => {
   })
 
   it('多个主题应先合并再与用户配置合并', () => {
-    const theme1: ExtendedConfig = {
+    const theme1: PluginClientConfig = {
       missing: {} as any
     }
-    const theme2: ExtendedConfig = {
+    const theme2: PluginClientConfig = {
       enhanceApp: () => {}
     }
     const userConfig: ClientConfig = { layout: {} as any }

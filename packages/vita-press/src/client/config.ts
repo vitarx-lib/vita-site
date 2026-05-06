@@ -4,9 +4,12 @@ import type { AfterCallback, NavigationGuard, Router, RouterOptions } from 'vita
 export type EnhanceApp = (app: App, router: Router) => void
 
 /**
- * 插件扩展配置
+ * 插件客户端配置
+ *
+ * 插件/主题通过此接口向客户端注入配置，由 VitaPressPlugin.clientConfig 字段声明模块路径，
+ * 构建时自动加载并合并，优先级低于用户 ClientConfig。
  */
-export interface ExtendedConfig {
+export interface PluginClientConfig {
   /**
    * 应用入口布局组件或视图对象
    */
@@ -105,11 +108,11 @@ export function defineConfig<T extends ClientConfig>(config: T): T {
 }
 
 /**
- * 定义主题扩展配置
+ * 定义插件客户端配置
  *
- * @param config - 主题扩展配置
- * @returns {ExtendedConfig} 主题扩展配置
+ * @param config - 插件客户端配置 
+ * @returns {PluginClientConfig} 插件客户端配置
  */
-export function defineExtendedConfig<T extends ExtendedConfig>(config: T): T {
+export function definePluginClientConfig<T extends PluginClientConfig>(config: T): T {
   return config
 }

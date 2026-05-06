@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type ClientConfig, defineConfig, type ExtendedConfig } from '../../src/client/config.js'
+import { type ClientConfig, defineConfig, type PluginClientConfig } from '../../src/client/config.js'
 
 describe('defineConfig', () => {
   it('应原样返回配置对象', () => {
@@ -26,9 +26,9 @@ describe('defineConfig', () => {
   })
 })
 
-describe('ExtendedConfig', () => {
-  it('ExtendedConfig 应包含所有扩展字段', () => {
-    const theme: ExtendedConfig = {
+describe('PluginClientConfig', () => {
+  it('PluginClientConfig 应包含所有扩展字段', () => {
+    const theme: PluginClientConfig = {
       layout: {} as any,
       enhanceApp: () => {},
       missing: {} as any,
@@ -42,15 +42,15 @@ describe('ExtendedConfig', () => {
     expect(theme.afterEach).toBeDefined()
   })
 
-  it('ExtendedConfig enhanceApp 应支持数组', () => {
-    const theme: ExtendedConfig = {
+  it('PluginClientConfig enhanceApp 应支持数组', () => {
+    const theme: PluginClientConfig = {
       enhanceApp: [() => {}, () => {}]
     }
     expect(Array.isArray(theme.enhanceApp)).toBe(true)
   })
 
-  it('ThemeExpandConfig beforeEach/afterEach 应支持数组', () => {
-    const theme: ExtendedConfig = {
+  it('PluginClientConfig beforeEach/afterEach 应支持数组', () => {
+    const theme: PluginClientConfig = {
       beforeEach: [() => true as any, () => true as any],
       afterEach: [() => {}, () => {}]
     }
