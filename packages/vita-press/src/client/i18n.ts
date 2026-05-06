@@ -109,13 +109,15 @@ export class I18n {
    * 翻译函数
    *
    * @param key - 翻译键
-   * @param params - 插值参数
+   * @param params - 插值参数或未匹配时的默认值（字符串）
+   * @param defaultValue - 未匹配时的默认回退文本，优先级低于 params 为字符串时的值
    * @returns {string} 翻译后的文本
    */
-  t(key: string, params?: Record<string, string | number>): string {
+  t(key: string, params?: Record<string, string | number> | string, defaultValue?: string): string {
     const ms = this.#currentMessages.value
-    let text = ms[key] || this.#messages[this.defaultLang]?.[key] || key
-    if (params) {
+    const fallback = typeof params === 'string' ? params : defaultValue
+    let text = ms[key] || fallback || this.#messages[this.defaultLang]?.[key] || key
+    if (params && typeof params === 'object') {
       for (const [paramKey, value] of Object.entries(params)) {
         text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(value))
       }
