@@ -82,8 +82,7 @@ export class ConfigManager {
     const registered: VitaPressPlugin[] = []
     if (Array.isArray(plugin)) {
       for (const p of plugin) {
-        const registered = this.registerPlugins(p)
-        registered.push(...registered)
+        registered.push(...this.registerPlugins(p))
       }
     } else if (!this.#pluginNames.has(plugin.name)) {
       this.#pluginNames.add(plugin.name)
