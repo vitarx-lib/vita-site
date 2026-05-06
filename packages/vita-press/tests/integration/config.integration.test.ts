@@ -3,7 +3,15 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ConfigManager } from '../../src/server/config/manager.js'
+import type { ConfigEnv } from '../../src/types/index.js'
 import { loadUserConfig, mergeConfig } from '../../src/server/index.js'
+
+const devEnv: ConfigEnv = {
+  command: 'dev',
+  isDev: true,
+  isBuild: false,
+  isPreview: false
+}
 
 describe('配置系统端到端集成测试', () => {
   let tempDir: string
@@ -86,7 +94,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.title).toBe('Valid Config')
       expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
@@ -96,7 +104,7 @@ describe('配置系统端到端集成测试', () => {
     it('应正确处理空配置', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config).toBeDefined()
       expect(manager.config.title).toBe('')
@@ -110,7 +118,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.title).toBe('Partial Config')
       expect(manager.config.description).toBe('')
@@ -127,7 +135,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.title).toBe('User Title')
       expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
@@ -146,7 +154,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.vite.base).toBe('/docs/')
       expect(manager.config.vite.server?.port).toBe(3000)
@@ -160,7 +168,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.injectHead).toHaveLength(1)
       expect(manager.config.injectHead[0]).toBe('<script src="custom.js"></script>')
@@ -171,7 +179,7 @@ describe('配置系统端到端集成测试', () => {
     it('应正确加载空插件列表', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toEqual([])
     })
@@ -189,7 +197,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toHaveLength(1)
       expect(manager.plugins[0]!.name).toBe('my-plugin')
@@ -205,7 +213,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toHaveLength(3)
       expect(manager.plugins.map(p => p.name)).toEqual(['plugin-1', 'plugin-2', 'plugin-3'])
@@ -220,7 +228,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins[0]!.name).toBe('pre')
       expect(manager.plugins[1]!.name).toBe('normal')
@@ -235,7 +243,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins[0]!.name).toBe('normal')
       expect(manager.plugins[1]!.name).toBe('post')
@@ -251,7 +259,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins.map(p => p.name)).toEqual(['p5', 'p3', 'p1'])
     })
@@ -264,7 +272,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toHaveLength(1)
     })
@@ -274,7 +282,7 @@ describe('配置系统端到端集成测试', () => {
     it('应使用默认语言配置', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
     })
@@ -286,7 +294,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])
     })
@@ -302,7 +310,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.locales).toEqual([
         { id: 'zh-CN', name: '简体中文' },
@@ -316,7 +324,7 @@ describe('配置系统端到端集成测试', () => {
     it('应使用默认 MarkdownIt 配置', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.markdownIt).toBeDefined()
     })
@@ -334,7 +342,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
       expect(manager.config.markdownIt.options!.html).toBe(true)
       expect(manager.config.markdownIt.options!.linkify).toBe(true)
       expect(manager.config.markdownIt.options!.typographer).toBe(true)
@@ -345,7 +353,7 @@ describe('配置系统端到端集成测试', () => {
     it('应使用默认 Vite 配置', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.vite).toBeDefined()
     })
@@ -363,7 +371,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.vite.base).toBe('/docs/')
       expect(manager.config.vite.server?.port).toBe(3000)
@@ -382,7 +390,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.injectHead).toHaveLength(2)
       expect(manager.config.injectHead[0]).toBe('<meta name="author" content="Test">')
@@ -398,7 +406,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.injectBody).toHaveLength(2)
     })
@@ -413,7 +421,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.injectCode).toHaveLength(2)
     })
@@ -423,7 +431,7 @@ describe('配置系统端到端集成测试', () => {
     it('默认 docLayoutPath 应为 null', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.docLayoutPath).toBeNull()
     })
@@ -438,7 +446,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.docLayoutPath).toBe(layoutPath)
     })
@@ -450,7 +458,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.docLayoutPath).toBeNull()
     })
@@ -465,7 +473,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.docLayoutPath).toBe(layoutPath)
     })
@@ -475,7 +483,7 @@ describe('配置系统端到端集成测试', () => {
     it('默认 homePath 应为 null', async () => {
       createConfigFile(`export default {}`)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.homePath).toBeNull()
     })
@@ -490,7 +498,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.homePath).toBe(homePath)
     })
@@ -502,7 +510,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.homePath).toBeNull()
     })
@@ -517,7 +525,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.homePath).toBe(homePath)
     })
@@ -531,7 +539,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager1 = await ConfigManager.create(tempDir)
+      const manager1 = await ConfigManager.create(tempDir, undefined, devEnv)
       expect(manager1.config.title).toBe('Initial Title')
 
       createConfigFile(`
@@ -540,7 +548,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      const manager2 = await ConfigManager.create(tempDir)
+      const manager2 = await ConfigManager.create(tempDir, undefined, devEnv)
       expect(manager2.config.title).toBe('Updated Title')
     })
   })
@@ -553,7 +561,7 @@ describe('配置系统端到端集成测试', () => {
         }
       `)
 
-      await expect(ConfigManager.create(tempDir)).rejects.toThrow()
+      await expect(ConfigManager.create(tempDir, undefined, devEnv)).rejects.toThrow()
     })
   })
 

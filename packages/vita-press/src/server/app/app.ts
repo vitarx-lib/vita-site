@@ -1,14 +1,13 @@
 import MarkdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
-import type { ResolvedConfig, UserConfig } from '../../types/index.js'
+import type { CommandName, ConfigEnv, ResolvedConfig, UserConfig } from '../../types/index.js'
 import type { VitaPressPlugin } from '../../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
 import { VitaPressRouter } from '../router/index.js'
 
-export type CommandName = 'dev' | 'build' | 'preview'
 export interface VitaPressAppOptions {
   /** 根目录 */
   root: string
@@ -139,7 +138,13 @@ export class VitaPressApp {
     command: CommandName,
     config?: string | UserConfig
   ): Promise<VitaPressApp> {
-    const configManager = await ConfigManager.create(root, config)
+    const env: ConfigEnv = {
+      command,
+      isDev: command === 'dev',
+      isBuild: command === 'build',
+      isPreview: command === 'preview'
+    }
+    const configManager = await ConfigManager.create(root, config, env)
     const markdownIt = await createMarkdownIt(configManager.config.markdownIt)
 
     await invokeParallel(configManager.plugins, 'markdownIt', markdownIt)

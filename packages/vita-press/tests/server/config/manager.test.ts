@@ -2,6 +2,14 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ConfigManager } from '../../../src/server/config/manager.js'
+import type { ConfigEnv } from '../../../src/types/index.js'
+
+const devEnv: ConfigEnv = {
+  command: 'dev',
+  isDev: true,
+  isBuild: false,
+  isPreview: false
+}
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
   const mod = await importOriginal<typeof import('vitarx-router/file-router')>()
@@ -34,7 +42,7 @@ describe('ConfigManager', () => {
   describe('create', () => {
     it('应正确创建 ConfigManager 实例', async () => {
       createConfigFile(`export default { title: 'Test Site' }`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager).toBeInstanceOf(ConfigManager)
       expect(manager.root).toBe(tempDir)
@@ -45,7 +53,7 @@ describe('ConfigManager', () => {
         title: 'Test Title',
         description: 'Test Description'
       }`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.title).toBe('Test Title')
       expect(manager.config.description).toBe('Test Description')
@@ -53,7 +61,7 @@ describe('ConfigManager', () => {
 
     it('应正确处理空配置', async () => {
       createConfigFile(`export default {}`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config).toBeDefined()
       expect(manager.config.title).toBe('')
@@ -63,7 +71,7 @@ describe('ConfigManager', () => {
   describe('config getter', () => {
     it('应返回解析后的配置', async () => {
       createConfigFile(`export default { title: 'Config Test' }`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config).toBeDefined()
       expect(manager.config.title).toBe('Config Test')
@@ -73,7 +81,7 @@ describe('ConfigManager', () => {
   describe('plugins getter', () => {
     it('应返回空数组当没有插件', async () => {
       createConfigFile(`export default {}`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toEqual([])
     })
@@ -83,7 +91,7 @@ describe('ConfigManager', () => {
         const plugin = { name: 'test-plugin' }
         export default { plugins: [plugin] }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toHaveLength(1)
       expect(manager.plugins[0]!.name).toBe('test-plugin')
@@ -99,7 +107,7 @@ describe('ConfigManager', () => {
         ]
         export default { plugins }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins[0]!.name).toBe('pre-plugin')
       expect(manager.plugins[1]!.name).toBe('normal-plugin')
@@ -113,7 +121,7 @@ describe('ConfigManager', () => {
         ]
         export default { plugins }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins[0]!.name).toBe('normal-plugin')
       expect(manager.plugins[1]!.name).toBe('post-plugin')
@@ -128,7 +136,7 @@ describe('ConfigManager', () => {
         ]
         export default { plugins }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins[0]!.name).toBe('plugin-5')
       expect(manager.plugins[1]!.name).toBe('plugin-3')
@@ -149,7 +157,7 @@ describe('ConfigManager', () => {
         ]
         export default { plugins }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       const names = manager.plugins.map(p => p.name)
       expect(names.indexOf('pre-1')).toBeLessThan(names.indexOf('normal-1'))
@@ -170,7 +178,7 @@ describe('ConfigManager', () => {
         ]
         export default { plugins }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.plugins).toHaveLength(1)
     })
@@ -179,7 +187,7 @@ describe('ConfigManager', () => {
   describe('配置合并', () => {
     it('应正确合并默认配置', async () => {
       createConfigFile(`export default {}`)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
       expect(manager.config.dts).toBe(false)
@@ -193,7 +201,7 @@ describe('ConfigManager', () => {
           dts: true
         }
       `)
-      const manager = await ConfigManager.create(tempDir)
+      const manager = await ConfigManager.create(tempDir, undefined, devEnv)
 
       expect(manager.config.title).toBe('Custom Title')
       expect(manager.config.locales).toEqual([{ id: 'en-US', name: 'English' }])

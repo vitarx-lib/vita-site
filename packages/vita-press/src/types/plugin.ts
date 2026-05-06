@@ -8,6 +8,15 @@ import type { MdParseResult } from './markdown.js'
  * MarkdownIt 实例类型
  */
 export type MarkdownIt = MarkdownItInstance
+
+export type CommandName = 'dev' | 'build' | 'preview'
+export interface ConfigEnv {
+  command: CommandName
+  isDev: boolean
+  isBuild: boolean
+  isPreview: boolean
+}
+
 /**
  * 插件钩子函数
  */
@@ -17,11 +26,11 @@ export interface PluginHooks {
    *
    * 注意事项： 不应该修改 config 对象（特别是 config.plugins），应该返回一个新的配置对象。
    */
-  config?: (config: UserConfig) => void | UserConfig | Promise<void | UserConfig>
+  config?: (config: UserConfig, env: ConfigEnv) => void | UserConfig | Promise<void | UserConfig>
   /**
    * 配置解析完成后调用
    */
-  configResolved?: (config: ResolvedConfig) => void | Promise<void>
+  configResolved?: (config: ResolvedConfig, env: ConfigEnv) => void | Promise<void>
   /**
    * 扩展 MarkdownIt 实例
    */

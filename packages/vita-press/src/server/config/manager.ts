@@ -1,4 +1,4 @@
-import type { ResolvedConfig, UserConfig } from '../../types/index.js'
+import type { ConfigEnv, ResolvedConfig, UserConfig } from '../../types/index.js'
 import type { VitaPressPlugin } from '../../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { isPlainObject } from '../common/utils.js'
@@ -32,8 +32,10 @@ export class ConfigManager {
    * @private
    */
   #pluginConfig = new Map<string, UserConfig>()
-  private constructor(root: string) {
+  public readonly env: ConfigEnv
+  private constructor(root: string, env: ConfigEnv) {
     this.root = root
+    this.env = env
   }
   /**
    * 插件排序
@@ -107,7 +109,7 @@ export class ConfigManager {
     for (const plugin of plugins) {
       // 调用插件的 invokeConfigHook 方法
       if (typeof plugin.config === 'function') {
-        const result = plugin.config(config)
+        const result = plugin.config(config, this.env)
         if (result) {
           results.push(result)
           pluginIndex.push(plugin)
@@ -140,7 +142,7 @@ export class ConfigManager {
    * @private
    */
   private async invokeConfigResolvedHook(config: ResolvedConfig): Promise<void> {
-    await invokeParallel(this.#plugins, 'configResolved', config)
+    await invokeParallel(this.#plugins, 'configResolved', config, this.env)
   }
   /**
    * 解析配置
@@ -195,8 +197,13 @@ export class ConfigManager {
    * 创建配置管理器
    * @param root - 根目录
    * @param config - 配置文件名
+   * @param env - 环境变量
    */
-  public static async create(root: string, config?: string | UserConfig): Promise<ConfigManager> {
+  public static async create(
+    root: string,
+    config: string | UserConfig | undefined,
+    env: ConfigEnv
+  ): Promise<ConfigManager> {
     let loadedConfig: UserConfig
     if (isPlainObject(config)) {
       loadedConfig = config
@@ -204,7 +211,7 @@ export class ConfigManager {
       const result = await loadUserConfig(root, config)
       loadedConfig = result.config
     }
-    const manager = new ConfigManager(root)
+    const manager = new ConfigManager(root, env)
     await manager.init(loadedConfig)
     return manager
   }
