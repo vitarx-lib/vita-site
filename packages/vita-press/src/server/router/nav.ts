@@ -48,9 +48,43 @@ function buildNavItems(children: RouteNode[] | undefined): NavItem[] {
       path: child.fullPath,
       title: resolveNavTitle(child.meta, child.path),
       tocList: (child.meta?.['tocList'] as TocTree[] | undefined) ?? [],
-      order: (child.meta?.['navOrder'] as number | undefined) ?? 0
+      order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
+      prev: null,
+      next: null
     }))
     .sort((a, b) => a.order - b.order)
+}
+
+/**
+ * 为导航条目列表中的所有 NavItem 分配跨分组的分页信息
+ *
+ * 将所有 NavItem（含分组内和独立项）扁平化为线性序列，
+ * 按顺序串联 prev/next，实现跨分组的连续翻页
+ *
+ * @param entries - 导航条目数组
+ */
+function assignPagination(entries: NavEntry[]): void {
+  const flatItems: NavItem[] = []
+
+  for (const entry of entries) {
+    if (entry.type === 'group') {
+      flatItems.push(...entry.items)
+    } else {
+      flatItems.push(entry)
+    }
+  }
+
+  for (let i = 0; i < flatItems.length; i++) {
+    const item = flatItems[i]!
+    if (i > 0) {
+      const prevItem = flatItems[i - 1]!
+      item.prev = { title: prevItem.title, path: prevItem.path }
+    }
+    if (i < flatItems.length - 1) {
+      const nextItem = flatItems[i + 1]!
+      item.next = { title: nextItem.title, path: nextItem.path }
+    }
+  }
 }
 
 /**
@@ -93,12 +127,16 @@ function extractNavEntries(docGroupChildren: RouteNode[]): NavEntry[] {
         path: child.fullPath,
         title: resolveNavTitle(child.meta, child.path),
         tocList: (child.meta?.['tocList'] as TocTree[] | undefined) ?? [],
-        order: (child.meta?.['navOrder'] as number | undefined) ?? 0
+        order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
+        prev: null,
+        next: null
       })
     }
   }
 
-  return entries.sort((a, b) => a.order - b.order)
+  entries.sort((a, b) => a.order - b.order)
+  assignPagination(entries)
+  return entries
 }
 
 /**
