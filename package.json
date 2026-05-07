@@ -23,13 +23,17 @@
     "rimraf": "^6.1.3",
     "typescript": "^6.0.2",
     "vite": "^8.0.8",
-    "vitest": "^4.1.4"
+    "vitest": "^4.1.4",
+    "vitarx": "4.0.0-beta.16",
+    "@vitarx/plugin-vite": "1.0.0-beta.0",
+    "vitarx-router": "4.0.0-beta.19"
   },
   "pnpm": {
     "overrides": {
       "vite": "8.0.8",
-      "vitarx": "4.0.0-beta.13",
-      "vitarx-router": "4.0.0-beta.14"
+      "vitarx": "4.0.0-beta.16",
+      "vitarx-router": "4.0.0-beta.19",
+      "@vitarx/plugin-vite": "1.0.0-beta.0"
     }
   }
 }
