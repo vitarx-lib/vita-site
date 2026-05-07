@@ -3,6 +3,7 @@ import { type App, createComponentView, createSSRApp, type SSRApp } from 'vitarx
 import {
   type AfterCallback,
   createMemoryRouter,
+  createRouteManager,
   createWebRouter,
   type RouteLocation,
   type Router,
@@ -24,7 +25,11 @@ function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
   const app = createSSRApp(layout, config.app)
   const routerOptions: RouterOptions = Object.assign(
     {},
-    { routes, mode: 'path', suffix: '.html' },
+    {
+      routes: createRouteManager(routes, { ignoreCase: true, fallbackIndex: true }),
+      mode: 'path',
+      suffix: '.html'
+    },
     config.router
   )
   return { app, routerOptions }
