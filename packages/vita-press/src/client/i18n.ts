@@ -4,6 +4,11 @@ import type { Locale } from '../server/index.js'
 import { useI18nMessages } from './i18nMessages.js'
 import { locales } from './locales.js'
 
+/**
+ * 翻译消息
+ *
+ * `record<语言ID, record<翻译标识符, 翻译消息>>`
+ */
 export type I18nMessages = Record<string, Record<string, string>>
 
 /**
@@ -23,7 +28,34 @@ interface PageLocale extends Locale {
 }
 
 /**
- * 国际化类
+ * 国际化（i18n）管理类，用于处理多语言切换和文本翻译。
+ *
+ * 主要功能：
+ * - 管理当前语言状态和语言列表
+ * - 提供文本翻译功能（支持参数插值）
+ * - 处理语言切换时的路由跳转
+ * - 支持语言可用性检查
+ *
+ * @example
+ * ```typescript
+ * // 在应用中使用
+ * const i18n = new I18n(router)
+ * app.use(i18n)
+ *
+ * // 在组件中使用
+ * const i18n = inject(__I18N_INJECT_KEY__) as I18n
+ * i18n.setLang('en')  // 切换语言
+ * i18n.t('welcome')   // 翻译文本
+ * i18n.t('greeting', { name: 'John' })  // 带参数的翻译
+ * ```
+ *
+ * @param router - 路由实例，用于处理语言切换时的路由跳转
+ *
+ * 注意事项：
+ * - 语言切换会触发路由跳转，确保路由配置正确
+ * - 翻译键不存在时会返回键名本身或默认值
+ * - 语言标识无效时会抛出错误
+ * - 路由路径格式需符合约定：默认语言无后缀，其他语言格式为 `path-{lang}`
  */
 export class I18n {
   /**
