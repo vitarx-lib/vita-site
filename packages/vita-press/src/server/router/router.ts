@@ -13,8 +13,8 @@ import { buildNavTree } from './nav.js'
  */
 export class VitaPressRouter extends FileRouter {
   private _navTree: NavTree | null = null
-  private layoutComponentPath: string | null = null
-  private homeComponentPath: string | null = null
+  private readonly layoutComponentPath: string | null = null
+  private readonly homeComponentPath: string | null = null
   /**
    * 获取导航树
    *
@@ -98,7 +98,7 @@ export class VitaPressRouter extends FileRouter {
                   filePath: this.homeComponentPath,
                   fullPath: langPath,
                   isGroup: false,
-                  path: `index-${langSegment}`,
+                  path: langPath,
                   component: {
                     default: this.homeComponentPath
                   },
