@@ -105,5 +105,5 @@ export interface VitaPressPlugin extends PluginHooks {
    * 客户端可通过 useSiteData() 获取合并后的数据。
    * 多个插件的 siteData 会进行浅合并，后注册插件的同名属性覆盖先注册的。
    */
-  siteData?: Record<string, unknown>
+  siteData?: Record<string, any>
 }
