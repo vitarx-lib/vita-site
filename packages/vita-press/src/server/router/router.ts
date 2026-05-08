@@ -108,7 +108,7 @@ export class VitaPressRouter extends FileRouter {
             }
           }
           const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
-          this._navTree = buildNavTree(result, app.docDirPath, app.lang)
+          this._navTree = buildNavTree(result, app.docDirPath, app.lang, app.langs)
           return result
         }
       },

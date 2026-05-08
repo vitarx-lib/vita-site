@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import type { NavEntry, NavItem } from '../../../src/types/nav.js'
+import type { NavEntry, NavGroup, NavItem } from '../../../src/types/nav.js'
 import { createTestApp } from '../../testUtils.js'
 
 function flattenNavItems(entries: NavEntry[]): NavItem[] {
@@ -371,6 +371,154 @@ describe('buildNavTree', () => {
 
       expect(items[0]!.next).toEqual({ title: '第二步', path: '/guide/second' })
       expect(items[1]!.prev).toEqual({ title: '第一步', path: '/guide/first' })
+    })
+  })
+
+  describe('多语言导航 (i18n)', () => {
+    it('应按语言分离导航条目', async () => {
+      createFile('docs/guide/intro.md', '# Intro')
+      createFile('docs/guide/intro.en-US.md', '# Introduction')
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+
+      const zhEntries = app.router.navTree!['zh-CN']!
+      const enEntries = app.router.navTree!['en-US']!
+
+      const zhItems = flattenNavItems(zhEntries)
+      const enItems = flattenNavItems(enEntries)
+
+      expect(zhItems.length).toBe(1)
+      expect(enItems.length).toBe(1)
+
+      expect(zhItems[0]!.path).toBe('/guide/intro')
+      expect(enItems[0]!.path).toBe('/guide/intro-en-us')
+    })
+
+    it('非默认语言的 index 应被正确识别为分组首页', async () => {
+      createFile('docs/guide/index.md', '# Guide')
+      createFile('docs/guide/index.en-US.md', '# Guide EN')
+      createFile('docs/guide/getting-started.md', '# Getting Started')
+      createFile('docs/guide/getting-started.en-US.md', '# Getting Started EN')
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+
+      const zhEntries = app.router.navTree!['zh-CN']!
+      const enEntries = app.router.navTree!['en-US']!
+
+      const zhGroup = zhEntries.find(e => e.type === 'group') as NavGroup
+      const enGroup = enEntries.find(e => e.type === 'group') as NavGroup
+
+      expect(zhGroup).toBeDefined()
+      expect(zhGroup.path).toBe('/guide')
+      expect(zhGroup.items.length).toBe(1)
+      expect(zhGroup.items[0]!.path).toBe('/guide/getting-started')
+
+      expect(enGroup).toBeDefined()
+      expect(enGroup.path).toBe('/guide')
+      expect(enGroup.items.length).toBe(1)
+      expect(enGroup.items[0]!.path).toBe('/guide/getting-started-en-us')
+    })
+
+    it('非默认语言的 index 不应出现在 items 中', async () => {
+      createFile('docs/guide/index.en-US.md', '# Guide EN')
+      createFile('docs/guide/advanced.en-US.md', '# Advanced EN')
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+
+      const enEntries = app.router.navTree!['en-US']!
+      const enGroup = enEntries.find(e => e.type === 'group') as NavGroup
+
+      const paths = enGroup.items.map((i: NavItem) => i.path)
+      expect(paths).not.toContain('/guide/index-en-us')
+      expect(paths).toContain('/guide/advanced-en-us')
+    })
+
+    it('仅默认语言的页面不应出现在非默认语言导航中', async () => {
+      createFile('docs/guide/intro.md', '# Intro')
+      createFile('docs/changelog.md', '# Changelog')
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+      expect(app.router.navTree!['zh-CN']).toBeDefined()
+      expect(app.router.navTree!['en-US']).toBeUndefined()
+    })
+
+    it('独立页面也应按语言分离', async () => {
+      createFile('docs/changelog.md', '# Changelog')
+      createFile('docs/changelog.en-US.md', '# Changelog EN')
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+
+      const zhEntries = app.router.navTree!['zh-CN']!
+      const enEntries = app.router.navTree!['en-US']!
+
+      const zhItem = zhEntries.find(e => e.type === 'item') as NavItem
+      const enItem = enEntries.find(e => e.type === 'item') as NavItem
+
+      expect(zhItem).toBeDefined()
+      expect(zhItem.path).toBe('/changelog')
+
+      expect(enItem).toBeDefined()
+      expect(enItem.path).toBe('/changelog-en-us')
+    })
+
+    it('多语言导航应各自独立计算分页', async () => {
+      createFile('docs/guide/intro.md', '---\nnavOrder: 1\nnavTitle: 介绍\n---\n# Intro')
+      createFile(
+        'docs/guide/intro.en-US.md',
+        '---\nnavOrder: 1\nnavTitle: Introduction\n---\n# Intro'
+      )
+      createFile('docs/guide/advanced.md', '---\nnavOrder: 2\nnavTitle: 进阶\n---\n# Advanced')
+      createFile(
+        'docs/guide/advanced.en-US.md',
+        '---\nnavOrder: 2\nnavTitle: Advanced\n---\n# Advanced'
+      )
+
+      const app = await createTestApp(tempDir, {
+        locales: [
+          { id: 'zh-CN', name: '简体中文' },
+          { id: 'en-US', name: 'English' }
+        ]
+      })
+      app.router.generate()
+
+      const zhItems = flattenNavItems(app.router.navTree!['zh-CN']!)
+      const enItems = flattenNavItems(app.router.navTree!['en-US']!)
+
+      expect(zhItems[0]!.next).toEqual({ title: '进阶', path: '/guide/advanced' })
+      expect(zhItems[1]!.prev).toEqual({ title: '介绍', path: '/guide/intro' })
+
+      expect(enItems[0]!.next).toEqual({ title: 'Advanced', path: '/guide/advanced-en-us' })
+      expect(enItems[1]!.prev).toEqual({ title: 'Introduction', path: '/guide/intro-en-us' })
     })
   })
 })
