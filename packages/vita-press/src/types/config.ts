@@ -88,6 +88,42 @@ export interface Locale {
 }
 
 /**
+ * 文档目录选项
+ */
+interface DocDirOptions extends Omit<PageDirOptions, 'group'> {
+  /**
+   * 文件目录
+   *
+   * 支持相对路径或绝对路径
+   */
+  dir: string
+  /**
+   * 要包含的文件
+   *
+   * @default ['**\/*.{md,jsx,tsx}']
+   */
+  include?: string[]
+  /**
+   * 要排除的文件
+   *
+   * @default ['**\/.*']
+   */
+  exclude?: string[]
+  /**
+   * 文档路径前缀
+   *
+   * @default '/'
+   */
+  prefix?: string
+  /**
+   * 文档布局组件文件路径
+   *
+   * 通常由主题插件指定，亦可通过文档目录下的 `_layout.{tsx,jsx}` 文件覆盖
+   */
+  layout?: string
+}
+
+/**
  * VitaPress用户配置
  */
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions, PluginOptions {
@@ -146,11 +182,48 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
   /**
    * 文档目录
    *
-   * @default { dir: 'docs', include: ['**\/*.md'], exclude: ['**\/.*'], prefix:'/' }
+   * @default [{ dir: 'docs', include: ['**\/*.{md,jsx,tsx}'], exclude: ['**\/.*'], prefix:'/' }]
+   * @example
+   * ```js
+   * // 单文档目录 docDirs 配置
+   * // docs/1.quick-start.md -> /quick-start.html
+   * // docs/2.install.md -> /install.html
+   * // docs/3.basic/1.tutorial.md -> /basic/tutorial.html
+   * {
+   *  docDirs: [{ dir: 'docs', include: ['**\/*.{md,jsx,tsx}'], exclude: ['**\/.*'], prefix:'/' }]
+   * }
+   *
+   * // 多文档目录
+   * // docDirs 配置
+   * // guide/1.test.md -> /guide/test.html
+   * // config/1.config.md -> /config/config.html
+   * {
+   *  docDirs: [
+   *    { dir: 'guide', prefix:'/guide/' },
+   *    { dir: 'config', prefix:'/config/' }
+   *  ]
+   * }
+   * ```
    */
-  docDir?: Omit<PageDirOptions, 'group'>
+  docDirs?: DocDirOptions[]
   /**
    * 页面目录
+   *
+   * 用于配置独立页面目录，
+   * 这些页面将作为独立路由处理，不使用文档布局组件，也不会出现在文档侧边栏导航中
+   * 此目录下的文件（如 .jsx、.tsx 等，可以通过include配置需要扫描的文件）会被扫描并生成对应的独立路由
+   *
+   * @default []
+   *
+   * @example
+   * ```ts
+   * // pageDirs 配置
+   * // pages/changelog.md -> /changelog.html
+   * // pages/about.jsx -> /about.html
+   * {
+   *  pageDirs: [{ pages: 'pages', include: ['**\/*.{jsx,tsx}'], exclude: ['**\/.*'], prefix:'/' }]
+   * }
+   * ```
    */
   pageDirs?: PageDirOptions[]
   /**

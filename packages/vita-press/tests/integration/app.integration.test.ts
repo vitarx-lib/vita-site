@@ -55,7 +55,6 @@ describe('VitaPressApp 端到端集成测试', () => {
 
       expect(app.config.title).toBe('Test Site')
       expect(app.config.description).toBe('Test Description')
-      expect(app.docDirPath).toBe(join(tempDir, 'docs'))
       expect(app.cacheDir).toBe(join(tempDir, '.vitapress/.cache'))
       expect(app.tempDir).toBe(join(tempDir, '.vitapress/.temp'))
       expect(app.lang).toBe('zh-CN')
@@ -375,22 +374,24 @@ describe('VitaPressApp 端到端集成测试', () => {
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.docDirPath).toBe(join(tempDir, 'docs'))
+      expect(app.config.docDirs).toEqual([
+        { dir: 'docs', include: ['**/*.{md,jsx,tsx}'], exclude: ['**/.*'] }
+      ])
     })
     it('应支持文档目录配置对象', async () => {
       createProjectStructure({
         '.vitapress/config.ts': `export default {
-          docDir: {
+          docDirs: [{
             dir: 'content',
             prefix: '/docs'
-          }
+          }]
         }`,
         'content/index.md': '# Home'
       })
 
       const app = await VitaPressApp.create(tempDir, 'dev')
 
-      expect(app.docDirPath).toBe(join(tempDir, 'content'))
+      expect(app.config.docDirs[0]!.dir).toBe('content')
     })
   })
 

@@ -36,10 +36,6 @@ export class VitaPressApp {
    */
   public readonly root: string
   /**
-   * 文档目录路径
-   */
-  public readonly docDirPath: string
-  /**
    * 客户端配置路径
    */
   public readonly clientConfigPath: string | null
@@ -90,7 +86,6 @@ export class VitaPressApp {
     this.command = options.command
     this.config = Object.freeze(options.config)
     this.plugins = Object.freeze(options.plugins)
-    this.docDirPath = path.resolve(this.root, options.config.docDir.dir)
     const configTsPath = path.resolve(this.root, '.vitapress/config.client.ts')
     const configJsPath = path.resolve(this.root, '.vitapress/config.client.js')
     this.clientConfigPath = existsSync(configTsPath)

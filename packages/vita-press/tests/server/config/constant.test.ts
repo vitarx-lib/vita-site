@@ -10,7 +10,7 @@ describe('DEFAULT_CONFIG', () => {
     expect(DEFAULT_CONFIG).toHaveProperty('keywords')
     expect(DEFAULT_CONFIG).toHaveProperty('docLayoutFile')
     expect(DEFAULT_CONFIG).toHaveProperty('homeFile')
-    expect(DEFAULT_CONFIG).toHaveProperty('docDir')
+    expect(DEFAULT_CONFIG).toHaveProperty('docDirs')
     expect(DEFAULT_CONFIG).toHaveProperty('injectBody')
     expect(DEFAULT_CONFIG).toHaveProperty('injectCode')
     expect(DEFAULT_CONFIG).toHaveProperty('injectHead')
@@ -79,21 +79,9 @@ describe('DEFAULT_CONFIG', () => {
     })
   })
 
-  describe('docDir 配置', () => {
-    it('dir 应为 docs', () => {
-      expect(DEFAULT_CONFIG.docDir.dir).toBe('docs')
-    })
-
-    it('include 应包含正确的文件模式', () => {
-      expect(DEFAULT_CONFIG.docDir.include).toEqual([])
-    })
-
-    it('exclude 应排除隐藏文件', () => {
-      expect(DEFAULT_CONFIG.docDir.exclude).toEqual([])
-    })
-
-    it('prefix 应为 /', () => {
-      expect(DEFAULT_CONFIG.docDir.prefix).toBe('/')
+  describe('docDirs 配置', () => {
+    it('docDirs 应为空数组', () => {
+      expect(DEFAULT_CONFIG.docDirs).toEqual([])
     })
   })
 

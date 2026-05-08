@@ -5,6 +5,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { NavEntry, NavGroup, NavItem } from '../../../src/types/nav.js'
 import { createTestApp } from '../../testUtils.js'
 
+const DEFAULT_DOC_PATH = '/'
+
 function flattenNavItems(entries: NavEntry[]): NavItem[] {
   const items: NavItem[] = []
   for (const entry of entries) {
@@ -49,7 +51,7 @@ describe('buildNavTree', () => {
 
       const navTree = app.router.navTree
       expect(navTree).not.toBeNull()
-      const entries = navTree!['zh-CN']
+      const entries = navTree!['zh-CN']![DEFAULT_DOC_PATH]
       expect(entries).toBeDefined()
       expect(entries!.length).toBeGreaterThan(0)
 
@@ -67,7 +69,7 @@ describe('buildNavTree', () => {
 
       const navTree = app.router.navTree
       expect(navTree).not.toBeNull()
-      const entries = navTree!['zh-CN']
+      const entries = navTree!['zh-CN']![DEFAULT_DOC_PATH]
       expect(entries).toBeDefined()
 
       const item = entries!.find(e => e.type === 'item') as any
@@ -83,7 +85,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const groups = entries!.filter(e => e.type === 'group')
       const items = entries!.filter(e => e.type === 'item')
 
@@ -100,7 +102,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup).toBeDefined()
@@ -113,7 +115,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup).toBeDefined()
@@ -127,7 +129,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       const indexPaths = guideGroup.items.map((i: any) => i.path)
@@ -145,7 +147,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup.title).toBe('指南')
@@ -158,7 +160,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup.title).toBe('指南2')
@@ -170,7 +172,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup.title).toBe('Guide')
@@ -190,7 +192,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const groups = entries!.filter(e => e.type === 'group')
 
       expect(groups[0]!.title).toBe('指南')
@@ -204,7 +206,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup.items[0].title).toBe('Getting Started')
@@ -220,7 +222,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       const paths = guideGroup.items.map((i: any) => i.path)
@@ -235,7 +237,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const titles = entries!.map(e => e.title)
 
       expect(titles).not.toContain('Guide')
@@ -248,7 +250,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const paths = entries!.map(e => (e.type === 'item' ? e.path : null)).filter(Boolean)
 
       expect(paths).not.toContain('/changelog')
@@ -262,7 +264,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
       const guideGroup = entries!.find(e => e.type === 'group') as any
 
       expect(guideGroup.items.length).toBe(1)
@@ -277,7 +279,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']!
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(1)
@@ -293,7 +295,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']!
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(3)
@@ -320,7 +322,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']!
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(2)
@@ -344,7 +346,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']!
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(3)
@@ -366,7 +368,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']!
+      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items[0]!.next).toEqual({ title: '第二步', path: '/guide/second' })
@@ -387,8 +389,8 @@ describe('buildNavTree', () => {
       })
       app.router.generate()
 
-      const zhEntries = app.router.navTree!['zh-CN']!
-      const enEntries = app.router.navTree!['en-US']!
+      const zhEntries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
+      const enEntries = app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!
 
       const zhItems = flattenNavItems(zhEntries)
       const enItems = flattenNavItems(enEntries)
@@ -414,8 +416,8 @@ describe('buildNavTree', () => {
       })
       app.router.generate()
 
-      const zhEntries = app.router.navTree!['zh-CN']!
-      const enEntries = app.router.navTree!['en-US']!
+      const zhEntries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
+      const enEntries = app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!
 
       const zhGroup = zhEntries.find(e => e.type === 'group') as NavGroup
       const enGroup = enEntries.find(e => e.type === 'group') as NavGroup
@@ -443,7 +445,7 @@ describe('buildNavTree', () => {
       })
       app.router.generate()
 
-      const enEntries = app.router.navTree!['en-US']!
+      const enEntries = app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!
       const enGroup = enEntries.find(e => e.type === 'group') as NavGroup
 
       const paths = enGroup.items.map((i: NavItem) => i.path)
@@ -478,8 +480,8 @@ describe('buildNavTree', () => {
       })
       app.router.generate()
 
-      const zhEntries = app.router.navTree!['zh-CN']!
-      const enEntries = app.router.navTree!['en-US']!
+      const zhEntries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
+      const enEntries = app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!
 
       const zhItem = zhEntries.find(e => e.type === 'item') as NavItem
       const enItem = enEntries.find(e => e.type === 'item') as NavItem
@@ -511,8 +513,8 @@ describe('buildNavTree', () => {
       })
       app.router.generate()
 
-      const zhItems = flattenNavItems(app.router.navTree!['zh-CN']!)
-      const enItems = flattenNavItems(app.router.navTree!['en-US']!)
+      const zhItems = flattenNavItems(app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!)
+      const enItems = flattenNavItems(app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!)
 
       expect(zhItems[0]!.next).toEqual({ title: '进阶', path: '/guide/advanced' })
       expect(zhItems[1]!.prev).toEqual({ title: '介绍', path: '/guide/intro' })

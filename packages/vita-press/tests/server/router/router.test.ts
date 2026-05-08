@@ -96,7 +96,7 @@ describe('VitaPressRouter', () => {
       )
 
       const { router } = await createTestApp(tempDir, {
-        docDir: { dir: 'docs', include: ['**/*.tsx', '**/*.md'] }
+        docDirs: [{ dir: 'docs', include: ['**/*.tsx', '**/*.md'] }]
       })
       const { code } = router.generate()
 
@@ -236,7 +236,7 @@ describe('VitaPressRouter', () => {
       mkdirSync(customDocsDir, { recursive: true })
       writeFileSync(join(customDocsDir, 'index.md'), '# Home')
 
-      const { router } = await createTestApp(tempDir, { docDir: { dir: 'custom-docs' } })
+      const { router } = await createTestApp(tempDir, { docDirs: [{ dir: 'custom-docs' }] })
       const { code } = router.generate()
 
       expect(code).toContain('export default')
@@ -654,7 +654,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'about.jsx'), 'export default function About() {}')
 
       const { router } = await createTestApp(tempDir, {
-        docDir: { dir: 'docs', include: ['**/*.md', '**/*.jsx'] }
+        docDirs: [{ dir: 'docs', include: ['**/*.md', '**/*.jsx'] }]
       })
       const { code } = router.generate()
 

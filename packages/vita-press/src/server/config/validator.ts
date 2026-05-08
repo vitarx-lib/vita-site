@@ -26,7 +26,7 @@ export function validateConfig(config: UserConfig, root: string): void {
   validateInjectOptions(config)
   validateDocLayoutFile(config)
   validateHomeFile(config)
-  validateDocsDir(config, root)
+  validateDocDirs(config, root)
   validatePagesDir(config, root)
   validateLocales(config)
   validateI18nMessages(config)
@@ -95,19 +95,6 @@ function validateStringArray(value: unknown, fieldName: string): void {
 }
 
 /**
- * 验证文档目录配置
- *
- * @param config - 用户配置对象
- * @param root - 项目根目录
- * @throws {ConfigValidationError} 文档目录配置无效时抛出
- */
-function validateDocsDir(config: UserConfig, root: string): void {
-  if (!config.docDir) return
-
-  validateDirConfig(config.docDir, 'docsDir', root)
-}
-
-/**
  * 验证页面目录配置
  *
  * @param config - 用户配置对象
@@ -127,6 +114,29 @@ function validatePagesDir(config: UserConfig, root: string): void {
       throw new ConfigValidationError(`pageDirs[${i}] 不能为空`)
     }
     validateDirConfig(pageDir, `pageDirs[${i}]`, root)
+  }
+}
+
+/**
+ * 验证文档目录配置
+ *
+ * @param config - 用户配置对象
+ * @param root - 项目根目录
+ * @throws {ConfigValidationError} 文档目录配置无效时抛出
+ */
+function validateDocDirs(config: UserConfig, root: string): void {
+  if (!config.docDirs) return
+
+  if (!Array.isArray(config.docDirs)) {
+    throw new ConfigValidationError(`docDirs 必须是数组类型，当前类型: ${typeof config.docDirs}`)
+  }
+
+  for (let i = 0; i < config.docDirs.length; i++) {
+    const pageDir = config.docDirs[i]
+    if (!pageDir) {
+      throw new ConfigValidationError(`docDirs[${i}] 不能为空`)
+    }
+    validateDirConfig(pageDir, `docDirs[${i}]`, root)
   }
 }
 
@@ -157,14 +167,29 @@ function validateDirConfig(dirConfig: PageDirOptions, fieldName: string, root: s
   if (dirConfig.include !== undefined) {
     if (!Array.isArray(dirConfig.include)) {
       throw new ConfigValidationError(
-        `${fieldName}.patterns 必须是数组类型，当前类型: ${typeof dirConfig.include}`
+        `${fieldName}.include 必须是数组类型，当前类型: ${typeof dirConfig.include}`
       )
     }
 
     for (let i = 0; i < dirConfig.include.length; i++) {
       if (typeof dirConfig.include[i] !== 'string') {
         throw new ConfigValidationError(
-          `${fieldName}.patterns[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.include[i]}`
+          `${fieldName}.include[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.include[i]}`
+        )
+      }
+    }
+  }
+  if (dirConfig.exclude !== undefined) {
+    if (!Array.isArray(dirConfig.exclude)) {
+      throw new ConfigValidationError(
+        `${fieldName}.exclude 必须是数组类型，当前类型: ${typeof dirConfig.exclude}`
+      )
+    }
+
+    for (let i = 0; i < dirConfig.exclude.length; i++) {
+      if (typeof dirConfig.exclude[i] !== 'string') {
+        throw new ConfigValidationError(
+          `${fieldName}.exclude[${i}] 必须是字符串类型，当前类型: ${typeof dirConfig.exclude[i]}`
         )
       }
     }
@@ -172,7 +197,7 @@ function validateDirConfig(dirConfig: PageDirOptions, fieldName: string, root: s
 
   if (dirConfig.prefix !== undefined && typeof dirConfig.prefix !== 'string') {
     throw new ConfigValidationError(
-      `${fieldName}.basePath 必须是字符串类型，当前类型: ${typeof dirConfig.prefix}`
+      `${fieldName}.prefix 必须是字符串类型，当前类型: ${typeof dirConfig.prefix}`
     )
   }
 }
@@ -216,7 +241,11 @@ function validateLocales(config: UserConfig): void {
 function validateI18nMessages(config: UserConfig): void {
   if (config.i18nMessages === undefined) return
 
-  if (typeof config.i18nMessages !== 'object' || config.i18nMessages === null || Array.isArray(config.i18nMessages)) {
+  if (
+    typeof config.i18nMessages !== 'object' ||
+    config.i18nMessages === null ||
+    Array.isArray(config.i18nMessages)
+  ) {
     throw new ConfigValidationError(
       `i18nMessages 必须是对象类型，当前类型: ${typeof config.i18nMessages}`
     )

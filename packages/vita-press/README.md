@@ -159,13 +159,12 @@ export default defineConfig({
   ],
 
   // 文档目录配置
-  docDir: {
+  docDirs: [{
     dir: 'docs',
     include: ['**/*.md'],
     exclude: ['**/.*'],
-    prefix: '/',
-    group: true
-  },
+    prefix: '/'
+  }],
 
   // 文档布局组件文件
   // 通常由插件提供，优先级低于 docDir/_layout.{tsx,jsx}

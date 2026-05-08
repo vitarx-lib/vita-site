@@ -161,13 +161,18 @@ export class ConfigManager {
     if (!config.locales || config.locales.length === 0) {
       currentConfig.locales = [{ id: 'zh-CN', name: '简体中文' }]
     }
-    if (currentConfig.docDir.include.length === 0) {
-      currentConfig.docDir.include = ['**/*.md']
+    if (!config.docDirs || config.docDirs.length === 0) {
+      currentConfig.docDirs = [{ dir: 'docs', include: ['**/*.{md,jsx,tsx}'], exclude: ['**/.*'] }]
     }
-    if (currentConfig.docDir.exclude.length === 0) {
-      currentConfig.docDir.exclude = ['**/.*']
+    for (const docDir of currentConfig.docDirs) {
+      if (!docDir.include || docDir.include.length === 0) {
+        docDir.include = ['**/*.{md,jsx,tsx}']
+      }
+      if (!docDir.exclude || docDir.exclude.length === 0) {
+        docDir.exclude = ['**/.*']
+      }
     }
-    return currentConfig
+    return currentConfig as ResolvedConfig
   }
   /**
    * 初始化

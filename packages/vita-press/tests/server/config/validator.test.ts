@@ -105,53 +105,59 @@ describe('validateConfig', () => {
   })
 
   describe('文档目录验证', () => {
-    it('应接受有效的 docDir 配置', () => {
+    it('应接受有效的 docDirs 配置', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
-      const config: UserConfig = { docDir: { dir: 'docs' } }
+      const config: UserConfig = { docDirs: [{ dir: 'docs' }] }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
     it('应拒绝不存在的文档目录', () => {
-      const config: UserConfig = { docDir: { dir: 'non-existent' } }
+      const config: UserConfig = { docDirs: [{ dir: 'non-existent' }] }
       expect(() => validateConfig(config, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config, tempDir)).toThrow('目录不存在')
     })
 
-    it('应拒绝非对象类型的 docDir', () => {
-      const config = { docDir: 'docs' }
+    it('应拒绝非数组类型的 docDirs', () => {
+      const config = { docDirs: { dir: 'docs' } }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir 必须是对象类型')
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docDirs 必须是数组类型')
+    })
+
+    it('应拒绝 docDirs 中包含空元素', () => {
+      const config = { docDirs: [null] }
+      expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docDirs[0] 不能为空')
     })
 
     it('应拒绝空字符串的 dir', () => {
-      const config = { docDir: { dir: '' } }
+      const config = { docDirs: [{ dir: '' }] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
-      expect(() => validateConfig(config as any, tempDir)).toThrow('docsDir.dir 必须是非空字符串')
+      expect(() => validateConfig(config as any, tempDir)).toThrow('docDirs[0].dir 必须是非空字符串')
     })
 
     it('应接受有效的 include 配置', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
       const config: UserConfig = {
-        docDir: { dir: 'docs', include: ['**/*.md'] }
+        docDirs: [{ dir: 'docs', include: ['**/*.md'] }]
       }
       expect(() => validateConfig(config, tempDir)).not.toThrow()
     })
 
     it('应拒绝非数组类型的 include', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
-      const config = { docDir: { dir: 'docs', include: '*.md' } }
+      const config = { docDirs: [{ dir: 'docs', include: '*.md' }] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'docsDir.patterns 必须是数组类型'
+        'docDirs[0].include 必须是数组类型'
       )
     })
 
     it('应拒绝 include 中包含非字符串元素', () => {
       mkdirSync(join(tempDir, 'docs'), { recursive: true })
-      const config = { docDir: { dir: 'docs', include: [123] } }
+      const config = { docDirs: [{ dir: 'docs', include: [123] }] }
       expect(() => validateConfig(config as any, tempDir)).toThrow(ConfigValidationError)
       expect(() => validateConfig(config as any, tempDir)).toThrow(
-        'docsDir.patterns[0] 必须是字符串类型'
+        'docDirs[0].include[0] 必须是字符串类型'
       )
     })
   })

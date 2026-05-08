@@ -92,6 +92,25 @@ function buildNavItems(
 }
 
 /**
+ * 扁平化导航条目列表
+ * @param entries - 导航条目数组
+ */
+function flattenNavEntries(entries: NavEntry[]): NavEntry[] {
+  const flattenEntries: NavEntry[] = []
+  for (const entry of entries) {
+    if (entry.type === 'group') {
+      if (entry.path) {
+        flattenEntries.push(entry)
+      }
+      flattenEntries.push(...flattenNavEntries(entry.items))
+    } else {
+      flattenEntries.push(entry)
+    }
+  }
+  return flattenEntries
+}
+
+/**
  * 为导航条目列表中的所有 NavItem 分配跨分组的分页信息
  *
  * 将所有 NavItem（含分组内和独立项）扁平化为线性序列，
@@ -100,25 +119,17 @@ function buildNavItems(
  * @param entries - 导航条目数组
  */
 function assignPagination(entries: NavEntry[]): void {
-  const flatItems: NavItem[] = []
-
-  for (const entry of entries) {
-    if (entry.type === 'group') {
-      flatItems.push(...entry.items)
-    } else {
-      flatItems.push(entry)
-    }
-  }
+  const flatItems: NavEntry[] = flattenNavEntries(entries)
 
   for (let i = 0; i < flatItems.length; i++) {
     const item = flatItems[i]!
     if (i > 0) {
       const prevItem = flatItems[i - 1]!
-      item.prev = { title: prevItem.title, path: prevItem.path }
+      item.prev = { title: prevItem.title, path: prevItem.path! }
     }
     if (i < flatItems.length - 1) {
       const nextItem = flatItems[i + 1]!
-      item.next = { title: nextItem.title, path: nextItem.path }
+      item.next = { title: nextItem.title, path: nextItem.path! }
     }
   }
 }
@@ -158,7 +169,9 @@ function extractNavEntries(
         title,
         ...(hasIndex ? { path: child.fullPath } : {}),
         order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-        items: buildNavItems(child.children, lang, defaultLang)
+        items: buildNavItems(child.children, lang, defaultLang),
+        prev: null,
+        next: null
       }
 
       if (group.items.length > 0 || hasIndex) {
@@ -188,31 +201,34 @@ function extractNavEntries(
  * 从路由树构建导航树
  *
  * 遍历所有配置的语言，对每个语言从文档分组中提取对应的导航条目，
- * 生成按语言分组的导航树
+ * 生成按语言和文档目录分组的导航树
  *
  * @param routes - 路由节点数组
- * @param docDirPath - 文档目录的绝对路径
+ * @param docDirs - 文档目录的绝对路径
  * @param defaultLang - 默认语言标识
  * @param langs - 所有语言标识列表
- * @returns 按语言分组的导航树
+ * @returns 按语言和文档目录分组的导航树
  */
 export function buildNavTree(
   routes: RouteNode[],
-  docDirPath: string,
+  docDirs: Set<string>,
   defaultLang: string,
   langs: string[]
 ): NavTree {
   const tree: NavTree = {}
 
-  for (const route of routes) {
-    if (!route.filePath.startsWith(docDirPath)) continue
-    if (!route.isGroup) continue
-
-    for (const lang of langs) {
+  for (const lang of langs) {
+    const docNavTree: Record<string, NavEntry[]> = {}
+    for (const route of routes) {
+      if (!route.isGroup) continue
+      if (!docDirs.has(route.filePath)) continue
       const entries = extractNavEntries(route.children ?? [], lang, defaultLang)
       if (entries.length > 0) {
-        tree[lang] = entries
+        docNavTree[route.fullPath] = entries
       }
+    }
+    if (Object.keys(docNavTree).length > 0) {
+      tree[lang] = docNavTree
     }
   }
 

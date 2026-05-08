@@ -9,12 +9,7 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
   homeFile: null,
   i18nMessages: {},
   locales: [],
-  docDir: {
-    dir: 'docs',
-    include: [],
-    exclude: [],
-    prefix: '/'
-  },
+  docDirs: [],
   injectBody: [],
   injectCode: [],
   injectHead: [],
@@ -27,4 +22,4 @@ export const DEFAULT_CONFIG: ResolvedConfig = {
       outDir: '.vitapress/dist'
     }
   }
-}
+} as const

@@ -1,10 +1,31 @@
 import { existsSync } from 'node:fs'
-import { relative } from 'node:path'
+import { relative, resolve } from 'node:path'
 import { FileRouter, findRoute, type PageParseResult } from 'vitarx-router/file-router'
 import type { NavTree } from '../../types/nav.js'
 import type { VitaPressApp } from '../app/index.js'
 import { invokeParallel, invokePipe } from '../common/hooks.js'
 import { buildNavTree } from './nav.js'
+
+const ORDER_PREFIX_RE = /^(\d+)\.(.+)$/
+
+interface OrderParseResult {
+  name: string
+  order: number
+}
+
+/**
+ * 解析名称中的数字排序前缀
+ *
+ * @param name - 待解析的目录名或文件名
+ * @returns 解析结果，包含去除前缀后的名称和排序值
+ */
+function parseOrderPrefix(name: string): OrderParseResult {
+  const match = name.match(ORDER_PREFIX_RE)
+  if (match) {
+    return { name: match[2]!, order: Number(match[1]) }
+  }
+  return { name, order: 0 }
+}
 
 /**
  * 路由器
@@ -12,6 +33,10 @@ import { buildNavTree } from './nav.js'
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
 export class VitaPressRouter extends FileRouter {
+  /**
+   * 文档入口路径集合
+   */
+  public readonly docEnters: Set<string>
   private _navTree: NavTree | null = null
   private readonly layoutComponentPath: string | null = null
   private readonly homeComponentPath: string | null = null
@@ -25,10 +50,24 @@ export class VitaPressRouter extends FileRouter {
   }
 
   constructor(app: VitaPressApp) {
+    const docEnters = new Set<string>()
+    const docLayout = new Map<string, string>()
+    const docDirs = app.config.docDirs.map(docDir => {
+      const { layout, ...rest } = docDir
+      const absDir = resolve(app.root, rest.dir)
+      docEnters.add(absDir)
+      if (layout && existsSync(layout)) {
+        docLayout.set(absDir, layout)
+      }
+      return {
+        ...rest,
+        group: true
+      }
+    })
     super(
       {
         root: app.root,
-        pages: [{ ...app.config.docDir, group: true }, ...app.config.pageDirs],
+        pages: [...docDirs, ...app.config.pageDirs],
         injectImports: [
           `import { lazy } from "vitarx"`,
           `import __runtimeConfig from "virtual:vitapress/runtime/config"`
@@ -51,8 +90,16 @@ export class VitaPressRouter extends FileRouter {
           }
           return content
         },
+        groupParser: dirName => {
+          const { name, order } = parseOrderPrefix(dirName)
+          return {
+            path: name,
+            options: { meta: { order } }
+          }
+        },
         pageParser: basename => {
-          const [path, viewName] = basename.split('@', 2) as [string, string]
+          const { name, order } = parseOrderPrefix(basename)
+          const [path, viewName] = name.split('@', 2) as [string, string]
           const result: PageParseResult = { path, viewName }
           let lang: string = app.lang
 
@@ -69,7 +116,7 @@ export class VitaPressRouter extends FileRouter {
           }
 
           result.options = {
-            meta: { lang }
+            meta: { lang, order }
           }
           return result
         },
@@ -78,14 +125,13 @@ export class VitaPressRouter extends FileRouter {
         },
         beforeWriteRoutes: routes => {
           if (this.layoutComponentPath) {
-            const docsRoute = routes.find(route => route.filePath === app.docDirPath)
-            if (docsRoute) {
-              if (!docsRoute.component) {
-                docsRoute.component = {
-                  default: this.layoutComponentPath
+            for (const route of routes) {
+              if (!docEnters.has(route.filePath)) continue
+              const layout = docLayout.get(route.filePath) || this.layoutComponentPath
+              if (layout && !route.component) {
+                route.component = {
+                  default: layout
                 }
-              } else if (!docsRoute.component['default']) {
-                docsRoute.component['default'] = this.layoutComponentPath
               }
             }
           }
@@ -108,7 +154,7 @@ export class VitaPressRouter extends FileRouter {
             }
           }
           const result = invokePipe(app.plugins, 'beforeWriteRoutes', routes, app)
-          this._navTree = buildNavTree(result, app.docDirPath, app.lang, app.langs)
+          this._navTree = buildNavTree(result, docEnters, app.lang, app.langs)
           return result
         }
       },
@@ -121,5 +167,6 @@ export class VitaPressRouter extends FileRouter {
     if (app.config.homeFile && existsSync(app.config.homeFile)) {
       this.homeComponentPath = app.config.homeFile
     }
+    this.docEnters = docEnters
   }
 }

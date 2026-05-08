@@ -1,6 +1,7 @@
 import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 
 export type { TocTree }
+
 /**
  * 精简的页面信息
  *
@@ -22,6 +23,7 @@ export interface Pagination {
   prev: PageInfo | null
   next: PageInfo | null
 }
+
 /**
  * 导航项 - 对应一个可导航的文档页面，继承分页信息
  */
@@ -40,7 +42,7 @@ export interface NavItem extends Pagination {
 /**
  * 导航分组 - 对应一个文档分类目录
  */
-export interface NavGroup {
+export interface NavGroup extends Pagination {
   type: 'group'
   /** 分组标题 */
   title: string
@@ -58,6 +60,8 @@ export interface NavGroup {
 export type NavEntry = NavGroup | NavItem
 
 /**
- * 导航树 - 按语言分组
+ * 导航树 - 按语言和文档目录path分组
+ *
+ * `record<语言, record<文档目录路由path, 导航条目[]>>`
  */
-export type NavTree = Record<string, NavEntry[]>
+export type NavTree = Record<string, Record<string, NavEntry[]>>
