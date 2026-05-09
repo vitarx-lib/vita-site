@@ -24,7 +24,6 @@ function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
   const layout = config.layout ?? createComponentView(RouterView)
   const app = createSSRApp(layout, config.app)
   const routerOptions: RouterOptions = Object.assign(
-    {},
     {
       routes: createRouteManager(routes, { ignoreCase: true, fallbackIndex: true }),
       mode: 'path',
