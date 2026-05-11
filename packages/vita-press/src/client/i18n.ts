@@ -91,12 +91,9 @@ export class I18n {
     this.lang = computed((prevLang): string => {
       return router.route.meta['lang'] || prevLang || this.defaultLang
     })
-    let lastComputedLang: string | undefined
-    this.locales = computed((oldValue): PageLocale[] => {
+    this.locales = computed((): PageLocale[] => {
       const currentRoute = this.router.route
       const currentLang = this.lang.value
-      if (currentLang === lastComputedLang && oldValue) return oldValue
-      lastComputedLang = currentLang
       let path: RoutePath
       if (currentLang === this.defaultLang) {
         path = currentRoute.path
