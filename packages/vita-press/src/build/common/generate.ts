@@ -54,8 +54,8 @@ export function generateIndexHtml(
   content: string = ''
 ): string {
   const { title, description, keywords, injectHead, injectBody, lang } = config
-  const headInject = injectHead.join('\n')
-  const bodyInject = injectBody.join('\n')
+  const headInject = injectHead.join('\n    ')
+  const bodyInject = injectBody.join('\n    ')
 
   return `<!DOCTYPE html>
 <html lang="${lang}">
@@ -64,13 +64,13 @@ export function generateIndexHtml(
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="${description}" />
     <meta name="keywords" content="${keywords}" />
-    <title>${title}</title>${headInject ? `\n${headInject}` : ''}
+    <title>${title}</title>${headInject ? `\n    ${headInject}` : ''}
   </head>
   <body>
     <div id="root">${content}</div>
     <script type="module">
       import "${VIRTUAL_RUNTIME_ENTER_ID}"
-    </script>${bodyInject ? `\n${bodyInject}` : ''}
+    </script>${bodyInject ? `\n    ${bodyInject}` : ''}
   </body>
 </html>`
 }
