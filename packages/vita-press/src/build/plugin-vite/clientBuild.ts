@@ -70,7 +70,7 @@ export function clientBuildPlugin(app: VitaPressApp): Plugin {
         writeCacheFileSync(filePath, html)
       }
 
-      const spaFallbackPath = path.resolve(distDir, '_200.html')
+      const spaFallbackPath = path.resolve(distDir, 'spa.template.html')
       if (!existsSync(spaFallbackPath)) {
         const spaFallback = new HtmlPatcher(htmlTemplate)
           .replace(BODY_CONTENT_PLACEHOLDER, '')
