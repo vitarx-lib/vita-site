@@ -98,14 +98,13 @@ export class MdParser {
       tocList: []
     }
     const html = this.md.render(markdownContent, env)
-    const toc = env.tocList
     const docPageMetaData: DocPageMetaData = {
       authors: gitInfo.authors,
       createdAt: gitInfo.createdAt,
       lastUpdateAt: gitInfo.lastUpdateAt,
-      tocList: toc,
+      tocList: env.tocList,
       relativePath: path.relative(this.app.root, filePath),
-      ...frontmatter
+      ...env.frontmatter
     }
 
     return {
