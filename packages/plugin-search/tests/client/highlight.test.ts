@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { highlight } from '../../src/apis/highlight.js'
+import { highlight } from '../../src/client/highlight.js'
 
 describe('highlight', () => {
   describe('基本功能', () => {

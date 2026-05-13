@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { searchWithIndex } from '../../src/apis/search.js'
-import type { SearchIndex } from '../../src/shared/types.js'
+import { searchWithIndex } from '../../src/client/search.js'
+import type { SearchIndex } from '../../src/types.js'
 
 function createTestIndex(): SearchIndex {
   return {

@@ -18,7 +18,7 @@
 
 import type { RouteNode } from 'vitarx-router/file-router'
 import { tokenize } from '../common/tokenizer.js'
-import type { SearchDocBuild, SearchIndex, SearchSectionBuild } from '../shared/types.js'
+import type { SearchDocBuild, SearchIndex, SearchSectionBuild } from '../types.js'
 
 /**
  * 从路由树递归构建 relativePath → fullPath 的映射

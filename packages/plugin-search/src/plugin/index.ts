@@ -15,7 +15,7 @@
  */
 
 import type { MdParseResult, VitaPressApp, VitaPressPlugin } from 'vitapress/server'
-import type { SearchSectionBuild } from '../shared/types.js'
+import type { SearchSectionBuild } from '../types.js'
 import { buildSearchIndex } from './builder.js'
 import { splitByHeadings } from './splitter.js'
 

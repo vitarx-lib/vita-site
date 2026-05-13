@@ -23,7 +23,7 @@
  */
 
 import { tokenize } from '../common/tokenizer.js'
-import type { SearchIndex, SearchResponse, SearchResult } from '../shared/types.js'
+import type { SearchIndex, SearchResponse, SearchResult } from '../types.js'
 
 /** 搜索索引缓存，首次加载后常驻内存 */
 let indexCache: SearchIndex | null = null

@@ -1,7 +1,7 @@
 import type { RouteNode } from 'vitarx-router/file-router'
 import { describe, expect, it } from 'vitest'
 import { buildSearchIndex } from '../../src/plugin/builder.js'
-import type { SearchSectionBuild } from '../../src/shared/types.js'
+import type { SearchSectionBuild } from '../../src/types.js'
 
 function createMockRoutes(items: Array<{ relativePath: string; fullPath: string }>): RouteNode[] {
   return items.map(item => ({

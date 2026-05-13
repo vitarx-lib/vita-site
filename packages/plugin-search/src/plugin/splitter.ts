@@ -12,7 +12,7 @@
 
 import type { TocTree } from 'vitapress/server'
 import { tokenize } from '../common/tokenizer.js'
-import type { SearchSectionBuild } from '../shared/types.js'
+import type { SearchSectionBuild } from '../types.js'
 
 /**
  * 按标题将 Markdown 内容分段

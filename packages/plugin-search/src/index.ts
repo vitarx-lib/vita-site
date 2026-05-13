@@ -1,3 +1,6 @@
-export type * from './shared/types.js'
-export { cancelSearch, search, searchWithIndex, highlight } from './apis/index.js'
-export { searchPlugin, type SearchPluginOptions } from './plugin/index.js'
+export type * from './types.js'
+export { type SearchPluginOptions } from './plugin/index.js'
+
+import { searchPlugin } from './plugin/index.js'
+
+export default searchPlugin
