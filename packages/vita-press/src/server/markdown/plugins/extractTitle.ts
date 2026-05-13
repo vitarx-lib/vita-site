@@ -1,30 +1,27 @@
 import type MarkdownIt from 'markdown-it'
 import type Token from 'markdown-it/lib/token.mjs'
-
-export interface TitleEnv {
-  title?: string
-}
+import type { MarkdownParseEnvContext } from '../../../types/index.js'
 
 /**
  * 提取 H1 标题并赋值给 env.title
  *
  * 功能：
- * - 当 env.title 不为字符串时，提取文档中第一个 H1 标题内容
- * - 将提取的内容赋值给 env.title
+ * - 当 env.frontmatter.title 不为字符串时，提取文档中第一个 H1 标题内容
+ * - 将提取的内容赋值给 env.frontmatter.title
  *
  * @param md - Markdown-it 实例
  */
 export function extractTitle(md: MarkdownIt): void {
   md.core.ruler.push('extract-title', state => {
-    const env = state.env as TitleEnv
+    const env = state.env as MarkdownParseEnvContext
 
-    if (typeof env.title === 'string') {
+    if (!env.frontmatter || typeof env.frontmatter['title'] === 'string') {
       return
     }
 
     const h1Content = findFirstH1Content(state.tokens)
     if (h1Content) {
-      env.title = h1Content
+      env.frontmatter['title'] = h1Content
     }
   })
 }
