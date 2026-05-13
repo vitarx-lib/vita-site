@@ -328,7 +328,7 @@ describe('buildNavTree', () => {
       expect(items.length).toBe(2)
 
       expect(items[0]!.prev).toBeNull()
-      expect(items[0]!.next).toEqual({ title: 'Rest', path: '/api/rest' })
+      expect(items[0]!.next).toEqual({ title: 'REST', path: '/api/rest' })
 
       expect(items[1]!.prev).toEqual({ title: 'Intro', path: '/guide/intro' })
       expect(items[1]!.next).toBeNull()
