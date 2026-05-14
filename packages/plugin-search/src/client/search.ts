@@ -25,6 +25,21 @@
 import { tokenize } from '../common/tokenizer.js'
 import type { SearchIndex, SearchResponse, SearchResult } from '../types.js'
 
+export interface SearchOptions {
+  /**
+   * 最大搜索结果数量
+   *
+   * @default 10
+   */
+  maxResults?: number
+  /**
+   * 最大内容长度
+   *
+   * @default 200
+   */
+  maxContentLength?: number
+}
+
 /** 搜索索引缓存，首次加载后常驻内存 */
 let indexCache: SearchIndex | null = null
 
@@ -79,16 +94,17 @@ function isGenerationCurrent(generation: number): boolean {
  *
  * @param query - 搜索查询文本
  * @param searchIndex - 搜索索引
- * @param [maxResults=10] - 最大返回数量 @default 10
- * @param [maxContentLength=200] - 最大内容长度 @default 200
+ * @param options - 搜索选项
+ * @param options.maxResults - 最大返回数量 @default 10
+ * @param options.maxContentLength - 最大内容长度 @default 200
  * @returns 搜索结果数组，按匹配得分降序排列
  */
 export function searchWithIndex(
   query: string,
   searchIndex: SearchIndex,
-  maxResults: number = 10,
-  maxContentLength: number = 200
+  options?: SearchOptions
 ): SearchResult[] {
+  const { maxResults = 10, maxContentLength = 200 } = options || {}
   const tokens = tokenize(query)
   if (tokens.length === 0) return []
 
@@ -142,15 +158,17 @@ export function searchWithIndex(
  * - 被取消的搜索返回 { status: 'canceled', matched: [] }
  *
  * @param query - 搜索查询文本
- * @param maxResults - 最大返回数量 @default 10
- * @returns 搜索响应（含状态和匹配结果）
+ * @param options - 搜索选项
+ * @param [options.maxResults] - 最大返回数量 @default 10
+ * @param [options.maxContentLength] - 最大内容长度 @default 200
+ * @returns {Promise<SearchResponse>} 搜索响应（含状态和匹配结果）
  */
-export async function search(query: string, maxResults: number = 10): Promise<SearchResponse> {
+export async function search(query: string, options?: SearchOptions): Promise<SearchResponse> {
   const generation = ++searchGeneration
 
   const searchIndex = await loadIndex()
 
-  const matched = searchWithIndex(query, searchIndex, maxResults)
+  const matched = searchWithIndex(query, searchIndex, options)
 
   // 索引加载完成后检查代数，若已被新搜索或手动取消取代则直接返回 canceled
   if (!isGenerationCurrent(generation)) {

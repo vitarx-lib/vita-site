@@ -153,7 +153,7 @@ describe('searchWithIndex', () => {
 
   describe('maxResults', () => {
     it('应限制返回结果数量', () => {
-      const results = searchWithIndex('搜索', index, 1)
+      const results = searchWithIndex('搜索', index, { maxResults: 1 })
       expect(results.length).toBeLessThanOrEqual(1)
     })
 
