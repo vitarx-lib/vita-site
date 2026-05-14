@@ -101,6 +101,10 @@ export interface SearchIndex {
  * 段落内容及匹配得分，用于前端渲染搜索结果列表。
  */
 export interface SearchResult {
+  /** 匹配得分 */
+  score: number
+  /** 语言 */
+  lang: string
   /** 路由路径 */
   path: string
   /** 最近标题 hash（用于锚点跳转） */
@@ -113,8 +117,6 @@ export interface SearchResult {
   content: string
   /** 匹配类型：page 匹配文档主标题，content 匹配段落内容 */
   matchType: 'page' | 'content'
-  /** 匹配得分 */
-  score: number
 }
 
 /**

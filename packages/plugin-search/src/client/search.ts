@@ -27,6 +27,10 @@ import type { SearchIndex, SearchResponse, SearchResult } from '../types.js'
 
 export interface SearchOptions {
   /**
+   * 指定要搜索的语言
+   */
+  lang?: string
+  /**
    * 最大搜索结果数量
    *
    * @default 10
@@ -95,6 +99,7 @@ function isGenerationCurrent(generation: number): boolean {
  * @param query - 搜索查询文本
  * @param searchIndex - 搜索索引
  * @param options - 搜索选项
+ * @param options.lang - 指定要搜索的语言
  * @param options.maxResults - 最大返回数量 @default 10
  * @param options.maxContentLength - 最大内容长度 @default 200
  * @returns 搜索结果数组，按匹配得分降序排列
@@ -104,7 +109,7 @@ export function searchWithIndex(
   searchIndex: SearchIndex,
   options?: SearchOptions
 ): SearchResult[] {
-  const { maxResults = 10, maxContentLength = 200 } = options || {}
+  const { lang, maxResults = 10, maxContentLength = 200 } = options || {}
   const tokens = tokenize(query)
   if (tokens.length === 0) return []
 
@@ -115,6 +120,11 @@ export function searchWithIndex(
     if (!entries) continue
 
     for (const [di, si] of entries) {
+      if (lang) {
+        const doc = searchIndex.docs[di]
+        if (!doc || doc.lang !== lang) continue
+      }
+
       const key = `${di}:${si === -1 ? 0 : si}`
       const prev = scores.get(key)
       const addScore = si === -1 ? 5 : 1
@@ -133,13 +143,14 @@ export function searchWithIndex(
       const doc = searchIndex.docs[di]!
       const section = doc.sections[sectionIndex] ?? doc.sections[0]!
       return {
+        score,
+        lang: doc.lang,
         path: doc.path,
         hash: section.hash,
         title: doc.title,
         heading: section.heading,
         content: section.content.slice(0, maxContentLength),
-        matchType: doc.title.includes(query) ? ('page' as const) : ('content' as const),
-        score
+        matchType: doc.title.includes(query) ? ('page' as const) : ('content' as const)
       }
     })
 }
@@ -159,6 +170,7 @@ export function searchWithIndex(
  *
  * @param query - 搜索查询文本
  * @param options - 搜索选项
+ * @param options.lang - 指定要搜索的语言
  * @param [options.maxResults] - 最大返回数量 @default 10
  * @param [options.maxContentLength] - 最大内容长度 @default 200
  * @returns {Promise<SearchResponse>} 搜索响应（含状态和匹配结果）

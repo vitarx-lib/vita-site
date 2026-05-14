@@ -33,6 +33,30 @@ function createTestIndex(): SearchIndex {
           }
         ],
         lang: 'zh-CN'
+      },
+      {
+        path: '/en/guide/intro',
+        title: 'Getting Started',
+        sections: [
+          {
+            hash: '#quick-start',
+            heading: 'Quick Start',
+            content: 'This is a quick start guide to help you understand the basics.'
+          }
+        ],
+        lang: 'en-US'
+      },
+      {
+        path: '/en/guide/search',
+        title: 'Search',
+        sections: [
+          {
+            hash: '#search',
+            heading: 'Search',
+            content: 'Search plugin supports mixed Chinese and English search.'
+          }
+        ],
+        lang: 'en-US'
       }
     ],
     index: {
@@ -70,7 +94,17 @@ function createTestIndex(): SearchIndex {
       能: [[1, -1]],
       功能: [[1, -1]],
       插件: [[1, 0]],
-      支持: [[1, 0]]
+      支持: [[1, 0]],
+      get: [[2, -1]],
+      getting: [[2, -1]],
+      start: [[2, -1]],
+      started: [[2, -1]],
+      search: [
+        [3, -1],
+        [3, 0]
+      ],
+      plugin: [[3, 0]],
+      supports: [[3, 0]]
     }
   }
 }
@@ -183,6 +217,44 @@ describe('searchWithIndex', () => {
       const results = searchWithIndex('安装', index)
       const installResult = results.find(r => r.heading === '安装')
       expect(installResult).toBeDefined()
+    })
+  })
+
+  describe('语言过滤', () => {
+    it('指定 lang 时应只返回该语言的结果', () => {
+      const results = searchWithIndex('search', index, { lang: 'en-US' })
+      expect(results.length).toBeGreaterThan(0)
+      results.forEach(result => {
+        expect(result.lang).toBe('en-US')
+      })
+    })
+
+    it('指定 lang 为 zh-CN 时应只返回中文结果', () => {
+      const results = searchWithIndex('搜索', index, { lang: 'zh-CN' })
+      expect(results.length).toBeGreaterThan(0)
+      results.forEach(result => {
+        expect(result.lang).toBe('zh-CN')
+      })
+    })
+
+    it('不指定 lang 时应返回所有语言的结果', () => {
+      const zhResults = searchWithIndex('搜索', index)
+      const enResults = searchWithIndex('search', index)
+      expect(zhResults.some(r => r.lang === 'zh-CN')).toBe(true)
+      expect(enResults.some(r => r.lang === 'en-US')).toBe(true)
+    })
+
+    it('指定不存在的 lang 时应返回空数组', () => {
+      const results = searchWithIndex('搜索', index, { lang: 'ja-JP' })
+      expect(results).toEqual([])
+    })
+
+    it('语言过滤应与 maxResults 正确配合', () => {
+      const results = searchWithIndex('search', index, { lang: 'en-US', maxResults: 1 })
+      expect(results.length).toBeLessThanOrEqual(1)
+      results.forEach(result => {
+        expect(result.lang).toBe('en-US')
+      })
     })
   })
 })
