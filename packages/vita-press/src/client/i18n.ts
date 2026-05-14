@@ -1,5 +1,5 @@
 import { type App, type Computed, computed, getApp } from 'vitarx'
-import { type RoutePath, type Router } from 'vitarx-router'
+import { normalizePath, type RoutePath, type Router } from 'vitarx-router'
 import type { Locale } from '../server/index.js'
 import { useI18nMessages } from './i18nMessages.js'
 import { locales } from './locales.js'
@@ -93,18 +93,21 @@ export class I18n {
     })
     this.locales = computed((): PageLocale[] => {
       const currentRoute = this.router.route
+      const currentPath = normalizePath(currentRoute.path, true)
+      const isIndex =
+        currentRoute.matched.length > 1 && currentRoute.matched.at(-1)!.path === currentPath
       const currentLang = this.lang.value
       let path: RoutePath
       if (currentLang === this.defaultLang) {
-        path = currentRoute.path
+        path = currentPath
       } else {
-        path = currentRoute.path.replace(`-${currentLang}`, '') as RoutePath
+        path = currentPath.replace(`-${currentLang}`, '') as RoutePath
         if (path === '/index') path = '/'
       }
       return locales.map(item => {
         return {
           ...item,
-          path: item.id === currentLang ? currentRoute.path : this.buildPath(path, item.id)
+          path: item.id === currentLang ? currentPath : this.buildPath(path, item.id, isIndex)
         }
       })
     })
@@ -175,15 +178,19 @@ export class I18n {
 
   /**
    * 匹配路由
-   * @param path
-   * @param newLang
+   * @param path - 路由路径
+   * @param newLang - 语言标识
+   * @param isIndex - 是否为首页
    * @private
    */
-  private buildPath(path: RoutePath, newLang: string): RoutePath {
+  private buildPath(path: RoutePath, newLang: string, isIndex: boolean): RoutePath {
     if (path === '/') {
       path = newLang === this.defaultLang ? path : `/index-${newLang}`
     } else {
-      path = newLang === this.defaultLang ? path : `${path}-${newLang}`
+      path =
+        newLang === this.defaultLang
+          ? path
+          : `${isIndex ? ((path + '/index') as RoutePath) : path}-${newLang}`
     }
     return path
   }
