@@ -121,13 +121,15 @@ function createPageMetaManager(): AfterCallback {
 async function createClientApp(): Promise<SSRApp> {
   const { app, routerOptions } = createBaseApp()
   routerOptions.afterEach = concatHook(routerOptions.afterEach, createPageMetaManager())
-  const router = createWebRouter(routerOptions)
+  const router = createWebRouter(routerOptions, false)
   if (import.meta.hot) {
     handleHotUpdate(router)
   }
+  setupPlugins(app, router)
+  // 初始化路由
+  router.init()
   await router.isReady()
   await router.resolveComponents()
-  setupPlugins(app, router)
   app.mount(
     '#root',
     (window as unknown as { __INITIAL_STATE__?: Record<string, any> }).__INITIAL_STATE__
