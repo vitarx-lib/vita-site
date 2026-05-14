@@ -11,7 +11,7 @@ import {
   RouterView
 } from 'vitarx-router'
 import { handleHotUpdate, routes } from 'vitarx-router/auto-routes'
-import type { EnhanceApp } from './config.js'
+import type { AppPlugins, EnhanceApp } from './config.js'
 import { I18n } from './i18n.js'
 import { concatHook } from './merge.js'
 
@@ -39,17 +39,17 @@ function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
  *
  * @param enhanceApp - 单个增强函数或增强函数数组
  * @param app - 应用实例
- * @param router - 路由器实例
+ * @param plugins - 应用插件
  */
 function applyEnhanceApp(
   enhanceApp: EnhanceApp | EnhanceApp[] | undefined,
   app: App,
-  router: Router
+  plugins: AppPlugins
 ): void {
   if (enhanceApp == null) return
   const fns = Array.isArray(enhanceApp) ? enhanceApp : [enhanceApp]
   for (const fn of fns) {
-    fn(app, router)
+    fn(app, plugins)
   }
 }
 
@@ -63,7 +63,7 @@ function setupPlugins(app: App, router: Router): void {
   app.use(router)
   const i18n = new I18n(router)
   app.use(i18n)
-  applyEnhanceApp(config.enhanceApp, app, router)
+  applyEnhanceApp(config.enhanceApp, app, { router, i18n })
 }
 
 interface PageMeta {

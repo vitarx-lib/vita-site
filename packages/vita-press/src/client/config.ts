@@ -1,7 +1,18 @@
 import type { App, AppConfig, Component, LazyLoadOptions, View } from 'vitarx'
 import type { AfterCallback, NavigationGuard, Router, RouterOptions } from 'vitarx-router'
+import type { I18n } from './i18n.js'
 
-export type EnhanceApp = (app: App, router: Router) => void
+/**
+ * 应用插件
+ *
+ * @description VitaPress 内部挂载到应用实例上的插件
+ */
+export interface AppPlugins {
+  router: Router
+  i18n: I18n
+}
+
+export type EnhanceApp = (app: App, plugins: AppPlugins) => void
 
 /**
  * 插件客户端配置
@@ -110,7 +121,7 @@ export function defineConfig<T extends ClientConfig>(config: T): T {
 /**
  * 定义插件客户端配置
  *
- * @param config - 插件客户端配置 
+ * @param config - 插件客户端配置
  * @returns {PluginClientConfig} 插件客户端配置
  */
 export function definePluginClientConfig<T extends PluginClientConfig>(config: T): T {
