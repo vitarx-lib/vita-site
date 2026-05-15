@@ -1,5 +1,5 @@
 import { type App, type Computed, computed, getApp } from 'vitarx'
-import { normalizePath, type RoutePath, type Router } from 'vitarx-router'
+import { type RoutePath, type Router } from 'vitarx-router'
 import type { Locale } from '../server/index.js'
 import { useI18nMessages } from './i18nMessages.js'
 import { locales } from './locales.js'
@@ -16,7 +16,7 @@ export type I18nMessages = Record<string, Record<string, string>>
  */
 export const __I18N_INJECT_KEY__ = Symbol.for('__vitapress_i18n__')
 
-interface PageLocale extends Locale {
+export interface PageLocale extends Locale {
   /**
    * 路由路径
    *
@@ -25,6 +25,11 @@ interface PageLocale extends Locale {
    * 可通过 `router.manager.findByPath(path)` 判断当前页面是否存在特定语言版本
    */
   path: RoutePath
+}
+
+function removePathEndSlash<T extends string>(str: T): T {
+  if (str === '/') return str
+  return str.endsWith('/') ? (str.slice(0, -1) as T) : str
 }
 
 /**
@@ -93,21 +98,29 @@ export class I18n {
     })
     this.locales = computed((): PageLocale[] => {
       const currentRoute = this.router.route
-      const currentPath = normalizePath(currentRoute.path, true)
-      const isIndex =
-        currentRoute.matched.length > 1 && currentRoute.matched.at(-1)!.path === currentPath
+      const currentPath = removePathEndSlash(currentRoute.path)
       const currentLang = this.lang.value
-      let path: RoutePath
-      if (currentLang === this.defaultLang) {
-        path = currentPath
-      } else {
-        path = currentPath.replace(`-${currentLang}`, '') as RoutePath
-        if (path === '/index') path = '/'
+      let path: RoutePath = currentPath
+      const langSuffix = `-${currentLang}`
+      if (currentLang !== this.defaultLang && currentPath.endsWith(langSuffix)) {
+        // 找到后缀开始的位置，并截取它之前的所有内容
+        path = currentPath.slice(0, currentPath.lastIndexOf(langSuffix)) as RoutePath
+      }
+      // 兼容根路径/index情况多语言应该使用根路径
+      if (path === '/index') path = '/'
+      // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
+      const lastMatched = currentRoute.matched.at(-1)
+      if (
+        lastMatched &&
+        !path.endsWith('/index') &&
+        lastMatched.path === lastMatched.parent?.path
+      ) {
+        path = `${path}/index`
       }
       return locales.map(item => {
         return {
           ...item,
-          path: item.id === currentLang ? currentPath : this.buildPath(path, item.id, isIndex)
+          path: item.id === currentLang ? currentPath : this.buildPath(path, item.id)
         }
       })
     })
@@ -177,22 +190,16 @@ export class I18n {
   }
 
   /**
-   * 匹配路由
+   * 构建路由路径
+   *
    * @param path - 路由路径
-   * @param newLang - 语言标识
-   * @param isIndex - 是否为首页
-   * @private
+   * @param [newLang = this.lang.value] - 语言标识
    */
-  private buildPath(path: RoutePath, newLang: string, isIndex: boolean): RoutePath {
-    if (path === '/') {
-      path = newLang === this.defaultLang ? path : `/index-${newLang}`
-    } else {
-      path =
-        newLang === this.defaultLang
-          ? path
-          : `${isIndex ? ((path + '/index') as RoutePath) : path}-${newLang}`
-    }
-    return path
+  public buildPath(path: RoutePath, newLang?: string): RoutePath {
+    newLang ??= this.lang.value
+    if (newLang === this.defaultLang) return path
+    if (path === '/') return `/index-${newLang}`
+    return `${path}-${newLang}`
   }
 }
 
