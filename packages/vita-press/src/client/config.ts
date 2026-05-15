@@ -39,10 +39,6 @@ export interface PluginClientConfig {
    */
   enhanceApp?: EnhanceApp | EnhanceApp[]
   /**
-   * 未匹配到路由时显示的组件
-   */
-  missing?: Component
-  /**
    * 路由跳转前的守卫
    */
   beforeEach?: NavigationGuard | NavigationGuard[]

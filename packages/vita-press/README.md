@@ -700,7 +700,6 @@ import NotFound from './components/NotFound.tsx'
 
 export default {
   layout: Layout,
-  missing: NotFound,
   messages: { 'zh-CN': { 'nav.home': '首页' } },
   enhanceApp(app, router) {
     // 注册全局组件

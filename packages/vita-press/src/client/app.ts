@@ -89,12 +89,7 @@ function createPageMetaManager(): AfterCallback {
     keywords: metaKeywords?.content || '',
     lang: htmlEl.lang
   }
-  const missing = config.router?.missing
   return (to: RouteLocation): void => {
-    if (missing && to.matched[0]?.component?.default === missing) {
-      document.title = '404 Not Found'
-      return
-    }
     const meta = to.meta
     document.title = typeof meta['title'] === 'string' ? meta['title'] : rawMeta.title
     if (metaDescription) {

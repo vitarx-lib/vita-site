@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { type ClientConfig, defineConfig, type PluginClientConfig } from '../../src/client/config.js'
+import {
+  type ClientConfig,
+  defineConfig,
+  type PluginClientConfig
+} from '../../src/client/config.js'
 
 describe('defineConfig', () => {
   it('应原样返回配置对象', () => {
@@ -31,13 +35,11 @@ describe('PluginClientConfig', () => {
     const theme: PluginClientConfig = {
       layout: {} as any,
       enhanceApp: () => {},
-      missing: {} as any,
       beforeEach: () => true as any,
       afterEach: () => {}
     }
     expect(theme.layout).toBeDefined()
     expect(theme.enhanceApp).toBeDefined()
-    expect(theme.missing).toBeDefined()
     expect(theme.beforeEach).toBeDefined()
     expect(theme.afterEach).toBeDefined()
   })

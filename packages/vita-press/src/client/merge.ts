@@ -19,7 +19,6 @@ export function concatHook<T>(current: T | T[] | undefined, incoming: T | T[]): 
 }
 
 interface MergedRouterHooks {
-  missing?: RouterOptions['missing']
   beforeEach?: RouterOptions['beforeEach']
   afterEach?: RouterOptions['afterEach']
 }
@@ -33,8 +32,6 @@ interface MergedRouterHooks {
  */
 function mergeRouterHooks(base: MergedRouterHooks, override: MergedRouterHooks): MergedRouterHooks {
   const result: MergedRouterHooks = {}
-  const missing = override.missing ?? base.missing
-  if (missing != null) result.missing = missing
   if (base.beforeEach) result.beforeEach = base.beforeEach
   if (override.beforeEach) result.beforeEach = concatHook(result.beforeEach, override.beforeEach)
   if (base.afterEach) result.afterEach = base.afterEach
@@ -83,19 +80,16 @@ export function mergeClientConfig(base: PluginClientConfig, override: ClientConf
   if (lazy != null) result.lazy = lazy
 
   const baseHooks: MergedRouterHooks = {
-    missing: base.missing,
     beforeEach: base.beforeEach,
     afterEach: base.afterEach
   }
   const overrideHooks: MergedRouterHooks = {
-    missing: override.router?.missing,
     beforeEach: override.router?.beforeEach,
     afterEach: override.router?.afterEach
   }
   const mergedHooks = mergeRouterHooks(baseHooks, overrideHooks)
-  const { beforeEach: _bh, afterEach: _ah, missing: _m, ...routerRest } = override.router ?? {}
+  const { beforeEach: _bh, afterEach: _ah, ...routerRest } = override.router ?? {}
   const router: NonNullable<ClientConfig['router']> = { ...routerRest }
-  if (mergedHooks.missing != null) router.missing = mergedHooks.missing
   if (mergedHooks.beforeEach != null) router.beforeEach = mergedHooks.beforeEach
   if (mergedHooks.afterEach != null) router.afterEach = mergedHooks.afterEach
   result.router = router
@@ -125,8 +119,6 @@ export function mergePluginClientConfig(configs: PluginClientConfig[]): PluginCl
     if (layout != null) result.layout = layout
     const lazy = theme.lazy ?? acc.lazy
     if (lazy != null) result.lazy = lazy
-    const missing = theme.missing ?? acc.missing
-    if (missing != null) result.missing = missing
     const beforeEach = mergeEnhanceApp(
       acc.beforeEach as EnhanceApp | EnhanceApp[] | undefined,
       theme.beforeEach as EnhanceApp | EnhanceApp[] | undefined

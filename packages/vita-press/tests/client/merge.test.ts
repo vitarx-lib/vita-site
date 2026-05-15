@@ -69,22 +69,6 @@ describe('mergeRuntimeConfig', () => {
     expect(result.layout).toBe(themeLayout)
   })
 
-  it('missing: user.router.missing 覆盖 theme.missing', () => {
-    const themeMissing = {} as any
-    const userMissing = {} as any
-    const result = mergeClientConfig(
-      { missing: themeMissing },
-      { router: { missing: userMissing } }
-    )
-    expect(result.router?.missing).toBe(userMissing)
-  })
-
-  it('missing: user 缺失时回退到 theme', () => {
-    const themeMissing = {} as any
-    const result = mergeClientConfig({ missing: themeMissing }, {})
-    expect(result.router?.missing).toBe(themeMissing)
-  })
-
   it('beforeEach: 按 theme → user 顺序追加', () => {
     const themeGuard = (() => {}) as any
     const userGuard = (() => {}) as any
@@ -180,7 +164,6 @@ describe('mergeRuntimeConfig', () => {
 
   it('完整场景：所有字段同时合并', () => {
     const themeLayout = {} as any
-    const themeMissing = {} as any
     const themeGuard = (() => {}) as any
     const themeCb = (() => {}) as any
     const themeEnhance = (() => {}) as any
@@ -192,7 +175,6 @@ describe('mergeRuntimeConfig', () => {
     const result = mergeClientConfig(
       {
         layout: themeLayout,
-        missing: themeMissing,
         beforeEach: themeGuard,
         afterEach: themeCb,
         enhanceApp: themeEnhance
@@ -207,7 +189,6 @@ describe('mergeRuntimeConfig', () => {
 
     expect(result.layout).toBe(userLayout)
     expect(result.router?.mode).toBe('hash')
-    expect(result.router?.missing).toBe(themeMissing)
     expect(result.router?.beforeEach as any[]).toHaveLength(2)
     expect(result.router?.afterEach as any[]).toHaveLength(2)
     expect(result.enhanceApp as any[]).toHaveLength(2)
@@ -230,15 +211,13 @@ describe('mergeThemes', () => {
 
   it('多个主题应按顺序合并，后者覆盖前者', () => {
     const theme1: PluginClientConfig = {
-      layout: {} as any,
-      missing: {} as any
+      layout: {} as any
     }
     const theme2: PluginClientConfig = {
       layout: {} as any
     }
     const result = mergePluginClientConfig([theme1, theme2])
     expect(result.layout).toBe(theme2.layout)
-    expect(result.missing).toBe(theme1.missing)
   })
 
   it('应合并多个主题的 enhanceApp', () => {
@@ -266,9 +245,9 @@ describe('mergeThemes', () => {
 
   it('缺失字段应从前面主题继承', () => {
     const layout = {} as any
-    const result = mergePluginClientConfig([{ layout }, { missing: {} as any }])
+    const result = mergePluginClientConfig([{ layout }, { afterEach: {} as any }])
     expect(result.layout).toBe(layout)
-    expect(result.missing).toBeDefined()
+    expect(result.afterEach).toBeDefined()
   })
 })
 
@@ -293,14 +272,14 @@ describe('resolveClientConfig', () => {
 
   it('多个主题应先合并再与用户配置合并', () => {
     const theme1: PluginClientConfig = {
-      missing: {} as any
+      afterEach: {} as any
     }
     const theme2: PluginClientConfig = {
       enhanceApp: () => {}
     }
     const userConfig: ClientConfig = { layout: {} as any }
     const result = resolveClientConfig([theme1, theme2], userConfig)
-    expect(result.router?.missing).toBe(theme1.missing)
+    expect(result.router?.afterEach).toBe(theme1.afterEach)
     expect(result.enhanceApp).toBe(theme2.enhanceApp)
     expect(result.layout).toBeDefined()
   })
