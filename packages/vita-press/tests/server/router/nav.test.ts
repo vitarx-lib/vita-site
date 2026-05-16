@@ -579,4 +579,62 @@ describe('buildNavTree', () => {
       })
     })
   })
+
+  describe('导航元数据清理', () => {
+    it('导航处理完成后应从路由 meta 中移除 navTitle', async () => {
+      createFile('docs/guide/first.md', '---\nnavOrder: 1\nnavTitle: 第一步\n---\n# First')
+      createFile('docs/guide/second.md', '---\nnavOrder: 2\nnavTitle: 第二步\n---\n# Second')
+
+      const app = await createTestApp(tempDir)
+      const { routes } = app.router.generate()
+
+      const firstRoute = findRouteByFullPath(routes, '/guide/first')!
+      const secondRoute = findRouteByFullPath(routes, '/guide/second')!
+
+      expect(firstRoute.meta!['navTitle']).toBeUndefined()
+      expect(secondRoute.meta!['navTitle']).toBeUndefined()
+    })
+
+    it('导航处理完成后应从路由 meta 中移除 navOrder', async () => {
+      createFile('docs/guide/first.md', '---\nnavOrder: 1\n---\n# First')
+      createFile('docs/guide/second.md', '---\nnavOrder: 2\n---\n# Second')
+
+      const app = await createTestApp(tempDir)
+      const { routes } = app.router.generate()
+
+      const firstRoute = findRouteByFullPath(routes, '/guide/first')!
+      const secondRoute = findRouteByFullPath(routes, '/guide/second')!
+
+      expect(firstRoute.meta!['navOrder']).toBeUndefined()
+      expect(secondRoute.meta!['navOrder']).toBeUndefined()
+    })
+
+    it('导航处理完成后应从路由 meta 中移除 navHidden', async () => {
+      createFile('docs/guide/intro.md', '# Intro')
+      createFile('docs/guide/hidden.md', '---\nnavHidden: true\n---\n# Hidden')
+
+      const app = await createTestApp(tempDir)
+      const { routes } = app.router.generate()
+
+      const hiddenRoute = findRouteByFullPath(routes, '/guide/hidden')!
+
+      expect(hiddenRoute.meta!['navHidden']).toBeUndefined()
+    })
+
+    it('分组节点的导航元数据也应被清理', async () => {
+      createFile(
+        'docs/guide/_config.ts',
+        `definePage({ meta: { navTitle: '指南', navOrder: 10 } })`
+      )
+      createFile('docs/guide/intro.md', '# Intro')
+
+      const app = await createTestApp(tempDir)
+      const { routes } = app.router.generate()
+
+      const guideRoute = findRouteByFullPath(routes, '/guide')!
+
+      expect(guideRoute.meta!['navTitle']).toBeUndefined()
+      expect(guideRoute.meta!['navOrder']).toBeUndefined()
+    })
+  })
 })
