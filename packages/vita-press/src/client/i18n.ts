@@ -68,6 +68,10 @@ export class I18n {
    */
   public readonly lang: Computed<string>
   /**
+   * 所有支持的语言列表
+   */
+  public readonly langs: string[]
+  /**
    * 当前语言配置（计算属性）
    */
   public readonly locale: Computed<PageLocale | undefined>
@@ -93,6 +97,7 @@ export class I18n {
   constructor(private readonly router: Router) {
     this.defaultLang = locales[0]!.id
     this.#messages = useI18nMessages()
+    this.langs = locales.map(l => l.id)
     this.lang = computed((prevLang): string => {
       return router.route.meta['lang'] || prevLang || this.defaultLang
     })
@@ -101,10 +106,13 @@ export class I18n {
       const currentPath = removePathEndSlash(currentRoute.path)
       const currentLang = this.lang.value
       let path: RoutePath = currentPath
-      const langSuffix = `-${currentLang}`
-      if (currentLang !== this.defaultLang && currentPath.endsWith(langSuffix)) {
-        // 找到后缀开始的位置，并截取它之前的所有内容
-        path = currentPath.slice(0, currentPath.lastIndexOf(langSuffix)) as RoutePath
+      for (const lang of this.langs) {
+        const langSuffix = `-${lang}`
+        if (currentPath.endsWith(langSuffix)) {
+          // 找到后缀开始的位置，并截取它之前的所有内容
+          path = currentPath.slice(0, currentPath.lastIndexOf(langSuffix)) as RoutePath
+          break
+        }
       }
       // 兼容根路径/index情况多语言应该使用根路径
       if (path === '/index') path = '/'
@@ -200,6 +208,20 @@ export class I18n {
     if (newLang === this.defaultLang) return path
     if (path === '/') return `/index-${newLang}`
     return `${path}-${newLang}`
+  }
+  /**
+   * 从路径中解析语言标识
+   *
+   * 支持带文件扩展名的路径，如 `/path/index-en.html` 会正确解析出 `en`
+   *
+   * @param path - 路由路径
+   * @param [defaultLang = this.defaultLang] - 默认语言标识，如果未找到则返回此语言标识
+   * @returns {string} 语言标识，如果未找到则返回默认语言
+   */
+  public parsePathLang(path: string, defaultLang?: string): string {
+    defaultLang ??= this.defaultLang
+    const pathWithoutExt = path.replace(/\.[^.]+$/, '')
+    return this.langs.find(lang => pathWithoutExt.endsWith(`-${lang}`)) || defaultLang
   }
 }
 
