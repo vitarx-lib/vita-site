@@ -104,7 +104,8 @@ export class MdParser {
       lastUpdateAt: gitInfo.lastUpdateAt,
       tocList: env.tocList,
       relativePath: path.relative(this.app.root, filePath),
-      ...env.frontmatter
+      ...env.frontmatter,
+      pagination: { next: null, prev: null }
     }
 
     return {

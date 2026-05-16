@@ -1,6 +1,6 @@
 import type { RouteNode } from 'vitarx-router/file-router'
+import type { DocPageMetaData } from '../../types/index.js'
 import type { NavEntry, NavGroup, NavItem, NavTree } from '../../types/nav.js'
-import type { TocTree } from '../markdown/plugins/tocTree.js'
 
 /**
  * 从路由路径推断标题
@@ -79,15 +79,16 @@ function buildNavItems(
     .filter(child => !child.meta?.['navHidden'])
     .filter(child => !child.isGroup)
     .filter(child => isLangOf(child, lang))
-    .map(child => ({
-      type: 'item' as const,
-      path: child.fullPath,
-      title: resolveNavTitle(child.meta, child.path),
-      tocList: (child.meta?.['tocList'] as TocTree[] | undefined) ?? [],
-      order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-      prev: null,
-      next: null
-    }))
+    .map(child => {
+      const item: NavItem & { _routeNode?: RouteNode } = {
+        type: 'item' as const,
+        path: child.fullPath,
+        title: resolveNavTitle(child.meta, child.path),
+        order: (child.meta?.['navOrder'] as number | undefined) ?? 0
+      }
+      setTempRouteNode(item, child)
+      return item
+    })
     .sort((a, b) => a.order - b.order)
 }
 
@@ -111,6 +112,29 @@ function flattenNavEntries(entries: NavEntry[]): NavEntry[] {
 }
 
 /**
+ * 临时设置页面的路由节点
+ * @param entry
+ * @param routeNode
+ */
+function setTempRouteNode(entry: NavEntry & { _routeNode?: RouteNode }, routeNode: RouteNode) {
+  entry._routeNode = routeNode
+}
+
+/**
+ * 获取并删除页面的临时路由节点
+ * @param entry
+ */
+function getRouteMeta(entry: NavEntry & { _routeNode?: RouteNode }): DocPageMetaData {
+  const route = entry._routeNode!
+  delete entry._routeNode
+  const meta = route.meta! as DocPageMetaData
+  if (!meta.pagination) {
+    meta.pagination = { prev: null, next: null }
+  }
+  return meta
+}
+
+/**
  * 为导航条目列表中的所有 NavItem 分配跨分组的分页信息
  *
  * 将所有 NavItem（含分组内和独立项）扁平化为线性序列，
@@ -123,13 +147,14 @@ function assignPagination(entries: NavEntry[]): void {
 
   for (let i = 0; i < flatItems.length; i++) {
     const item = flatItems[i]!
+    const route = getRouteMeta(item)
     if (i > 0) {
       const prevItem = flatItems[i - 1]!
-      item.prev = { title: prevItem.title, path: prevItem.path! }
+      route.pagination.prev = { title: prevItem.title, path: prevItem.path! }
     }
     if (i < flatItems.length - 1) {
       const nextItem = flatItems[i + 1]!
-      item.next = { title: nextItem.title, path: nextItem.path! }
+      route.pagination.next = { title: nextItem.title, path: nextItem.path! }
     }
   }
 }
@@ -164,31 +189,27 @@ function extractNavEntries(
         : resolveNavTitle(indexChild?.meta, child.path)
       const hasIndex = !!indexChild && !indexChild.meta?.['navHidden']
 
-      const group: NavGroup = {
+      const groupEntry: NavGroup = {
         type: 'group',
         title,
         ...(hasIndex ? { path: child.fullPath } : {}),
         order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-        items: buildNavItems(child.children, lang, defaultLang),
-        prev: null,
-        next: null
+        items: buildNavItems(child.children, lang, defaultLang)
       }
-
-      if (group.items.length > 0 || hasIndex) {
-        entries.push(group)
+      if (groupEntry.items.length > 0 || hasIndex) {
+        entries.push(groupEntry)
+        setTempRouteNode(groupEntry, child)
       }
     } else {
       if (!isLangOf(child, lang)) continue
-
-      entries.push({
-        type: 'item',
+      const itemEntry = {
+        type: 'item' as const,
         path: child.fullPath,
         title: resolveNavTitle(child.meta, child.path),
-        tocList: (child.meta?.['tocList'] as TocTree[] | undefined) ?? [],
-        order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-        prev: null,
-        next: null
-      })
+        order: (child.meta?.['navOrder'] as number | undefined) ?? 0
+      }
+      entries.push(itemEntry)
+      setTempRouteNode(itemEntry, child)
     }
   }
 

@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import type { RouteNode } from 'vitarx-router/file-router'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import type { NavEntry, NavGroup, NavItem } from '../../../src/types/nav.js'
 import { createTestApp } from '../../testUtils.js'
@@ -17,6 +18,24 @@ function flattenNavItems(entries: NavEntry[]): NavItem[] {
     }
   }
   return items
+}
+
+/**
+ * 递归查找 fullPath 匹配的路由节点
+ *
+ * @param routes - 路由节点数组
+ * @param fullPath - 目标完整路径
+ * @returns 匹配的路由节点，未找到返回 null
+ */
+function findRouteByFullPath(routes: RouteNode[], fullPath: string): RouteNode | null {
+  for (const route of routes) {
+    if (route.fullPath === fullPath) return route
+    if (route.children) {
+      const found = findRouteByFullPath(route.children, fullPath)
+      if (found) return found
+    }
+  }
+  return null
 }
 
 describe('buildNavTree', () => {
@@ -257,34 +276,19 @@ describe('buildNavTree', () => {
     })
   })
 
-  describe('tocList', () => {
-    it('NavItem 应携带 tocList', async () => {
-      createFile('docs/guide/intro.md', '## Section 1\n### Subsection\n## Section 2')
-
-      const app = await createTestApp(tempDir)
-      app.router.generate()
-
-      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
-      const guideGroup = entries!.find(e => e.type === 'group') as any
-
-      expect(guideGroup.items.length).toBe(1)
-      expect(Array.isArray(guideGroup.items[0].tocList)).toBe(true)
-    })
-  })
-
   describe('分页数据 (Pagination)', () => {
     it('唯一 NavItem 的 prev 和 next 应均为 null', async () => {
       createFile('docs/changelog.md', '# Changelog')
 
       const app = await createTestApp(tempDir)
       app.router.generate()
-
+      const route = app.router.generate().routes[0]!.children![0]!
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(1)
-      expect(items[0]!.prev).toBeNull()
-      expect(items[0]!.next).toBeNull()
+      expect(route.meta!['pagination'].prev).toBeNull()
+      expect(route.meta!['pagination'].next).toBeNull()
     })
 
     it('同分组内多个 NavItem 应按顺序串联 prev/next', async () => {
@@ -293,21 +297,36 @@ describe('buildNavTree', () => {
       createFile('docs/guide/deployment.md', '---\nnavOrder: 3\n---\n# Deployment')
 
       const app = await createTestApp(tempDir)
-      app.router.generate()
-
+      const { routes } = app.router.generate()
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(3)
 
-      expect(items[0]!.prev).toBeNull()
-      expect(items[0]!.next).toEqual({ title: 'Advanced', path: '/guide/advanced' })
+      const route1 = findRouteByFullPath(routes, '/guide/getting-started')!
+      const route2 = findRouteByFullPath(routes, '/guide/advanced')!
+      const route3 = findRouteByFullPath(routes, '/guide/deployment')!
 
-      expect(items[1]!.prev).toEqual({ title: 'Getting Started', path: '/guide/getting-started' })
-      expect(items[1]!.next).toEqual({ title: 'Deployment', path: '/guide/deployment' })
+      expect(route1.meta!['pagination'].prev).toBeNull()
+      expect(route1.meta!['pagination'].next).toEqual({
+        title: 'Advanced',
+        path: '/guide/advanced'
+      })
 
-      expect(items[2]!.prev).toEqual({ title: 'Advanced', path: '/guide/advanced' })
-      expect(items[2]!.next).toBeNull()
+      expect(route2.meta!['pagination'].prev).toEqual({
+        title: 'Getting Started',
+        path: '/guide/getting-started'
+      })
+      expect(route2.meta!['pagination'].next).toEqual({
+        title: 'Deployment',
+        path: '/guide/deployment'
+      })
+
+      expect(route3.meta!['pagination'].prev).toEqual({
+        title: 'Advanced',
+        path: '/guide/advanced'
+      })
+      expect(route3.meta!['pagination'].next).toBeNull()
     })
 
     it('跨分组的 NavItem 应连续串联分页', async () => {
@@ -320,18 +339,20 @@ describe('buildNavTree', () => {
       createFile('docs/api/rest.md', '# REST')
 
       const app = await createTestApp(tempDir)
-      app.router.generate()
-
+      const { routes } = app.router.generate()
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(2)
 
-      expect(items[0]!.prev).toBeNull()
-      expect(items[0]!.next).toEqual({ title: 'REST', path: '/api/rest' })
+      const introRoute = findRouteByFullPath(routes, '/guide/intro')!
+      const restRoute = findRouteByFullPath(routes, '/api/rest')!
 
-      expect(items[1]!.prev).toEqual({ title: 'Intro', path: '/guide/intro' })
-      expect(items[1]!.next).toBeNull()
+      expect(introRoute.meta!['pagination'].prev).toBeNull()
+      expect(introRoute.meta!['pagination'].next).toEqual({ title: 'REST', path: '/api/rest' })
+
+      expect(restRoute.meta!['pagination'].prev).toEqual({ title: 'Intro', path: '/guide/intro' })
+      expect(restRoute.meta!['pagination'].next).toBeNull()
     })
 
     it('独立项与分组项应混合串联分页', async () => {
@@ -344,21 +365,36 @@ describe('buildNavTree', () => {
       createFile('docs/changelog.md', '---\nnavOrder: 20\n---\n# Changelog')
 
       const app = await createTestApp(tempDir)
-      app.router.generate()
-
+      const { routes } = app.router.generate()
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
       const items = flattenNavItems(entries)
 
       expect(items.length).toBe(3)
 
-      expect(items[0]!.prev).toBeNull()
-      expect(items[0]!.next).toEqual({ title: 'Advanced', path: '/guide/advanced' })
+      const introRoute = findRouteByFullPath(routes, '/guide/intro')!
+      const advancedRoute = findRouteByFullPath(routes, '/guide/advanced')!
+      const changelogRoute = findRouteByFullPath(routes, '/changelog')!
 
-      expect(items[1]!.prev).toEqual({ title: 'Intro', path: '/guide/intro' })
-      expect(items[1]!.next).toEqual({ title: 'Changelog', path: '/changelog' })
+      expect(introRoute.meta!['pagination'].prev).toBeNull()
+      expect(introRoute.meta!['pagination'].next).toEqual({
+        title: 'Advanced',
+        path: '/guide/advanced'
+      })
 
-      expect(items[2]!.prev).toEqual({ title: 'Advanced', path: '/guide/advanced' })
-      expect(items[2]!.next).toBeNull()
+      expect(advancedRoute.meta!['pagination'].prev).toEqual({
+        title: 'Intro',
+        path: '/guide/intro'
+      })
+      expect(advancedRoute.meta!['pagination'].next).toEqual({
+        title: 'Changelog',
+        path: '/changelog'
+      })
+
+      expect(changelogRoute.meta!['pagination'].prev).toEqual({
+        title: 'Advanced',
+        path: '/guide/advanced'
+      })
+      expect(changelogRoute.meta!['pagination'].next).toBeNull()
     })
 
     it('分页数据应携带正确的 title 和 path', async () => {
@@ -366,13 +402,19 @@ describe('buildNavTree', () => {
       createFile('docs/guide/second.md', '---\nnavOrder: 2\nnavTitle: 第二步\n---\n# Second')
 
       const app = await createTestApp(tempDir)
-      app.router.generate()
+      const { routes } = app.router.generate()
 
-      const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!
-      const items = flattenNavItems(entries)
+      const firstRoute = findRouteByFullPath(routes, '/guide/first')!
+      const secondRoute = findRouteByFullPath(routes, '/guide/second')!
 
-      expect(items[0]!.next).toEqual({ title: '第二步', path: '/guide/second' })
-      expect(items[1]!.prev).toEqual({ title: '第一步', path: '/guide/first' })
+      expect(firstRoute.meta!['pagination'].next).toEqual({
+        title: '第二步',
+        path: '/guide/second'
+      })
+      expect(secondRoute.meta!['pagination'].prev).toEqual({
+        title: '第一步',
+        path: '/guide/first'
+      })
     })
   })
 
@@ -511,16 +553,30 @@ describe('buildNavTree', () => {
           { id: 'en-US', name: 'English' }
         ]
       })
-      app.router.generate()
+      const { routes } = app.router.generate()
 
-      const zhItems = flattenNavItems(app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]!)
-      const enItems = flattenNavItems(app.router.navTree!['en-US']![DEFAULT_DOC_PATH]!)
+      const zhIntroRoute = findRouteByFullPath(routes, '/guide/intro')!
+      const zhAdvancedRoute = findRouteByFullPath(routes, '/guide/advanced')!
+      const enIntroRoute = findRouteByFullPath(routes, '/guide/intro-en-us')!
+      const enAdvancedRoute = findRouteByFullPath(routes, '/guide/advanced-en-us')!
 
-      expect(zhItems[0]!.next).toEqual({ title: '进阶', path: '/guide/advanced' })
-      expect(zhItems[1]!.prev).toEqual({ title: '介绍', path: '/guide/intro' })
+      expect(zhIntroRoute.meta!['pagination'].next).toEqual({
+        title: '进阶',
+        path: '/guide/advanced'
+      })
+      expect(zhAdvancedRoute.meta!['pagination'].prev).toEqual({
+        title: '介绍',
+        path: '/guide/intro'
+      })
 
-      expect(enItems[0]!.next).toEqual({ title: 'Advanced', path: '/guide/advanced-en-us' })
-      expect(enItems[1]!.prev).toEqual({ title: 'Introduction', path: '/guide/intro-en-us' })
+      expect(enIntroRoute.meta!['pagination'].next).toEqual({
+        title: 'Advanced',
+        path: '/guide/advanced-en-us'
+      })
+      expect(enAdvancedRoute.meta!['pagination'].prev).toEqual({
+        title: 'Introduction',
+        path: '/guide/intro-en-us'
+      })
     })
   })
 })

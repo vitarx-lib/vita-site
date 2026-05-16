@@ -27,14 +27,12 @@ export interface Pagination {
 /**
  * 导航项 - 对应一个可导航的文档页面，继承分页信息
  */
-export interface NavItem extends Pagination {
+export interface NavItem {
   type: 'item'
   /** 路由路径 */
   path: string
   /** 导航标题 */
   title: string
-  /** 页面目录树 */
-  tocList: TocTree[]
   /** 排序权重，数值越小越靠前 */
   order: number
 }
@@ -42,7 +40,7 @@ export interface NavItem extends Pagination {
 /**
  * 导航分组 - 对应一个文档分类目录
  */
-export interface NavGroup extends Pagination {
+export interface NavGroup {
   type: 'group'
   /** 分组标题 */
   title: string

@@ -1,6 +1,7 @@
 import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 import type { GitCommitInfo } from '../server/markdown/utils/index.js'
 import type { SiteOptions } from './config.js'
+import type { Pagination } from './nav.js'
 
 /**
  * 页面元数据
@@ -49,4 +50,8 @@ export interface DocPageMetaData extends GitCommitInfo, PageMetaData {
    * 相对于项目根目录的文件路径
    */
   relativePath: string
+  /**
+   * 分页信息
+   */
+  pagination: Pagination
 }
