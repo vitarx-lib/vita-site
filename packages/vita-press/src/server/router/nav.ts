@@ -181,7 +181,6 @@ function extractNavEntries(
 
   for (const child of docGroupChildren) {
     if (child.meta?.['navHidden']) continue
-
     if (child.isGroup) {
       const indexChild = child.children?.find(c => c.path === indexPath && isLangOf(c, lang))
       const title = child.meta?.['navTitle']
@@ -219,6 +218,31 @@ function extractNavEntries(
 }
 
 /**
+ * 需要在导航处理完成后从路由元数据中移除的字段列表
+ *
+ * 这些字段仅用于服务端导航树构建，不应暴露到客户端
+ */
+const NAV_ONLY_META_KEYS = ['navTitle', 'navOrder', 'navHidden'] as const
+
+/**
+ * 递归移除路由节点中仅用于导航的元数据字段
+ *
+ * @param routes - 路由节点数组
+ */
+function cleanupNavMeta(routes: RouteNode[]): void {
+  for (const route of routes) {
+    if (route.meta) {
+      for (const key of NAV_ONLY_META_KEYS) {
+        delete route.meta[key]
+      }
+    }
+    if (route.children) {
+      cleanupNavMeta(route.children)
+    }
+  }
+}
+
+/**
  * 从路由树构建导航树
  *
  * 遍历所有配置的语言，对每个语言从文档分组中提取对应的导航条目，
@@ -253,5 +277,6 @@ export function buildNavTree(
     }
   }
 
+  cleanupNavMeta(routes)
   return tree
 }
