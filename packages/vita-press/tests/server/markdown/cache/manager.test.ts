@@ -18,7 +18,7 @@ const mockParseResult = {
     lastUpdateAt: ''
   },
   alias: undefined
-} as MdParseResult
+} as unknown as MdParseResult
 
 describe('CacheManager', () => {
   let tempDir: string
