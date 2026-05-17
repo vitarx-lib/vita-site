@@ -114,7 +114,7 @@ describe('buildNavTree', () => {
   })
 
   describe('index.md 处理', () => {
-    it('有 index.md 的分组应有 path 属性', async () => {
+    it('有 index.md 的分组 path 和 indexPath 应均存在', async () => {
       createFile('docs/guide/index.md', '# Guide')
       createFile('docs/guide/getting-started.md', '# Getting Started')
 
@@ -122,23 +122,25 @@ describe('buildNavTree', () => {
       app.router.generate()
 
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
-      const guideGroup = entries!.find(e => e.type === 'group') as any
+      const guideGroup = entries!.find(e => e.type === 'group') as NavGroup
 
       expect(guideGroup).toBeDefined()
       expect(guideGroup.path).toBe('/guide')
+      expect(guideGroup.indexPath).toBe('/guide')
     })
 
-    it('无 index.md 的分组不应有 path 属性', async () => {
+    it('无 index.md 的分组 path 应存在但 indexPath 应不存在', async () => {
       createFile('docs/guide/getting-started.md', '# Getting Started')
 
       const app = await createTestApp(tempDir)
       app.router.generate()
 
       const entries = app.router.navTree!['zh-CN']![DEFAULT_DOC_PATH]
-      const guideGroup = entries!.find(e => e.type === 'group') as any
+      const guideGroup = entries!.find(e => e.type === 'group') as NavGroup
 
       expect(guideGroup).toBeDefined()
-      expect(guideGroup.path).toBeUndefined()
+      expect(guideGroup.path).toBe('/guide')
+      expect(guideGroup.indexPath).toBeUndefined()
     })
 
     it('index.md 不应出现在 items 中', async () => {
@@ -466,11 +468,13 @@ describe('buildNavTree', () => {
 
       expect(zhGroup).toBeDefined()
       expect(zhGroup.path).toBe('/guide')
+      expect(zhGroup.indexPath).toBe('/guide')
       expect(zhGroup.items.length).toBe(1)
       expect(zhGroup.items[0]!.path).toBe('/guide/getting-started')
 
       expect(enGroup).toBeDefined()
       expect(enGroup.path).toBe('/guide')
+      expect(enGroup.indexPath).toBe('/guide/index-en-us')
       expect(enGroup.items.length).toBe(1)
       expect(enGroup.items[0]!.path).toBe('/guide/getting-started-en-us')
     })

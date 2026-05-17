@@ -24,11 +24,8 @@ export interface Pagination {
   next: PageInfo | null
 }
 
-/**
- * 导航项 - 对应一个可导航的文档页面，继承分页信息
- */
-export interface NavItem {
-  type: 'item'
+interface BaseNavEntry {
+  type: 'item' | 'group'
   /** 路由路径 */
   path: string
   /** 导航标题 */
@@ -38,16 +35,19 @@ export interface NavItem {
 }
 
 /**
+ * 导航项 - 对应一个可导航的文档页面，继承分页信息
+ */
+export interface NavItem extends BaseNavEntry {
+  type: 'item'
+}
+
+/**
  * 导航分组 - 对应一个文档分类目录
  */
-export interface NavGroup {
+export interface NavGroup extends BaseNavEntry {
   type: 'group'
-  /** 分组标题 */
-  title: string
-  /** 分组路径（有 index 页面时存在，可点击跳转） */
-  path?: string
-  /** 排序权重，数值越小越靠前 */
-  order: number
+  /** 首页路由路径（有 index 页面时存在，可点击跳转） */
+  indexPath?: string
   /** 分组内导航项（不含 index） */
   items: NavItem[]
 }

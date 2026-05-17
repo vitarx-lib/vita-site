@@ -58,7 +58,7 @@ function isLangOf(node: RouteNode, lang: string): boolean {
  * 从路由子节点中构建指定语言的导航项列表
  *
  * 过滤掉首页、隐藏项、分组节点和非目标语言的页面，
- * 排除当前语言的首页（首页由 NavGroup.path 表示）
+ * 排除当前语言的首页（首页由 NavGroup.indexPath 表示）
  *
  * @param children - 子路由节点
  * @param lang - 目标语言标识
@@ -94,13 +94,16 @@ function buildNavItems(
 
 /**
  * 扁平化导航条目列表
+ *
+ * 有首页的分组（indexPath 存在）自身也作为可导航项加入扁平列表
+ *
  * @param entries - 导航条目数组
  */
 function flattenNavEntries(entries: NavEntry[]): NavEntry[] {
   const flattenEntries: NavEntry[] = []
   for (const entry of entries) {
     if (entry.type === 'group') {
-      if (entry.path) {
+      if (entry.indexPath) {
         flattenEntries.push(entry)
       }
       flattenEntries.push(...flattenNavEntries(entry.items))
@@ -135,6 +138,18 @@ function getRouteMeta(entry: NavEntry & { _routeNode?: RouteNode }): DocPageMeta
 }
 
 /**
+ * 获取导航条目的可导航路径
+ *
+ * NavItem 直接使用 path，NavGroup 使用 indexPath（首页路径）
+ *
+ * @param entry - 导航条目
+ * @returns 可导航的路由路径
+ */
+function getNavigablePath(entry: NavEntry): string {
+  return entry.type === 'group' ? entry.indexPath! : entry.path
+}
+
+/**
  * 为导航条目列表中的所有 NavItem 分配跨分组的分页信息
  *
  * 将所有 NavItem（含分组内和独立项）扁平化为线性序列，
@@ -150,11 +165,11 @@ function assignPagination(entries: NavEntry[]): void {
     const route = getRouteMeta(item)
     if (i > 0) {
       const prevItem = flatItems[i - 1]!
-      route.pagination.prev = { title: prevItem.title, path: prevItem.path! }
+      route.pagination.prev = { title: prevItem.title, path: getNavigablePath(prevItem) }
     }
     if (i < flatItems.length - 1) {
       const nextItem = flatItems[i + 1]!
-      route.pagination.next = { title: nextItem.title, path: nextItem.path! }
+      route.pagination.next = { title: nextItem.title, path: getNavigablePath(nextItem) }
     }
   }
 }
@@ -191,7 +206,8 @@ function extractNavEntries(
       const groupEntry: NavGroup = {
         type: 'group',
         title,
-        ...(hasIndex ? { path: child.fullPath } : {}),
+        path: child.fullPath,
+        ...(hasIndex ? { indexPath: indexChild!.fullPath } : {}),
         order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
         items: buildNavItems(child.children, lang, defaultLang)
       }
