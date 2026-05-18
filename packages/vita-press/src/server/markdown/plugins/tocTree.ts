@@ -88,6 +88,9 @@ function parseHeadingLevel(tag: string): number | null {
 /**
  * 获取标题内容
  *
+ * 过滤 html_inline 类型的子 token，避免将标题中的行内 HTML/JSX 组件
+ * （如 `<Badge type="vip" />`）纳入标题文本。
+ *
  * @param tokens - token 数组
  * @param headingOpenIndex - heading_open token 的索引
  * @returns 标题文本内容
@@ -98,6 +101,7 @@ function getHeadingContent(tokens: Token[], headingOpenIndex: number): string {
 
   let content = ''
   for (const child of contentToken.children) {
+    if (child.type === 'html_inline') continue
     content += child.content || ''
   }
   return content.trim()

@@ -1,11 +1,19 @@
 import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'vitest'
+import { jsxComponentParser } from '../../../../src/server/markdown/plugins/jsxComponentParser.js'
 import { tocTree } from '../../../../src/server/markdown/plugins/tocTree.js'
 import { renderMarkdown } from '../../../testUtils.js'
 
 function createMarkdownWithToc(): MarkdownIt {
   const md = new MarkdownIt()
   md.use(tocTree)
+  return md
+}
+
+function createMarkdownWithTocAndJsx(): MarkdownIt {
+  const md = new MarkdownIt({ html: true })
+  md.use(tocTree)
+  md.use(jsxComponentParser)
   return md
 }
 
@@ -148,6 +156,61 @@ describe('tocTree', () => {
       const html = renderMarkdown(md, '## My Heading')
 
       expect(html).toContain('>My Heading</RouterLink>')
+    })
+  })
+
+  describe('标题中包含行内 HTML/JSX 组件', () => {
+    it('tocList name 应排除行内 JSX 组件', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const env: any = {}
+      md.parse('## title <Badge type="vip" />', env)
+
+      expect(env.tocList).toHaveLength(1)
+      expect(env.tocList[0].name).toBe('title')
+    })
+
+    it('heading id 应排除行内 JSX 组件', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const tokens = md.parse('## title <Badge type="vip" />', {})
+
+      const headingOpen = tokens.find(t => t.type === 'heading_open')
+      expect(headingOpen?.attrGet('id')).toBe('title')
+    })
+
+    it('tocList hash 应与 heading id 一致', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const env: any = {}
+      const tokens = md.parse('## title <Badge type="vip" />', env)
+
+      const headingOpen = tokens.find(t => t.type === 'heading_open')
+      expect(env.tocList[0].hash).toBe(headingOpen?.attrGet('id'))
+    })
+
+    it('应处理标题中包含多个行内组件的情况', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const env: any = {}
+      md.parse('## API <Badge type="tip" /> <Badge type="warning" />', env)
+
+      expect(env.tocList[0].name).toBe('API')
+      expect(env.tocList[0].hash).toBe('api')
+    })
+
+    it('应处理仅包含行内组件的标题', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const env: any = {}
+      md.parse('## <Badge type="vip" />', env)
+
+      expect(env.tocList).toHaveLength(1)
+      expect(env.tocList[0].name).toBe('')
+    })
+
+    it('无行内组件的标题应不受影响', () => {
+      const md = createMarkdownWithTocAndJsx()
+      const env: any = {}
+      md.parse('## Pure Title', env)
+
+      expect(env.tocList[0].name).toBe('Pure Title')
+      expect(env.tocList[0].hash).toBe('pure-title')
     })
   })
 
