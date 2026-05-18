@@ -151,6 +151,111 @@ describe('tocTree', () => {
     })
   })
 
+  describe('重复标题 hash 唯一性', () => {
+    it('重复标题的 token id 应各不相同', () => {
+      const md = createMarkdownWithToc()
+      const tokens = md.parse(
+        `## Introduction
+## Introduction
+## Introduction`,
+        {}
+      )
+
+      const headingOpens = tokens.filter(t => t.type === 'heading_open')
+      const ids = headingOpens.map(t => t.attrGet('id'))
+
+      expect(ids).toHaveLength(3)
+      expect(new Set(ids).size).toBe(3)
+    })
+
+    it('重复标题的 tocList hash 应各不相同', () => {
+      const md = createMarkdownWithToc()
+      const env: any = {}
+      md.parse(
+        `## Introduction
+## Introduction
+## Introduction`,
+        env
+      )
+
+      const hashes = env.tocList.map((item: any) => item.hash)
+      expect(hashes).toHaveLength(3)
+      expect(new Set(hashes).size).toBe(3)
+    })
+
+    it('重复标题的 hash 应遵循 github-slugger 递增后缀规则', () => {
+      const md = createMarkdownWithToc()
+      const tokens = md.parse(
+        `## Getting Started
+## Getting Started
+## Getting Started`,
+        {}
+      )
+
+      const headingOpens = tokens.filter(t => t.type === 'heading_open')
+      const ids = headingOpens.map(t => t.attrGet('id'))
+
+      expect(ids[0]).toBe('getting-started')
+      expect(ids[1]).toBe('getting-started-1')
+      expect(ids[2]).toBe('getting-started-2')
+    })
+
+    it('不同级别的重复标题 hash 应各不相同', () => {
+      const md = createMarkdownWithToc()
+      const tokens = md.parse(
+        `## Overview
+### Overview`,
+        {}
+      )
+
+      const headingOpens = tokens.filter(t => t.type === 'heading_open')
+      const ids = headingOpens.map(t => t.attrGet('id'))
+
+      expect(ids).toHaveLength(2)
+      expect(ids[0]).not.toBe(ids[1])
+    })
+
+    it('数字开头的重复标题 id 应保持唯一且符合规范', () => {
+      const md = createMarkdownWithToc()
+      const tokens = md.parse(
+        `## 1 快速开始
+## 1 快速开始`,
+        {}
+      )
+
+      const headingOpens = tokens.filter(t => t.type === 'heading_open')
+      const ids = headingOpens.map(t => t.attrGet('id'))
+
+      expect(ids).toHaveLength(2)
+      expect(new Set(ids).size).toBe(2)
+      ids.forEach(id => {
+        expect(id).toMatch(/^_\d/)
+      })
+    })
+
+    it('tocList 中 hash 与 token id 应保持一致', () => {
+      const md = createMarkdownWithToc()
+      const env: any = {}
+      const tokens = md.parse(
+        `## Introduction
+## Introduction`,
+        env
+      )
+
+      const headingOpens = tokens.filter(t => t.type === 'heading_open')
+      const tokenIds = headingOpens
+        .filter(t => {
+          const level = t.tag
+          return level === 'h2' || level === 'h3'
+        })
+        .map(t => t.attrGet('id'))
+
+      const tocHashes = env.tocList.map((item: any) => item.hash)
+
+      expect(tocHashes).toEqual(tokenIds)
+    })
+  })
+
   describe('TOC 树生成', () => {
     it('应生成 TOC 树', () => {
       const md = createMarkdownWithToc()
