@@ -1,476 +1,302 @@
+import MarkdownIt from 'markdown-it'
 import { describe, expect, it } from 'vitest'
 import { jsxComponentParser } from '../../../../src/server/markdown/plugins/jsxComponentParser.js'
-import { createMarkdownWithPlugin, parseMarkdown, renderMarkdown } from '../../../testUtils.js'
+
+function createMd(availableComponents: Set<string> = new Set()): MarkdownIt {
+  const md = new MarkdownIt({ html: true })
+  md.use(jsxComponentParser)
+  md.render = ((content: string, env?: Record<string, unknown>) => {
+    const fullEnv = {
+      availableComponents,
+      filePath: '/test.md',
+      ...env
+    }
+    return MarkdownIt.prototype.render.call(md, content, fullEnv)
+  }) as typeof md.render
+  return md
+}
 
 describe('jsxComponentParser', () => {
-  describe('自闭合标签', () => {
-    it('应解析标准自闭合标签 <Tag />', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button />')
-
-      expect(html).toContain('<Button />')
+  describe('已导入的组件', () => {
+    it('自闭合组件不应抛出异常', () => {
+      const md = createMd(new Set(['Badge']))
+      expect(() => md.render('<Badge type="vip" />')).not.toThrow()
     })
 
-    it('应解析带空格的自闭合标签 <Tag / >', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button / >')
-
-      expect(html).toContain('<Button / >')
+    it('成对组件不应抛出异常', () => {
+      const md = createMd(new Set(['Button']))
+      expect(() => md.render('<Button>Click</Button>')).not.toThrow()
     })
 
-    it('应解析带属性的自闭合标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button variant="primary" size="large" />')
-
-      expect(html).toContain('<Button variant="primary" size="large" />')
+    it('行内组件不应抛出异常', () => {
+      const md = createMd(new Set(['Badge']))
+      expect(() => md.render('## title <Badge type="vip" />')).not.toThrow()
     })
 
-    it('应解析带空格和属性的自闭合标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button variant="primary" / >')
-
-      expect(html).toContain('<Button variant="primary" / >')
-    })
-
-    it('应正确识别多个连续的自闭合标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Button />
-<Input />
-<Select />`
-      )
-
-      expect(html).toContain('<Button />')
-      expect(html).toContain('<Input />')
-      expect(html).toContain('<Select />')
+    it('多个已导入组件不应抛出异常', () => {
+      const md = createMd(new Set(['Badge', 'Button', 'Container']))
+      expect(() =>
+        md.render(`<Badge type="vip" />
+<Button>Click</Button>
+<Container>Content</Container>`)
+      ).not.toThrow()
     })
   })
 
-  describe('成对标签', () => {
-    it('应解析简单的成对标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Button>
-Click me
-</Button>`
-      )
-
-      expect(html).toContain('<Button>')
-      expect(html).toContain('Click me')
-      expect(html).toContain('</Button>')
+  describe('未导入的组件', () => {
+    it('应抛出包含组件名的异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Badge type="vip" />')).toThrow(/Badge/)
     })
 
-    it('应解析带属性的成对标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Button variant="primary">
-Submit
-</Button>`
-      )
-
-      expect(html).toContain('<Button>')
-      expect(html).toContain('Submit')
-      expect(html).toContain('</Button>')
+    it('应抛出包含文件路径的异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Badge />')).toThrow(/\/test\.md/)
     })
 
-    it('应解析空内容的成对标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Container>
-</Container>`
-      )
-
-      expect(html).toContain('<Container>')
-      expect(html).toContain('</Container>')
+    it('应抛出包含修复建议的异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Badge />')).toThrow(/import \{ Badge \} from/)
     })
 
-    it('应解析多行内容的成对标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Card>
-# Title
-Content here
-More content
-</Card>`
-      )
+    it('应报告所有未导入的组件', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Badge /><Button />')).toThrow(/Badge.*Button|Button.*Badge/)
+    })
 
-      expect(html).toContain('<Card>')
-      expect(html).toContain('# Title')
-      expect(html).toContain('Content here')
-      expect(html).toContain('</Card>')
+    it('部分导入时应只报告未导入的组件', () => {
+      const md = createMd(new Set(['Badge']))
+      expect(() => md.render('<Badge /><Button />')).toThrow(/Button/)
+      expect(() => md.render('<Badge /><Button />')).not.toThrow(/Badge.*未导入|未导入.*Badge/)
+    })
+
+    it('行内未导入组件应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('## title <Badge type="vip" />')).toThrow(/Badge/)
+    })
+
+    it('成对未导入组件应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Button>Click</Button>')).toThrow(/Button/)
     })
   })
 
-  describe('嵌套组件', () => {
-    it('应正确处理同名组件嵌套', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Container>
-<Container>
-Nested
-</Container>
-</Container>`
-      )
-
-      expect(html).toContain('<Container>')
-      expect(html).toContain('Nested')
-      expect(html).toContain('</Container>')
+  describe('无组件的文档', () => {
+    it('空文档不应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('')).not.toThrow()
     })
 
-    it('应正确处理不同组件嵌套', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Container>
-<Button>
-Click
-</Button>
-</Container>`
-      )
-
-      expect(html).toContain('<Container>')
-      expect(html).toContain('<Button>')
-      expect(html).toContain('Click')
-      expect(html).toContain('</Button>')
-      expect(html).toContain('</Container>')
+    it('纯文本不应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('这是一段普通文本')).not.toThrow()
     })
 
-    it('应正确处理多层嵌套', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Level1>
-<Level2>
-<Level3>
-Deep content
-</Level3>
-</Level2>
-</Level1>`
-      )
-
-      expect(html).toContain('<Level1>')
-      expect(html).toContain('<Level2>')
-      expect(html).toContain('<Level3>')
-      expect(html).toContain('Deep content')
+    it('小写 HTML 标签不应触发校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<div>content</div>')).not.toThrow()
     })
 
-    it('应正确处理嵌套中的自闭合标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Container>
-<Button />
-<Input />
-</Container>`
-      )
-
-      expect(html).toContain('<Container>')
-      expect(html).toContain('<Button />')
-      expect(html).toContain('<Input />')
-      expect(html).toContain('</Container>')
-    })
-
-    it('应正确处理嵌套中的带空格自闭合标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Container>
-<Button / >
-</Container>`
-      )
-
-      expect(html).toContain('<Container>')
-      expect(html).toContain('<Button / >')
-      expect(html).toContain('</Container>')
+    it('Markdown 语法不应触发校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('## Heading\n- Item 1\n- Item 2')).not.toThrow()
     })
   })
 
-  describe('组件命名规则', () => {
-    it('应识别大写字母开头的组件名', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<Button />')
+  describe('availableComponents 为空', () => {
+    it('任何大写组件都应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Badge />')).toThrow()
+    })
+  })
 
-      expect(tokens.some(t => t.type === 'jsxComponent')).toBe(true)
+  describe('env 中无 availableComponents', () => {
+    it('应跳过校验不抛出异常', () => {
+      const md = new MarkdownIt({ html: true })
+      md.use(jsxComponentParser)
+      expect(() => md.render('<Badge />')).not.toThrow()
+    })
+  })
+
+  describe('组件名称识别', () => {
+    it('应识别驼峰命名组件', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<MyButton />')).toThrow(/MyButton/)
+    })
+
+    it('应识别全大写组件名', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<BUTTON />')).toThrow(/BUTTON/)
     })
 
     it('应识别包含数字的组件名', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button2 />')
-
-      expect(html).toContain('<Button2 />')
+      const md = createMd(new Set())
+      expect(() => md.render('<Button2 />')).toThrow(/Button2/)
     })
 
     it('不应识别小写字母开头的标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<button />')
-
-      expect(tokens.some(t => t.type === 'jsxComponent')).toBe(false)
-    })
-
-    it('应识别驼峰命名的组件', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<MyButton />')
-
-      expect(html).toContain('<MyButton />')
-    })
-
-    it('应识别全大写的组件名', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<BUTTON />')
-
-      expect(html).toContain('<BUTTON />')
-    })
-  })
-
-  describe('边界情况', () => {
-    it('应处理空文档', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '')
-
-      expect(html).toBe('')
-    })
-
-    it('应处理无组件的文档', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '这是一段普通文本')
-
-      expect(html).toContain('这是一段普通文本')
-      expect(html).not.toContain('jsxComponent')
-    })
-
-    it('应处理未闭合的标签', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(
-        md,
-        `<Button>
-No closing tag`
-      )
-
-      expect(tokens.some(t => t.type === 'jsxComponent')).toBe(false)
-    })
-
-    it('应处理只有开始标签的情况', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button>')
-
-      expect(html).not.toContain('<Button>')
-    })
-
-    it('应处理标签前有缩进的情况', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `  <Button />
-  <Input />`
-      )
-
-      expect(html).toContain('<Button />')
-      expect(html).toContain('<Input />')
-    })
-
-    it('应处理标签后有空白的情况', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button />   ')
-
-      expect(html).toContain('<Button />')
-    })
-  })
-
-  describe('与其他 Markdown 语法共存', () => {
-    it('应与标题共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `# Title
-<Button />
-## Subtitle`
-      )
-
-      expect(html).toContain('<h1')
-      expect(html).toContain('<Button />')
-      expect(html).toContain('<h2')
-    })
-
-    it('应与列表共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `- Item 1
-<Button />
-- Item 2`
-      )
-
-      expect(html).toContain('<ul')
-      expect(html).toContain('<Button />')
-    })
-
-    it('应与引用共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `> Quote
-<Button />
-> Another quote`
-      )
-
-      expect(html).toContain('<blockquote')
-      expect(html).toContain('<Button />')
-    })
-
-    it('应与代码块共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `\`\`\`js
-const a = 1
-\`\`\`
-<Button />`
-      )
-
-      expect(html).toContain('<pre')
-      expect(html).toContain('<Button />')
-    })
-
-    it('应与行内代码共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `Use \`code\` here
-<Button />`
-      )
-
-      expect(html).toContain('<code>')
-      expect(html).toContain('<Button />')
-    })
-
-    it('应与链接共存', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `[Link](url)
-<Button />`
-      )
-
-      expect(html).toContain('<a href=')
-      expect(html).toContain('<Button />')
-    })
-  })
-
-  describe('Token 结构', () => {
-    it('应生成正确的 token 类型', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<Button />')
-
-      const jsxToken = tokens.find(t => t.type === 'jsxComponent')
-      expect(jsxToken).toBeDefined()
-    })
-
-    it('应设置正确的 tag 属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<Button />')
-
-      const jsxToken = tokens.find(t => t.type === 'jsxComponent')
-      expect(jsxToken?.tag).toBe('Button')
-    })
-
-    it('应设置正确的 content 属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<Button variant="primary" />')
-
-      const jsxToken = tokens.find(t => t.type === 'jsxComponent')
-      expect(jsxToken?.content).toBe('<Button variant="primary" />')
-    })
-
-    it('应设置正确的 block 属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(md, '<Button />')
-
-      const jsxToken = tokens.find(t => t.type === 'jsxComponent')
-      expect(jsxToken?.block).toBe(true)
-    })
-
-    it('应设置正确的 map 属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const tokens = parseMarkdown(
-        md,
-        `Text
-<Button />
-More text`
-      )
-
-      const jsxToken = tokens.find(t => t.type === 'jsxComponent')
-      expect(jsxToken?.map).toEqual([1, 2])
+      const md = createMd(new Set())
+      expect(() => md.render('<button />')).not.toThrow()
     })
   })
 
   describe('复杂场景', () => {
-    it('应处理包含特殊字符的属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(md, '<Button data-value="test &amp; demo" />')
-
-      expect(html).toContain('data-value="test &amp; demo"')
+    it('嵌套组件应分别校验', () => {
+      const md = createMd(new Set(['Container']))
+      expect(() => md.render('<Container><Button /></Container>')).toThrow(/Button/)
     })
 
-    it('应处理多个属性', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        '<Button id="btn" class="primary" disabled onClick={handleClick} />'
-      )
-
-      expect(html).toContain('id="btn"')
-      expect(html).toContain('class="primary"')
-      expect(html).toContain('disabled')
-    })
-
-    it('应处理包含 Markdown 语法的组件内容', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Card>
+    it('多行成对组件应正确校验', () => {
+      const md = createMd(new Set())
+      expect(() =>
+        md.render(`<Card>
 ## Title
-- Item 1
-- Item 2
-**Bold** and *italic*
-</Card>`
-      )
-
-      expect(html).toContain('<Card>')
-      expect(html).toContain('## Title')
-      expect(html).toContain('- Item 1')
-      expect(html).toContain('</Card>')
-    })
-
-    it('应处理复杂的嵌套结构', () => {
-      const md = createMarkdownWithPlugin(jsxComponentParser)
-      const html = renderMarkdown(
-        md,
-        `<Layout>
-<Header>
-<Nav />
-</Header>
-<Main>
-<Article>
 Content
-</Article>
-<Aside />
-</Main>
-</Layout>`
-      )
-
-      expect(html).toContain('<Layout>')
-      expect(html).toContain('<Header>')
-      expect(html).toContain('<Nav />')
-      expect(html).toContain('<Main>')
-      expect(html).toContain('<Article>')
-      expect(html).toContain('Content')
-      expect(html).toContain('<Aside />')
+</Card>`)
+      ).toThrow(/Card/)
     })
+
+    it('闭合标签中的组件名也应被识别', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Button>Click</Button>')).toThrow(/Button/)
+    })
+
+    it('与 Markdown 语法共存时应正确校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render(`# Title\n<Badge />\n## Subtitle`)).toThrow(/Badge/)
+    })
+  })
+
+  describe('未闭合标签检测', () => {
+    it('已导入但未闭合的标签应抛出异常', () => {
+      const md = createMd(new Set(['Button']))
+      expect(() => md.render('<Button>')).toThrow(/未闭合/)
+    })
+
+    it('未闭合标签异常应包含组件名', () => {
+      const md = createMd(new Set(['Button']))
+      expect(() => md.render('<Button>')).toThrow(/Button/)
+    })
+
+    it('自闭合标签不应被报告为未闭合', () => {
+      const md = createMd(new Set(['Badge']))
+      expect(() => md.render('<Badge />')).not.toThrow()
+    })
+
+    it('正确闭合的成对标签不应抛出异常', () => {
+      const md = createMd(new Set(['Button']))
+      expect(() => md.render('<Button>Click</Button>')).not.toThrow()
+    })
+
+    it('未闭合标签异常应包含修复建议', () => {
+      const md = createMd(new Set(['Button']))
+      expect(() => md.render('<Button>')).toThrow(/<\/Button>|\/>/)
+    })
+
+    it('多个未闭合标签应全部报告', () => {
+      const md = createMd(new Set(['Button', 'Card']))
+      expect(() => md.render('<Button>\n<Card>')).toThrow(/Button.*Card|Card.*Button/)
+    })
+
+    it('未导入且未闭合的标签应同时报告两类错误', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('<Button>')).toThrow(/未导入/)
+      expect(() => md.render('<Button>')).toThrow(/未闭合/)
+    })
+  })
+
+  describe('代码围栏中的标签', () => {
+    it('代码围栏中的未导入组件不应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('```jsx\n<Button />\n```')).not.toThrow()
+    })
+
+    it('代码围栏中的未闭合标签不应抛出异常', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('```jsx\n<Button>\n```')).not.toThrow()
+    })
+
+    it('行内代码中的组件不应触发校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('Use `<Button />` here')).not.toThrow()
+    })
+
+    it('缩进代码块中的组件不应触发校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('    <Button />')).not.toThrow()
+    })
+
+    it('代码围栏外的组件仍应被校验', () => {
+      const md = createMd(new Set())
+      expect(() => md.render('```jsx\n<Button />\n```\n\n<Badge />')).toThrow(/Badge/)
+    })
+  })
+})
+
+describe('extractImportNames', () => {
+  it('应从具名导入中提取标识符', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['import { Button } from "components"'])
+    expect(names).toEqual(new Set(['Button']))
+  })
+
+  it('应从多个具名导入中提取标识符', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['import { Button, Card } from "components"'])
+    expect(names).toEqual(new Set(['Button', 'Card']))
+  })
+
+  it('应处理 as 别名', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['import { Button as Btn } from "components"'])
+    expect(names).toEqual(new Set(['Btn']))
+  })
+
+  it('应从默认导入中提取标识符', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['import MyComponent from "components"'])
+    expect(names).toEqual(new Set(['MyComponent']))
+  })
+
+  it('应处理混合导入', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames([
+      'import { Button } from "components"',
+      'import Card from "ui"'
+    ])
+    expect(names).toEqual(new Set(['Button', 'Card']))
+  })
+
+  it('应跳过非 import 语句', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['const a = 1', 'import { Button } from "components"'])
+    expect(names).toEqual(new Set(['Button']))
+  })
+
+  it('应处理空数组', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames([])
+    expect(names).toEqual(new Set())
+  })
+
+  it('应处理带分号的 import 语句', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(['import { Button } from "components";'])
+    expect(names).toEqual(new Set(['Button']))
+  })
+
+  it('应处理单引号路径', async () => {
+    const { extractImportNames } =
+      await import('../../../../src/server/markdown/utils/importParser.js')
+    const names = extractImportNames(["import { Button } from 'components'"])
+    expect(names).toEqual(new Set(['Button']))
   })
 })

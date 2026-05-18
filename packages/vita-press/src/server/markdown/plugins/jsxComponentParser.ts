@@ -1,219 +1,156 @@
 import type MarkdownIt from 'markdown-it'
-import type StateBlock from 'markdown-it/lib/rules_block/state_block.mjs'
-import { getLineContent } from '../utils/lineContent.js'
+import type { MarkdownParseEnvContext } from '../../../types/index.js'
 
 /**
- * JSX 组件 Token 结构定义
+ * 从 HTML 内容中收集 JSX 组件名称
  *
- * 扩展 markdown-it 的 Token 类型，用于标识 JSX 组件标签
- * 与普通 HTML 标签的区别：组件名必须以大写字母开头（React 约定）
+ * JSX 组件名以大写字母开头（React 约定），
+ * 同时收集开始标签和闭合标签中的组件名，确保不遗漏。
+ *
+ * @param html - HTML 字符串
+ * @param names - 收集组件名称的集合
+ *
+ * @example
+ * collectJsxComponentNames('<Badge type="vip" />', names)  // names → {"Badge"}
+ * collectJsxComponentNames('</Container>', names)          // names → {"Container"}
  */
-interface JsxComponentToken {
-  type: 'jsxComponent'
-  tag: string
-  content: string
-  block: boolean
-  map: [number, number]
+function collectJsxComponentNames(html: string, names: Set<string>): void {
+  const re = /<\/?([A-Z][a-zA-Z0-9]*)/g
+  let match: RegExpExecArray | null
+  while ((match = re.exec(html)) !== null) {
+    names.add(match[1]!)
+  }
 }
 
 /**
- * JSX 组件解析器插件
+ * 标签开闭状态跟踪器
  *
- * 功能说明：
- * 为 markdown-it 添加 JSX 组件标签的解析能力，使其能够识别和处理 Markdown 中的 React 组件语法。
+ * 跨 token 维护栈结构，正确处理 markdown-it 将开始标签和闭合标签
+ * 拆分为独立 html_inline 子 token 的情况。
  *
- * 设计思路：
- * 1. 使用大写字母开头作为组件标识（遵循 React 命名约定）
- * 2. 支持自闭合和成对标签两种形式
- * 3. 通过深度计数处理嵌套组件，确保正确匹配闭合标签
+ * 例如 `<Button>Click</Button>` 会被 markdown-it 拆分为：
+ * - html_inline: `<Button>`
+ * - text: `Click`
+ * - html_inline: `</Button>`
  *
- * 支持的 JSX 语法：
- * - 自闭合标签：`<Button />`
- * - 带属性的标签：`<Button variant="primary">Click me</Button>`
- * - 嵌套组件：`<Container><Button>Click</Button></Container>`
- *
- * @param md - MarkdownIt 实例，用于注册解析规则和渲染器
- *
- * @example
- * ```ts
- * import MarkdownIt from 'markdown-it'
- * import { jsxComponentParser } from './plugins/jsxComponentParser'
- *
- * const md = new MarkdownIt()
- * md.use(jsxComponentParser)
- *
- * // 现在可以解析 JSX 组件了
- * md.render('<Button>Click</Button>')
- * ```
+ * 如果在每个 token 内独立运行栈，无法匹配开闭标签。
+ * 因此需要跨 token 维护统一的栈。
  */
-export function jsxComponentParser(md: MarkdownIt): void {
+class TagClosureTracker {
+  private readonly stack: string[] = []
+  private readonly tagRe = /<\/?([A-Z][a-zA-Z0-9]*)([^>]*)>/g
+
   /**
-   * 检测是否为自闭合标签
+   * 处理一段 HTML 内容，更新开闭状态
    *
-   * 支持的格式：
-   * - <Tag />
-   * - <Tag / >  (斜杠和大于号之间有空格)
-   * - <Tag attribute="value" />
-   *
-   * @param content - 要检测的内容
-   * @returns 是否为自闭合标签
+   * @param html - HTML 字符串
    */
-  function isSelfClosingTag(content: string): boolean {
-    return /<[A-Z][a-zA-Z0-9]*[^>]*\/\s*>/.test(content)
+  process(html: string): void {
+    this.tagRe.lastIndex = 0
+    let match: RegExpExecArray | null
+    while ((match = this.tagRe.exec(html)) !== null) {
+      const fullMatch = match[0]
+      const tagName = match[1]!
+      const attrs = match[2] || ''
+
+      if (fullMatch.startsWith('</')) {
+        if (this.stack.length > 0 && this.stack[this.stack.length - 1] === tagName) {
+          this.stack.pop()
+        }
+      } else if (attrs.trimEnd().endsWith('/')) {
+        // 自闭合标签，不压栈
+      } else {
+        this.stack.push(tagName)
+      }
+    }
   }
 
   /**
-   * 解析 JSX 组件标签的核心函数
+   * 获取未闭合的标签名称集合
    *
-   * 算法流程：
-   * 1. 检测行首是否匹配 JSX 组件标签模式（大写字母开头）
-   * 2. 判断是自闭合标签还是成对标签
-   * 3. 对于成对标签，使用深度计数法查找匹配的闭合标签
-   * 4. 提取组件内容并生成对应的 Token
-   *
-   * @param state - markdown-it 解析状态对象，包含源码、行信息等
-   * @param startLine - 当前解析的起始行号
-   * @param endLine - 文档结束行号
-   * @param silent - 是否为静默模式（仅检测，不生成 Token）
-   * @returns 是否成功解析为 JSX 组件
+   * @returns 未闭合标签名称集合
    */
-  function parseJsxComponent(
-    state: StateBlock,
-    startLine: number,
-    endLine: number,
-    silent: boolean
-  ): boolean {
-    if (startLine >= endLine) return false
+  getUnclosed(): Set<string> {
+    return new Set(this.stack)
+  }
+}
 
-    const lineContent = getLineContent(state, startLine)
-    if (lineContent === null) return false
+/**
+ * JSX 组件导入校验与标签闭合检测插件
+ *
+ * 功能说明：
+ * 扫描 Markdown 解析后的 token 流，执行两项校验：
+ * 1. 导入校验：检查使用的 JSX 组件是否已在 injectCode 中导入
+ * 2. 闭合校验：检查 JSX 组件标签是否正确闭合
+ *
+ * 设计思路：
+ * 1. 在 core 规则链中后处理 token 流，而非块级规则
+ *    （markdown-it 的 HTML 块规则优先级更高，块级规则无法拦截 JSX）
+ * 2. 扫描 html_block 和 html_inline 两类 token，覆盖块级和行内 JSX
+ * 3. 不扫描 fence / code_inline / code_block token，代码围栏中的标签不参与校验
+ * 4. 使用 TagClosureTracker 跨 token 维护开闭状态，避免误报
+ * 5. 仅做校验，不修改 token 流，不影响最终 HTML 输出
+ *
+ * @param md - MarkdownIt 实例
+ *
+ * @example
+ * ```ts
+ * // injectCode 中未导入 Badge
+ * const env = { availableComponents: new Set(['Button']), ... }
+ * md.render('## title <Badge type="vip" />', env)
+ * // → 抛出 Error: 使用了未导入的组件: Badge
+ *
+ * // 未闭合的组件标签
+ * md.render('<Button>Click', env)
+ * // → 抛出 Error: 存在未闭合的组件标签: Button
+ * ```
+ */
+export function jsxComponentParser(md: MarkdownIt): void {
+  md.core.ruler.push('jsx-component-check', state => {
+    const env = state.env as MarkdownParseEnvContext
+    if (!env?.availableComponents) return
 
-    /**
-     * 正则匹配规则：
-     * - ^< : 以 < 开头
-     * - ([A-Z][a-zA-Z0-9]*) : 组件名必须大写字母开头，后续为字母或数字
-     * - (\s+[^>]*)? : 可选的属性部分（空格 + 非 > 的任意字符）
-     * - \/?> : 以 /> 或 > 结尾
-     */
-    const match = lineContent.match(/^<([A-Z][a-zA-Z0-9]*)(\s+[^>]*)?\/?>/)
-    if (!match) {
-      return false
-    }
+    const usedComponents = new Set<string>()
+    const closureTracker = new TagClosureTracker()
 
-    if (silent) {
-      return true
-    }
-
-    const tagName = match[1]!
-    const isSelfClosing = isSelfClosingTag(lineContent)
-
-    if (isSelfClosing) {
-      const token = state.push('jsxComponent', tagName, 0) as JsxComponentToken
-      token.content = lineContent
-      token.block = true
-      token.map = [startLine, startLine + 1]
-      state.line = startLine + 1
-      return true
-    }
-
-    /**
-     * 处理成对标签的闭合标签查找
-     *
-     * 使用深度计数法处理嵌套场景：
-     * - 遇到同名开始标签时 depth++
-     * - 遇到同名结束标签时 depth--
-     * - 当 depth === 0 时找到匹配的闭合标签
-     *
-     * 示例：
-     * <Container>      depth = 1
-     *   <Container>    depth = 2
-     *   </Container>   depth = 1
-     * </Container>     depth = 0 ✓ 找到匹配
-     */
-    const endTag = `</${tagName}>`
-    let endLinePos = -1
-    let depth = 1
-
-    for (let i = startLine + 1; i < endLine; i++) {
-      const linePos = state.bMarks[i]
-      const lineTShift = state.tShift[i]
-      const lineMax = state.eMarks[i]
-
-      if (linePos === undefined || lineTShift === undefined || lineMax === undefined) {
-        continue
+    for (const token of state.tokens) {
+      if (token.type === 'html_block') {
+        collectJsxComponentNames(token.content, usedComponents)
+        closureTracker.process(token.content)
       }
-
-      const line = state.src.slice(linePos + lineTShift, lineMax).trim()
-
-      /**
-       * 检测嵌套的开始标签
-       * 注意：自闭合标签 <Tag /> 或 <Tag / > 不增加深度，因为它不会闭合
-       */
-      if (line.includes(`<${tagName}`) && !isSelfClosingTag(line)) {
-        depth++
-      }
-
-      if (line === endTag) {
-        depth--
-        if (depth === 0) {
-          endLinePos = i
-          break
+      if (token.type === 'inline' && token.children) {
+        for (const child of token.children) {
+          if (child.type === 'html_inline') {
+            collectJsxComponentNames(child.content, usedComponents)
+            closureTracker.process(child.content)
+          }
         }
       }
     }
 
-    if (endLinePos === -1) {
-      return false
+    const filePath = env.filePath || 'unknown'
+    const errors: string[] = []
+
+    const unimported = [...usedComponents].filter(name => !env.availableComponents.has(name))
+    if (unimported.length > 0) {
+      const names = unimported.join(', ')
+      const suggestions = unimported.map(n => `  import { ${n} } from "..."`).join('\n')
+      errors.push(
+        `使用了未导入的组件: ${names}\n请在配置 injectCode 中添加导入语句:\n${suggestions}`
+      )
     }
 
-    /**
-     * 提取组件内容
-     *
-     * contentStart: 开始标签后的第一个字符位置
-     * contentEnd: 闭合标签前的最后一个字符位置
-     *
-     * 示例：
-     * <Button>
-     *   Click me    <- content
-     * </Button>
-     */
-    const contentStart = state.eMarks[startLine]! + 1
-    const contentEnd = state.bMarks[endLinePos]!
-    const content = state.src.slice(contentStart, contentEnd).trim()
+    const unclosedTags = closureTracker.getUnclosed()
+    if (unclosedTags.size > 0) {
+      const names = [...unclosedTags].join(', ')
+      const sample = [...unclosedTags][0]!
+      errors.push(
+        `存在未闭合的组件标签: ${names}\n请添加对应的闭合标签，如 <${sample}></${sample}> 或使用自闭合形式 <${sample} />`
+      )
+    }
 
-    const token = state.push('jsxComponent', tagName, 0) as JsxComponentToken
-    token.content = `<${tagName}>${content}${endTag}`
-    token.block = true
-    token.map = [startLine, endLinePos + 1]
-
-    state.line = endLinePos + 1
-
-    return true
-  }
-
-  /**
-   * 注册块级解析规则
-   *
-   * 位置选择：
-   * - before('paragraph'): 在段落解析之前执行，优先级高于普通文本
-   * - alt: 定义替代解析规则，当主要规则失败时尝试这些规则
-   *
-   * 这样可以确保 JSX 组件标签不会被当作普通段落处理
-   */
-  md.block.ruler.before('paragraph', 'jsxComponent', parseJsxComponent, {
-    alt: ['paragraph', 'reference', 'blockquote', 'list']
+    if (errors.length > 0) {
+      throw new Error(`[jsxComponentParser] ${filePath} 中存在以下问题:\n${errors.join('\n\n')}`)
+    }
   })
-
-  /**
-   * 渲染器规则
-   *
-   * 将 JSX 组件 Token 转换为原始字符串
-   *
-   * 注意：这里保留原始 JSX 语法，后续由其他处理器（如 Vite 插件）进行编译
-   * 这样可以保持插件的职责单一，只负责解析，不负责转换
-   */
-  md.renderer.rules['jsxComponent'] = (tokens, idx) => {
-    const token = tokens[idx] as JsxComponentToken
-    return token.content || ''
-  }
 }

@@ -263,7 +263,12 @@ This is a danger
     })
 
     it('应正确解析 JSX 组件', async () => {
-      const app = await createTestApp(tempDir)
+      const app = await createTestApp(tempDir, {
+        injectCode: [
+          'import { CustomComponent } from "components"',
+          'import { AnotherComponent } from "components"'
+        ]
+      })
       const parser = app.mdParser
 
       const content = `<CustomComponent title="Test" />
@@ -532,7 +537,9 @@ lang: en-US
 
   describe('完整文档解析', () => {
     it('应正确解析完整的文档', async () => {
-      const app = await createTestApp(tempDir)
+      const app = await createTestApp(tempDir, {
+        injectCode: ['import { CustomComponent } from "components"']
+      })
       const parser = app.mdParser
 
       const content = `---

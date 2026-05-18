@@ -90,6 +90,13 @@ export interface MarkdownParseEnvContext {
    * 目录列表
    */
   readonly tocList: TocTree[]
+  /**
+   * 可用的 JSX 组件名称集合
+   *
+   * 从 injectCode 配置中提取的导入标识符名称，
+   * 用于校验 Markdown 中使用的 JSX 组件是否已被导入。
+   */
+  readonly availableComponents: Set<string>
 }
 
 /**

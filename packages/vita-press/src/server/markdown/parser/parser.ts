@@ -8,7 +8,7 @@ import type { VitaPressApp } from '../../app/index.js'
 import { invokeParallel, invokePipe } from '../../common/hooks.js'
 import { getVersion } from '../../common/utils.js'
 import { CacheManager } from '../cache/index.js'
-import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
+import { extractImportNames, getCommitInfo, parseFrontMatter } from '../utils/index.js'
 
 /**
  * Markdown 解析器
@@ -19,6 +19,7 @@ import { getCommitInfo, parseFrontMatter } from '../utils/index.js'
 export class MdParser {
   private readonly app: VitaPressApp
   private readonly injectCode: string
+  private readonly availableComponents: Set<string>
   public readonly md: MarkdownIt
   public readonly cache: CacheManager
   /**
@@ -33,6 +34,7 @@ export class MdParser {
     this.injectCode = this.app.config.injectCode.length
       ? Array.from(new Set(this.app.config.injectCode)).join('\n') + '\n'
       : ''
+    this.availableComponents = extractImportNames(this.app.config.injectCode)
     const configHash = createHash('md5')
       .update(
         JSON.stringify({
@@ -95,7 +97,8 @@ export class MdParser {
       app: this.app,
       filePath,
       frontmatter,
-      tocList: []
+      tocList: [],
+      availableComponents: this.availableComponents
     }
     const html = this.md.render(markdownContent, env)
     const docPageMetaData: DocPageMetaData = {

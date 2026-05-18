@@ -15,29 +15,33 @@ vi.mock('vitarx-router/file-router', async importOriginal => {
   }
 })
 
-vi.mock('../../../../src/server/markdown/utils/index.js', () => ({
-  parseFrontMatter: vi.fn((content: string) => {
-    const frontMatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
-    if (frontMatterMatch) {
-      const yaml = require('js-yaml')
-      try {
-        const data = yaml.load(frontMatterMatch[1]) || {}
-        return {
-          data: typeof data === 'object' && !Array.isArray(data) ? data : {},
-          content: content.slice(frontMatterMatch[0].length)
+vi.mock('../../../../src/server/markdown/utils/index.js', async importOriginal => {
+  const actual = await importOriginal<typeof import('../../../../src/server/markdown/utils/index.js')>()
+  return {
+    ...actual,
+    parseFrontMatter: vi.fn((content: string) => {
+      const frontMatterMatch = content.match(/^---\n([\s\S]*?)\n---\n/)
+      if (frontMatterMatch) {
+        const yaml = require('js-yaml')
+        try {
+          const data = yaml.load(frontMatterMatch[1]) || {}
+          return {
+            data: typeof data === 'object' && !Array.isArray(data) ? data : {},
+            content: content.slice(frontMatterMatch[0].length)
+          }
+        } catch {
+          return { data: {}, content: content.slice(frontMatterMatch[0].length) }
         }
-      } catch {
-        return { data: {}, content: content.slice(frontMatterMatch[0].length) }
       }
-    }
-    return { data: {}, content }
-  }),
-  getCommitInfo: vi.fn(() => ({
-    authors: ['test-author'],
-    createdAt: '2024-01-01T00:00:00+08:00',
-    lastUpdateAt: '2024-01-01T00:00:00+08:00'
-  }))
-}))
+      return { data: {}, content }
+    }),
+    getCommitInfo: vi.fn(() => ({
+      authors: ['test-author'],
+      createdAt: '2024-01-01T00:00:00+08:00',
+      lastUpdateAt: '2024-01-01T00:00:00+08:00'
+    }))
+  }
+})
 
 describe('MdParser', () => {
   let tempDir: string
