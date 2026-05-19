@@ -153,6 +153,54 @@ describe('containerPlugin', () => {
     })
   })
 
+  describe('无空格语法', () => {
+    it(':::info 应正常渲染', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::info\n内容\n:::')
+
+      expect(result).toContain('class="v-state-container info"')
+      expect(result).toContain('<h4 class="title">INFO</h4>')
+      expect(result).toContain('内容')
+    })
+
+    it(':::info:自定义标题 应正常渲染', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::info:提示\n内容\n:::')
+
+      expect(result).toContain('<h4 class="title">提示</h4>')
+    })
+
+    it(':::success 应正常渲染', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::success\n内容\n:::')
+
+      expect(result).toContain('class="v-state-container success"')
+      expect(result).toContain('<h4 class="title">SUCCESS</h4>')
+    })
+
+    it(':::warning:注意 应正常渲染', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::warning:注意\n内容\n:::')
+
+      expect(result).toContain('<h4 class="title">注意</h4>')
+    })
+
+    it(':::error 应正常渲染', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::error\n内容\n:::')
+
+      expect(result).toContain('class="v-state-container error"')
+      expect(result).toContain('<h4 class="title">ERROR</h4>')
+    })
+
+    it(':::info: 冒号后无内容应使用默认标题', () => {
+      const md = createMdWithPlugin()
+      const result = md.render(':::info:\n内容\n:::')
+
+      expect(result).toContain('<h4 class="title">INFO</h4>')
+    })
+  })
+
   describe('内容渲染', () => {
     it('应正确渲染容器内的 Markdown 内容', () => {
       const md = createMdWithPlugin()

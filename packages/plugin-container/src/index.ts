@@ -11,7 +11,7 @@ const ICONS = {
 /**
  * 创建 Markdown 容器插件，为 markdown-it 注册多种提示容器（info / success / warning / error）
  *
- * 容器语法：`::: type[:title]`，title 省略时默认使用类型大写形式。
+ * 容器语法：`:::type[:title]` 或 `::: type[:title]`，title 省略时默认使用类型大写形式。
  * 渲染输出包含对应图标（SVG）与标题的 `<div class="v-container">` 结构。
  *
  * @returns VitaPressPlugin - 可注入 VitaPress 的 markdown-it 容器插件实例
@@ -28,12 +28,9 @@ export function containerPlugin(): VitaPressPlugin {
           render: (tokens: MarkdownItToken[], idx: number) => {
             const token = tokens[idx]!
             if (token.nesting === 1) {
-              // 开始标签
-              const parts = token.info.trim().slice(type.length).trim().split(':')
-              const title = parts[1] || type.toUpperCase()
+              const title = parseContainerTitle(token.info.trim(), type)
               return `<div class="v-state-container ${type}"><div class="v-state-container-header"><svg width="18" height="18" viewBox="64 64 896 896" class="icon">${ICONS[type]}</svg><h4 class="title">${title}</h4></div>\n`
             } else {
-              // 结束标签
               return '</div>\n'
             }
           }
@@ -41,4 +38,27 @@ export function containerPlugin(): VitaPressPlugin {
       }
     }
   }
+}
+
+/**
+ * 从容器 info 字段中解析自定义标题
+ *
+ * 支持的格式：
+ * - "info"           → 默认标题 "INFO"
+ * - "info:自定义"     → "自定义"
+ * - "info:"          → 默认标题 "INFO"
+ * - "info-extra"     → 默认标题 "INFO"
+ * - "info-extra:自定义" → "自定义"
+ *
+ * @param info - token.info 字段值（已 trim）
+ * @param type - 容器类型名
+ * @returns 解析后的标题文本
+ */
+function parseContainerTitle(info: string, type: string): string {
+  const colonIndex = info.indexOf(':')
+  if (colonIndex === -1) {
+    return type.toUpperCase()
+  }
+  const title = info.slice(colonIndex + 1).trim()
+  return title || type.toUpperCase()
 }
