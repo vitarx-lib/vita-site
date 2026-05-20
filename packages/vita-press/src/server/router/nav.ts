@@ -62,17 +62,15 @@ function isLangOf(node: RouteNode, lang: string): boolean {
  *
  * @param children - 子路由节点
  * @param lang - 目标语言标识
- * @param defaultLang - 默认语言标识
+ * @param indexPath - 首页路由的 path 字段值
  * @returns 导航项数组
  */
 function buildNavItems(
   children: RouteNode[] | undefined,
   lang: string,
-  defaultLang: string
+  indexPath: string
 ): NavItem[] {
   if (!children) return []
-
-  const indexPath = resolveIndexPath(lang, defaultLang)
 
   return children
     .filter(child => child.path !== indexPath)
@@ -195,25 +193,30 @@ function extractNavEntries(
   const indexPath = resolveIndexPath(lang, defaultLang)
 
   for (const child of docGroupChildren) {
+    // 过滤隐藏项
     if (child.meta?.['navHidden']) continue
+    // 如果是分组，则生成 NavGroup
     if (child.isGroup) {
+      // 查找首页
       const indexChild = child.children?.find(c => c.path === indexPath && isLangOf(c, lang))
       const title = child.meta?.['navTitle']
         ? child.meta['navTitle']
         : resolveNavTitle(indexChild?.meta, child.path)
       const hasIndex = !!indexChild && !indexChild.meta?.['navHidden']
-
       const groupEntry: NavGroup = {
         type: 'group',
         title,
         path: child.fullPath,
-        ...(hasIndex ? { indexPath: indexChild!.fullPath } : {}),
         order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-        items: buildNavItems(child.children, lang, defaultLang)
+        items: buildNavItems(child.children, lang, indexPath)
+      }
+      if (hasIndex) {
+        groupEntry.indexPath = indexChild!.fullPath
       }
       if (groupEntry.items.length > 0 || hasIndex) {
         entries.push(groupEntry)
-        setTempRouteNode(groupEntry, child)
+        // 有首页时将分页信息写入 index 子路由，避免运行时被空分页覆盖
+        setTempRouteNode(groupEntry, hasIndex ? indexChild! : child)
       }
     } else {
       if (!isLangOf(child, lang)) continue
@@ -281,8 +284,11 @@ export function buildNavTree(
   for (const lang of langs) {
     const docNavTree: Record<string, NavEntry[]> = {}
     for (const route of routes) {
+      // 过滤非分组路由
       if (!route.isGroup) continue
+      // 过滤非文档目录
       if (!docDirs.has(route.filePath)) continue
+      // 生成导航条目
       const entries = extractNavEntries(route.children ?? [], lang, defaultLang)
       if (entries.length > 0) {
         docNavTree[route.fullPath] = entries

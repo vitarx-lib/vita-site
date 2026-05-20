@@ -21,17 +21,35 @@ function flattenNavItems(entries: NavEntry[]): NavItem[] {
 }
 
 /**
- * 递归查找 fullPath 匹配的路由节点
+ * 递归查找 fullPath 匹配的页面路由节点（优先匹配非分组节点）
  *
  * @param routes - 路由节点数组
  * @param fullPath - 目标完整路径
- * @returns 匹配的路由节点，未找到返回 null
+ * @returns 匹配的页面路由节点，未找到返回 null
  */
 function findRouteByFullPath(routes: RouteNode[], fullPath: string): RouteNode | null {
   for (const route of routes) {
-    if (route.fullPath === fullPath) return route
+    if (!route.isGroup && route.fullPath === fullPath) return route
     if (route.children) {
       const found = findRouteByFullPath(route.children, fullPath)
+      if (found) return found
+    }
+  }
+  return null
+}
+
+/**
+ * 查找 fullPath 匹配的分组路由节点
+ *
+ * @param routes - 路由节点数组
+ * @param fullPath - 目标完整路径
+ * @returns 匹配的分组路由节点，未找到返回 null
+ */
+function findGroupRouteByFullPath(routes: RouteNode[], fullPath: string): RouteNode | null {
+  for (const route of routes) {
+    if (route.isGroup && route.fullPath === fullPath) return route
+    if (route.children) {
+      const found = findGroupRouteByFullPath(route.children, fullPath)
       if (found) return found
     }
   }
@@ -418,6 +436,29 @@ describe('buildNavTree', () => {
         path: '/guide/first'
       })
     })
+
+    it('有 index 的分组分页信息应写入 index 子路由', async () => {
+      createFile('docs/guide/index.md', '# Guide')
+      createFile('docs/guide/getting-started.md', '---\nnavOrder: 1\n---\n# Getting Started')
+      createFile('docs/guide/advanced.md', '---\nnavOrder: 2\n---\n# Advanced')
+
+      const app = await createTestApp(tempDir)
+      const { routes } = app.router.generate()
+
+      // 分页信息应写入 index 子路由而非分组路由
+      const indexRoute = findRouteByFullPath(routes, '/guide')!
+      const groupRoute = findGroupRouteByFullPath(routes, '/guide')!
+
+      expect(indexRoute.meta!['pagination']).toBeDefined()
+      expect(indexRoute.meta!['pagination'].prev).toBeNull()
+      expect(indexRoute.meta!['pagination'].next).toEqual({
+        title: 'Getting Started',
+        path: '/guide/getting-started'
+      })
+
+      // 分组路由不应有分页信息
+      expect(groupRoute.meta!['pagination']).toBeUndefined()
+    })
   })
 
   describe('多语言导航 (i18n)', () => {
@@ -635,7 +676,7 @@ describe('buildNavTree', () => {
       const app = await createTestApp(tempDir)
       const { routes } = app.router.generate()
 
-      const guideRoute = findRouteByFullPath(routes, '/guide')!
+      const guideRoute = findGroupRouteByFullPath(routes, '/guide')!
 
       expect(guideRoute.meta!['navTitle']).toBeUndefined()
       expect(guideRoute.meta!['navOrder']).toBeUndefined()
