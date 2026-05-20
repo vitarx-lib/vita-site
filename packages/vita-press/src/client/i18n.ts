@@ -205,7 +205,9 @@ export class I18n {
    */
   public buildPath(path: RoutePath, newLang?: string): RoutePath {
     newLang ??= this.lang.value
-    if (newLang === this.defaultLang) return path
+    if (newLang === this.defaultLang) {
+      return path.endsWith('/index') ? (path.slice(0, -6) as RoutePath) || '/' : path
+    }
     if (path === '/') return `/index-${newLang}`
     return `${path}-${newLang}`
   }
