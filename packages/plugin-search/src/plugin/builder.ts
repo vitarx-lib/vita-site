@@ -20,27 +20,38 @@ import type { RouteNode } from 'vitarx-router/file-router'
 import { tokenize } from '../common/tokenizer.js'
 import type { SearchDocBuild, SearchIndex, SearchSectionBuild } from '../types.js'
 
+/** 路由映射条目，包含 fullPath 和路由级别的 lang */
+interface RouteMapping {
+  fullPath: string
+  lang?: string | undefined
+}
+
 /**
- * 从路由树递归构建 relativePath → fullPath 的映射
+ * 从路由树递归构建 relativePath → RouteMapping 的映射
  *
  * Markdown 文件的 meta.relativePath 格式为 "guide/getting-started.md"，
  * 而路由 fullPath 为 "/guide/getting-started"，此映射用于将两者关联。
  * 同时注册去掉 .md 后缀的路径作为备选 key，提高匹配成功率。
  *
+ * lang 来源：路由 pageParser 根据文件名后缀（如 intro.en.md）解析得到，
+ * 优先级高于文档 frontmatter 中的 lang，因为文件名约定是 VitaPress 多语言的核心机制。
+ *
  * @param routes - 路由节点数组（来自 FileRouter.generate().routes）
- * @returns relativePath → fullPath 的映射
+ * @returns relativePath → RouteMapping 的映射
  */
-function buildPathMap(routes: RouteNode[]): Map<string, string> {
-  const map = new Map<string, string>()
+function buildPathMap(routes: RouteNode[]): Map<string, RouteMapping> {
+  const map = new Map<string, RouteMapping>()
 
   function walk(nodes: RouteNode[]): void {
     for (const node of nodes) {
       const relativePath = node.meta?.['relativePath'] as string | undefined
       if (relativePath && node.fullPath) {
+        const lang = node.meta?.['lang'] as string | undefined
+        const mapping: RouteMapping = { fullPath: node.fullPath, lang }
         // 同时注册带 .md 和不带 .md 的路径，以兼容不同来源的 key
         const mdPath = relativePath.replace(/\.md$/, '')
-        map.set(relativePath, node.fullPath)
-        map.set(mdPath, node.fullPath)
+        map.set(relativePath, mapping)
+        map.set(mdPath, mapping)
       }
       if (node.children?.length) {
         walk(node.children)
@@ -62,31 +73,33 @@ function buildPathMap(routes: RouteNode[]): Map<string, string> {
  * 3. 遍历所有 token，构建 token → [docIndex, sectionIndex][] 倒排索引
  * 4. 剥离 token 数据，输出精简的 SearchIndex
  *
- * @param docs - 文档数据 Map（relativePath → { title, sections, lang }）
+ * @param docs - 文档数据 Map（relativePath → { title, sections }）
  * @param routes - RouteNode 数组（来自 generate().routes）
+ * @param fallbackLang - 回退语言，路由无 lang 时使用
  * @returns 搜索索引（docs 不含 token 数据 + 倒排 index）
  */
 export function buildSearchIndex(
-  docs: Map<string, { title: string; sections: SearchSectionBuild[]; lang: string }>,
-  routes: RouteNode[]
+  docs: Map<string, { title: string; sections: SearchSectionBuild[] }>,
+  routes: RouteNode[],
+  fallbackLang: string
 ): SearchIndex {
   const pathMap = buildPathMap(routes)
   const buildDocs: SearchDocBuild[] = []
 
   for (const [relPath, doc] of docs) {
-    const fullPath = pathMap.get(relPath)
+    const mapping = pathMap.get(relPath)
     // 跳过无法匹配路由的文档（可能是被排除或未注册的页面）
-    if (!fullPath) continue
+    if (!mapping) continue
 
     buildDocs.push({
-      path: fullPath,
+      path: mapping.fullPath,
       title: doc.title,
       titleTokens: tokenize(doc.title),
       sections: doc.sections.map(s => ({
         ...s,
         contentTokens: tokenize(s.content)
       })),
-      lang: doc.lang
+      lang: mapping.lang ?? fallbackLang
     })
   }
 

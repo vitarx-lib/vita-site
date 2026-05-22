@@ -44,7 +44,7 @@ const RESOLVED_SEARCH_INDEX_ID = '\0' + VIRTUAL_SEARCH_INDEX_ID
  */
 export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugin {
   /** 暂存所有文档的分段数据，key 为 meta.relativePath */
-  const docs = new Map<string, { title: string; sections: SearchSectionBuild[]; lang: string }>()
+  const docs = new Map<string, { title: string; sections: SearchSectionBuild[] }>()
   /** app 实例引用，在 afterParse 中赋值，供 Vite 插件 load 钩子使用 */
   let appRef: VitaPressApp | null = null
 
@@ -77,7 +77,7 @@ export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugi
                     return 'export default { docs: [], index: {} }'
                   }
                   const { routes } = appRef.router.generate()
-                  const searchIndex = buildSearchIndex(docs, routes)
+                  const searchIndex = buildSearchIndex(docs, routes, appRef.lang)
                   return `export default ${JSON.stringify(searchIndex)}`
                 }
                 return null
@@ -101,13 +101,11 @@ export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugi
      * Markdown 解析完成后回调
      *
      * 将原始 Markdown 内容按标题分段，暂存到 docs Map 中。
-     * 同时记录 app 实例引用，供 Vite 虚拟模块的 load 钩子构建索引时使用。
-     * 语言优先使用 frontmatter 中的 lang，否则回退到 app 默认语言。
+     * lang 由 buildSearchIndex 从路由信息中获取，路由无 lang 时回退到 app 默认语言。
      *
      * @param result - Markdown 解析结果（含 content、meta 等）
-     * @param app - VitaPress 应用实例
      */
-    afterParse(result: MdParseResult, app: VitaPressApp): void {
+    afterParse(result: MdParseResult): void {
       const { content, meta } = result
       const relativePath = meta.relativePath
 
@@ -115,8 +113,7 @@ export function searchPlugin(_options: SearchPluginOptions = {}): VitaPressPlugi
 
       docs.set(relativePath, {
         title: meta.title || '',
-        sections,
-        lang: meta.lang || app.lang
+        sections
       })
     }
   }
