@@ -86,6 +86,18 @@ function buildHashMap(tocList: TocTree[]): Map<string, string> {
 }
 
 /**
+ * 移除 HTML 标签
+ *
+ * 用于在构建索引前清理内容中的 HTML 标签，避免标签污染分词和搜索结果。
+ *
+ * @param html - 可能包含 HTML 标签的文本
+ * @returns 纯文本
+ */
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, '')
+}
+
+/**
  * 构建单个搜索段落
  *
  * @param hash - 段落对应标题的锚点 hash
@@ -94,10 +106,10 @@ function buildHashMap(tocList: TocTree[]): Map<string, string> {
  * @returns 包含分词结果的搜索段落
  */
 function buildSection(hash: string, heading: string, lines: string[]): SearchSectionBuild {
-  const text = lines.join('\n').trim()
+  const text = stripHtml(lines.join('\n').trim())
   return {
     hash,
-    heading,
+    heading: stripHtml(heading),
     content: text,
     contentTokens: tokenize(text)
   }
