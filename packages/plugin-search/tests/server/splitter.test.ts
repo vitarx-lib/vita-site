@@ -103,6 +103,39 @@ describe('splitByHeadings', () => {
     })
   })
 
+  describe('HTML 标签移除', () => {
+    it('应移除内容中的 HTML 标签', () => {
+      const content = '## 标题\n<strong>粗体</strong>和<em>斜体</em>'
+      const result = splitByHeadings(content, [])
+      expect(result[0]!.content).toBe('粗体和斜体')
+    })
+
+    it('应移除标题中的 HTML 标签', () => {
+      const content = '## <code>安装</code>指南\n内容'
+      const result = splitByHeadings(content, [])
+      expect(result[0]!.heading).toBe('安装指南')
+    })
+
+    it('应移除带属性的 HTML 标签', () => {
+      const content = '## 标题\n<a href="https://example.com">链接</a>'
+      const result = splitByHeadings(content, [])
+      expect(result[0]!.content).toBe('链接')
+    })
+
+    it('应移除自闭合 HTML 标签', () => {
+      const content = '## 标题\n第一行<br/>第二行'
+      const result = splitByHeadings(content, [])
+      expect(result[0]!.content).toBe('第一行第二行')
+    })
+
+    it('HTML 标签不应出现在分词结果中', () => {
+      const content = '## 标题\n<strong>搜索</strong>功能'
+      const result = splitByHeadings(content, [])
+      expect(result[0]!.contentTokens).not.toContain('strong')
+      expect(result[0]!.contentTokens).toContain('搜索')
+    })
+  })
+
   describe('边界情况', () => {
     it('应处理空内容', () => {
       const result = splitByHeadings('', [])
