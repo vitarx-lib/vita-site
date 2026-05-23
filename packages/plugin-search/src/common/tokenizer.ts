@@ -28,6 +28,8 @@
  */
 export function tokenize(text: string): string[] {
   const tokens: string[] = []
+  /** 前一个中文字符，用于构建 bigram */
+  let prevChineseChar = ''
   /** 匹配单个中文字符或连续的英文/数字 */
   const regex = /[\u4e00-\u9fff]|[a-zA-Z0-9]+/g
   let match: RegExpExecArray | null
@@ -39,18 +41,16 @@ export function tokenize(text: string): string[] {
       // 中文单字 token
       tokens.push(word)
 
-      // bigram：与前一个中文 token 组合为双字 token
-      // 例如 ["搜", "索"] → 追加 "搜索"，使查询 "搜索" 可命中
-      const prevIndex = tokens.length - 2
-      if (prevIndex >= 0) {
-        const prev = tokens[prevIndex]!
-        if (/[\u4e00-\u9fff]/.test(prev)) {
-          tokens.push(prev + word)
-        }
+      // bigram：与前一个中文字符组合为双字 token
+      if (prevChineseChar) {
+        tokens.push(prevChineseChar + word)
       }
+
+      prevChineseChar = word
     } else {
       // 英文/数字整体作为一个 token
       tokens.push(word)
+      prevChineseChar = ''
     }
   }
 

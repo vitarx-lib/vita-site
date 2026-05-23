@@ -16,7 +16,7 @@ describe('tokenize', () => {
       expect(result).toContain('搜索')
       expect(result).toContain('功')
       expect(result).toContain('能')
-      expect(result).toContain('搜索功能')
+      expect(result).toContain('功能')
     })
 
     it('单字应在 bigram 之前', () => {
@@ -37,7 +37,7 @@ describe('tokenize', () => {
       expect(result).toContain('索')
       expect(result).toContain('器')
       expect(result).toContain('搜索')
-      expect(result).toContain('搜索器')
+      expect(result).toContain('索器')
     })
   })
 
