@@ -27,12 +27,10 @@ export function onNavTreeChange(cb: (navTree: NavTree) => void): void {
   // 检查是否处于热更新模式
   if (import.meta.hot) {
     if (import.meta.hot) {
-      // 监听 'vitapress:nav-change' 事件
-      // 动态导入虚拟模块中的导航树数据
-      import.meta.hot.on('vitapress:nav-change', async () => {
+      import.meta.hot.accept('virtual:vitapress/runtime/nav', newModule => {
+        if (!newModule) return
         // 调用回调函数，传入默认导出的导航树数据
-        const navTree = await import('virtual:vitapress/runtime/nav')
-        cb(navTree.default)
+        cb(newModule['default'])
       })
     }
   }
