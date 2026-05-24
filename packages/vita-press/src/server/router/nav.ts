@@ -215,8 +215,10 @@ function extractNavEntries(
       }
       if (groupEntry.items.length > 0 || hasIndex) {
         entries.push(groupEntry)
-        // 有首页时将分页信息写入 index 子路由，避免运行时被空分页覆盖
-        setTempRouteNode(groupEntry, hasIndex ? indexChild! : child)
+        if (hasIndex) {
+          // 将分页信息写入 index 子路由，避免运行时被空分页覆盖
+          setTempRouteNode(groupEntry, indexChild!)
+        }
       }
     } else {
       if (!isLangOf(child, lang)) continue
