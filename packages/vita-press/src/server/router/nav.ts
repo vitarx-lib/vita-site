@@ -47,11 +47,16 @@ function resolveIndexPath(lang: string, defaultLang: string): string {
 /**
  * 判断路由节点是否属于指定语言
  *
+ * 未设置 lang 的页面视为属于默认语言
+ *
  * @param node - 路由节点
  * @param lang - 目标语言标识
+ * @param defaultLang - 默认语言标识
  */
-function isLangOf(node: RouteNode, lang: string): boolean {
-  return (node.meta?.['lang'] as string | undefined) === lang
+function isLangOf(node: RouteNode, lang: string, defaultLang: string): boolean {
+  const nodeLang = node.meta?.['lang'] as string | undefined
+  if (nodeLang === undefined) return lang === defaultLang
+  return nodeLang === lang
 }
 
 /**
@@ -62,12 +67,14 @@ function isLangOf(node: RouteNode, lang: string): boolean {
  *
  * @param children - 子路由节点
  * @param lang - 目标语言标识
+ * @param defaultLang - 默认语言标识
  * @param indexPath - 首页路由的 path 字段值
  * @returns 导航项数组
  */
 function buildNavItems(
   children: RouteNode[] | undefined,
   lang: string,
+  defaultLang: string,
   indexPath: string
 ): NavItem[] {
   if (!children) return []
@@ -76,7 +83,7 @@ function buildNavItems(
     .filter(child => child.path !== indexPath)
     .filter(child => !child.meta?.['navHidden'])
     .filter(child => !child.isGroup)
-    .filter(child => isLangOf(child, lang))
+    .filter(child => isLangOf(child, lang, defaultLang))
     .map(child => {
       const item: NavItem & { _routeNode?: RouteNode } = {
         type: 'item' as const,
@@ -198,7 +205,9 @@ function extractNavEntries(
     // 如果是分组，则生成 NavGroup
     if (child.isGroup) {
       // 查找首页
-      const indexChild = child.children?.find(c => c.path === indexPath && isLangOf(c, lang))
+      const indexChild = child.children?.find(
+        c => c.path === indexPath && isLangOf(c, lang, defaultLang)
+      )
       const title = child.meta?.['navTitle']
         ? child.meta['navTitle']
         : resolveNavTitle(indexChild?.meta, child.path)
@@ -208,7 +217,7 @@ function extractNavEntries(
         title,
         path: child.fullPath,
         order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
-        items: buildNavItems(child.children, lang, indexPath)
+        items: buildNavItems(child.children, lang, defaultLang, indexPath)
       }
       if (hasIndex) {
         groupEntry.indexPath = indexChild!.fullPath
@@ -221,7 +230,7 @@ function extractNavEntries(
         }
       }
     } else {
-      if (!isLangOf(child, lang)) continue
+      if (!isLangOf(child, lang, defaultLang)) continue
       const itemEntry = {
         type: 'item' as const,
         path: child.fullPath,
