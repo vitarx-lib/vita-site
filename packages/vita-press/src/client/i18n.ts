@@ -114,15 +114,9 @@ export class I18n {
           break
         }
       }
-      // 兼容根路径/index情况多语言应该使用根路径
-      if (path === '/index') path = '/'
       // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
       const lastMatched = currentRoute.matched.at(-1)
-      if (
-        lastMatched &&
-        !path.endsWith('/index') &&
-        lastMatched.path === lastMatched.parent?.path
-      ) {
+      if (lastMatched && lastMatched.path === lastMatched.parent?.path) {
         path = `${path}/index`
       }
       return locales.map(item => {
