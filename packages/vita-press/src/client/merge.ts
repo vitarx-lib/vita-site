@@ -8,14 +8,10 @@ import type { ClientConfig, EnhanceApp, PluginClientConfig } from './config.js'
  * @param incoming - 待追加的钩子
  * @returns 合并后的钩子
  */
-export function concatHook<T>(current: T | T[] | undefined, incoming: T | T[]): T | T[] {
-  const hooks = Array.isArray(incoming) ? incoming : [incoming]
-  if (current == null) return incoming
-  if (Array.isArray(current)) {
-    current.push(...hooks)
-    return current
-  }
-  return [current, ...hooks]
+export function concatHook<T>(current: T | T[] | undefined, incoming: T | T[] | undefined): T[] {
+  const currentArr = Array.isArray(current) ? current : [current]
+  const incomingArr = Array.isArray(incoming) ? incoming : [incoming]
+  return [...currentArr, ...incomingArr].filter(Boolean) as T[]
 }
 
 interface MergedRouterHooks {

@@ -1,19 +1,33 @@
 import config from 'virtual:vitapress/runtime/config'
 import { type App, createComponentView, createSSRApp, type SSRApp } from 'vitarx'
-import {
-  type AfterCallback,
-  createMemoryRouter,
-  createRouteManager,
-  createWebRouter,
-  type RouteLocation,
-  type Router,
-  type RouterOptions,
-  RouterView
+import type {
+  AfterCallback,
+  NavTarget,
+  NotFoundTarget,
+  RouteLocation,
+  RoutePath,
+  Router,
+  RouterOptions
 } from 'vitarx-router'
+import { createMemoryRouter, createRouteManager, createWebRouter, RouterView } from 'vitarx-router'
 import { handleHotUpdate, routes } from 'vitarx-router/auto-routes'
 import type { AppPlugins, EnhanceApp } from './config.js'
 import { I18n } from './i18n.js'
 import { concatHook } from './merge.js'
+
+/**
+ * 处理首页路由重定向回退策略
+ *
+ * @param target
+ */
+function handleIndexRoute(target: NotFoundTarget): NavTarget | void {
+  const path = target.index
+  if (typeof path === 'string' && path.endsWith('/index')) {
+    const fallback = (path.slice(0, -6) || '/') as RoutePath
+    return { index: fallback, replace: true }
+  }
+  return void 0
+}
 
 /**
  * 创建基础应用实例和路由配置
@@ -25,12 +39,13 @@ function createBaseApp(): { app: SSRApp; routerOptions: RouterOptions } {
   const app = createSSRApp(layout, config.app)
   const routerOptions: RouterOptions = Object.assign(
     {
-      routes: createRouteManager(routes, { ignoreCase: true, fallbackIndex: true }),
+      routes: createRouteManager(routes),
       mode: 'path',
       suffix: '.html'
     },
     config.router
   )
+  routerOptions.onNotFound = concatHook(handleIndexRoute, routerOptions.onNotFound)
   return { app, routerOptions }
 }
 
@@ -115,7 +130,7 @@ function createPageMetaManager(): AfterCallback {
  */
 async function createClientApp(): Promise<SSRApp> {
   const { app, routerOptions } = createBaseApp()
-  routerOptions.afterEach = concatHook(routerOptions.afterEach, createPageMetaManager())
+  routerOptions.afterEach = concatHook(createPageMetaManager(), routerOptions.afterEach)
   const router = createWebRouter(routerOptions, false)
   if (import.meta.hot) {
     handleHotUpdate(router)
