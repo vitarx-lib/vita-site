@@ -8,14 +8,17 @@ import {
 } from '../../src/client/merge.js'
 
 describe('concatHook', () => {
-  it('current 为 undefined 时应返回 incoming', () => {
+  it('current 为 undefined 且 incoming 为单函数时应返回包含该函数的新数组', () => {
     const fn = () => {}
-    expect(concatHook(undefined, fn)).toBe(fn)
+    const result = concatHook(undefined, fn)
+    expect(result).toEqual([fn])
   })
 
-  it('current 为 undefined 且 incoming 为数组时应返回数组', () => {
+  it('current 为 undefined 且 incoming 为数组时应返回新数组', () => {
     const fns = [() => {}, () => {}]
-    expect(concatHook(undefined, fns)).toBe(fns)
+    const result = concatHook(undefined, fns)
+    expect(result).toEqual(fns)
+    expect(result).not.toBe(fns)
   })
 
   it('current 为单函数时应合并为数组', () => {
@@ -27,24 +30,25 @@ describe('concatHook', () => {
     expect(result[1]).toBe(fn2)
   })
 
-  it('current 为数组时应原地 push 并返回', () => {
+  it('current 为数组时应返回新数组，不修改原数组', () => {
     const fn1 = () => {}
     const fn2 = () => {}
     const arr = [fn1]
     const result = concatHook(arr, fn2)
-    expect(result).toBe(arr)
-    expect(arr).toHaveLength(2)
-    expect(arr[1]).toBe(fn2)
+    expect(result).not.toBe(arr)
+    expect(result).toEqual([fn1, fn2])
+    expect(arr).toHaveLength(1)
   })
 
-  it('current 为数组且 incoming 为数组时应全部 push', () => {
+  it('current 为数组且 incoming 为数组时应返回新数组，不修改原数组', () => {
     const fn1 = () => {}
     const fn2 = () => {}
     const fn3 = () => {}
     const arr = [fn1]
     const result = concatHook(arr, [fn2, fn3])
-    expect(result).toBe(arr)
-    expect(arr).toHaveLength(3)
+    expect(result).not.toBe(arr)
+    expect(result).toEqual([fn1, fn2, fn3])
+    expect(arr).toHaveLength(1)
   })
 })
 
@@ -91,7 +95,7 @@ describe('mergeRuntimeConfig', () => {
   it('beforeEach: 仅 user 有时保留', () => {
     const userGuard = (() => {}) as any
     const result = mergeClientConfig({}, { router: { beforeEach: userGuard } })
-    expect(result.router?.beforeEach).toBe(userGuard)
+    expect(result.router?.beforeEach).toEqual([userGuard])
   })
 
   it('beforeEach: theme 数组 + user 单函数', () => {
