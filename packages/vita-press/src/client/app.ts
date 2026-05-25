@@ -22,8 +22,8 @@ import { concatHook } from './merge.js'
  */
 function handleIndexRoute(target: NotFoundTarget): NavTarget | void {
   const path = target.index
-  if (typeof path === 'string' && path.endsWith('/index')) {
-    const fallback = (path.slice(0, -6) || '/') as RoutePath
+  if (typeof path === 'string' && path.endsWith('/index.html')) {
+    const fallback = (path.slice(0, -11) || '/') as RoutePath
     return { index: fallback, replace: true }
   }
   return void 0
