@@ -106,7 +106,13 @@ export class I18n {
       const currentPath = removePathEndSlash(currentRoute.path)
       const currentLang = this.lang.value
       let path: RoutePath = currentPath
-      if (currentLang !== this.defaultLang) {
+      if (currentLang === this.defaultLang) {
+        // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
+        const lastMatched = currentRoute.matched.at(-1)
+        if (lastMatched && lastMatched.path === lastMatched.parent?.path) {
+          path = `${path}/index`
+        }
+      } else {
         for (const lang of this.langs) {
           const langSuffix = `-${lang}`
           if (currentPath.endsWith(langSuffix)) {
@@ -116,17 +122,10 @@ export class I18n {
           }
         }
       }
-      if (currentLang === this.defaultLang) {
-        // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
-        const lastMatched = currentRoute.matched.at(-1)
-        if (lastMatched && lastMatched.path === lastMatched.parent?.path) {
-          path = `${path}/index`
-        }
-      }
       return locales.map(item => {
         return {
           ...item,
-          path: item.id === currentLang ? currentPath : this.buildPath(path, item.id)
+          path: this.buildPath(path, item.id)
         }
       })
     })
@@ -209,6 +208,7 @@ export class I18n {
     if (path === '/') return `/index-${newLang}`
     return `${path}-${newLang}`
   }
+
   /**
    * 从路径中解析语言标识
    *
@@ -220,7 +220,10 @@ export class I18n {
    */
   public parsePathLang(path: string, defaultLang?: string): string {
     defaultLang ??= this.defaultLang
+    if (this.langs.length === 1) return defaultLang
+    // 移除文件扩展名
     const pathWithoutExt = path.replace(/\.[^.]+$/, '')
+    // 查找语言标识
     return this.langs.find(lang => pathWithoutExt.endsWith(`-${lang}`)) || defaultLang
   }
 }
