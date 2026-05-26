@@ -106,18 +106,22 @@ export class I18n {
       const currentPath = removePathEndSlash(currentRoute.path)
       const currentLang = this.lang.value
       let path: RoutePath = currentPath
-      for (const lang of this.langs) {
-        const langSuffix = `-${lang}`
-        if (currentPath.endsWith(langSuffix)) {
-          // 找到后缀开始的位置，并截取它之前的所有内容
-          path = currentPath.slice(0, currentPath.lastIndexOf(langSuffix)) as RoutePath
-          break
+      if (currentLang !== this.defaultLang) {
+        for (const lang of this.langs) {
+          const langSuffix = `-${lang}`
+          if (currentPath.endsWith(langSuffix)) {
+            // 找到后缀开始的位置，并截取它之前的所有内容
+            path = currentPath.slice(0, currentPath.lastIndexOf(langSuffix)) as RoutePath
+            break
+          }
         }
       }
-      // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
-      const lastMatched = currentRoute.matched.at(-1)
-      if (lastMatched && lastMatched.path === lastMatched.parent?.path) {
-        path = `${path}/index`
+      if (currentLang === this.defaultLang) {
+        // 兼容子路由path为空使用父级path情况多语言应该使用父级path+/index
+        const lastMatched = currentRoute.matched.at(-1)
+        if (lastMatched && lastMatched.path === lastMatched.parent?.path) {
+          path = `${path}/index`
+        }
       }
       return locales.map(item => {
         return {
