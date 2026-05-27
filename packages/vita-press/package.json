@@ -35,7 +35,7 @@
     "build": "pnpm test && tsc -p tsconfig.build.json && pnpm check:circular",
     "check:circular": "madge --extensions js --circular dist --warning --exclude '.*\\.d\\.ts$'",
     "typecheck": "tsc --noEmit",
-    "release": "pnpm dlx @vitarx/release-cli",
+    "release": "release-cli",
     "test": "vitest run",
     "test:watch": "vitest"
   },
