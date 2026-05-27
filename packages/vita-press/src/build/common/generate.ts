@@ -23,20 +23,34 @@ import { __ROUTER_KEY__ } from "vitarx-router"
  * @returns {Promise<{ [url: string]: { body: string; context: { [key: string]: any }; meta: { [key: string]: any } } }>}
  */
 export async function renderPages() {
-  const app = await createApp()
+    const app = await createApp()
   const router = app.inject(__ROUTER_KEY__)
-  const pages = {}
-  for (const [url, route] of router.manager.staticRoutes) {
+
+  const pages: Record<string, RenderPageResult> = {}
+
+  const renderRoute = async (url: string) => {
     await router.replace({ index: url })
     await router.resolveComponents()
-    const context = {}
+
+    const context: Record<string, any> = {}
     const body = await renderToString(app, context)
+
     pages[url] = {
       body,
       context,
       meta: router.route.meta || {}
     }
   }
+
+  const routes = [
+    ...router.manager.staticRoutes.keys(),
+    ...router.manager.aliasRoutes.keys()
+  ]
+
+  for (const url of routes) {
+    await renderRoute(url)
+  }
+
   return pages
 }
 `
