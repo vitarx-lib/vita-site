@@ -1,47 +1,9 @@
 import { useI18n, useSiteData } from 'vitapress'
-import { computed, Dynamic, For, isPlainObject, type View } from 'vitarx'
+import { computed, Dynamic, For, type View } from 'vitarx'
 import { RouterLink } from 'vitarx-router'
 import '../assets/styles/home.scss'
-import type { Feature, HeroConfig, SiteData } from '../types'
-
-/**
- * 解析 Hero 配置，支持直接配置和多语言配置
- *
- * @param hero - 原始 hero 配置
- * @param lang - 当前语言
- * @returns 解析后的 HeroConfig 或 null
- */
-function resolveHero(
-  hero: HeroConfig | { [lang: string]: HeroConfig } | null,
-  lang: string
-): HeroConfig | null {
-  if (!hero) return null
-  if (isPlainObject(hero)) {
-    // 检查是否为多语言配置（不含 HeroConfig 特有字段）
-    if (!('name' in hero) && !('text' in hero) && !('actions' in hero)) {
-      return (hero as Record<string, HeroConfig>)[lang] || null
-    }
-  }
-  return hero as HeroConfig
-}
-
-/**
- * 解析 Features 配置，支持直接配置和多语言配置
- *
- * @param features - 原始 features 配置
- * @param lang - 当前语言
- * @returns 解析后的 Feature 数组
- */
-function resolveFeatures(
-  features: Feature[] | { [lang: string]: Feature[] },
-  lang: string
-): Feature[] {
-  if (Array.isArray(features)) return features
-  if (isPlainObject(features)) {
-    return (features as Record<string, Feature[]>)[lang] || []
-  }
-  return []
-}
+import { resolveHero, resolveFeatures } from '../shared/config.js'
+import type { SiteData } from '../types'
 
 /**
  * 文档站点首页
