@@ -1,0 +1,117 @@
+@keyframes _404-zero-rotate {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+.not-found-page {
+  height: calc(100dvh - var(--header-height));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-background);
+
+  .content {
+    text-align: center;
+    padding: 2rem;
+
+    & > * {
+      animation: slideIn 0.8s ease-out;
+    }
+  }
+
+  h1 {
+    font-size: 8rem;
+    margin: 0;
+    color: var(--color-primary);
+    letter-spacing: 0.1em;
+    text-shadow: 2px 2px 0 var(--color-surface-variant);
+
+    .zero {
+      display: inline-block;
+      animation: _404-zero-rotate 4s infinite;
+      color: var(--color-error);
+    }
+  }
+
+  h2 {
+    font-size: 2rem;
+    color: var(--color-on-background);
+    margin: 1rem 0;
+  }
+
+  p {
+    font-size: 1.4rem;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 2rem;
+  }
+
+  .primary-button,
+  .secondary-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 2rem;
+    font-size: 1.4rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-decoration: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    margin: 0 1rem;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  .primary-button {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+
+    &:hover {
+      background-color: var(--color-primary-hover);
+      color: var(--color-on-primary-hover);
+    }
+
+    &:active {
+      background-color: var(--color-primary-active);
+      color: var(--color-on-primary-active);
+    }
+  }
+
+  .secondary-button {
+    background-color: transparent;
+    color: var(--color-secondary);
+    border: 1px solid var(--color-secondary);
+
+    &:hover {
+      border-color: var(--color-secondary-hover);
+      background-color: var(--color-secondary-hover);
+      color: var(--color-on-secondary-hover);
+    }
+
+    &:active {
+      background-color: var(--color-secondary-active);
+      border-color: var(--color-secondary-active);
+      color: var(--color-on-secondary-active);
+    }
+  }
+}
+
+

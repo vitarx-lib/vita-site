@@ -1,0 +1,27 @@
+// 定义变量用于存储屏幕尺寸断点
+$tablet-breakpoint: 992px;
+// 平板电脑和手机适配
+@mixin for-phone {
+  @media (max-width: #{$tablet-breakpoint}) {
+    @content;
+  }
+}
+
+// 电脑适配
+@mixin for-pc {
+  @media (min-width: #{$tablet-breakpoint + 1}) {
+    @content;
+  }
+}
+
+// hover 样式
+@mixin hover {
+  @media (hover: hover) {
+    @content;
+  }
+}
+
+@mixin layoutBg {
+  background-color: color-mix(in srgb, var(--layout-color) 90%, transparent);
+  backdrop-filter: blur(6px);
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "types": ["node", "vite/client", "vitarx", "@vitarx/plugin-vite"]
+  },
+  "include": ["src", "tests",
+    "guide"
+  ]
+}
