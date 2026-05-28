@@ -24,16 +24,16 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.8",
     "vitest": "^4.1.4",
-    "vitarx": "4.0.0-beta.16",
-    "@vitarx/plugin-vite": "1.0.0-beta.0",
-    "vitarx-router": "4.0.0-beta.19"
+    "vitarx": "4.0.0",
+    "@vitarx/plugin-vite": "1.0.0",
+    "vitarx-router": "4.0.0"
   },
   "pnpm": {
     "overrides": {
       "vite": "8.0.8",
-      "vitarx": "4.0.0-beta.16",
-      "vitarx-router": "4.0.0-beta.19",
-      "@vitarx/plugin-vite": "1.0.0-beta.0"
+      "vitarx": "4.0.0",
+      "vitarx-router": "4.0.0",
+      "@vitarx/plugin-vite": "1.0.0"
     }
   }
 }
