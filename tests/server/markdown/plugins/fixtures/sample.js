@@ -1,7 +1,8 @@
 const greeting = 'Hello, World!'
 console.log(greeting)
 
-function add(a, b) {
+function add(a, b)
+{
   return a + b
 }
 
