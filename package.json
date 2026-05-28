@@ -11,8 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/vitarx/vita-site.git",
-    "directory": "packages/vita-site"
+    "url": "https://github.com/vitarx/vita-site.git"
   },
   "main": "./dist/client/index.js",
   "types": "./dist/client/index.d.ts",
