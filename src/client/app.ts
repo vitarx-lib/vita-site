@@ -1,4 +1,4 @@
-import config from 'virtual:vitapress/runtime/config'
+import config from 'virtual:vita-site/runtime/config'
 import { type App, createComponentView, createSSRApp, type SSRApp } from 'vitarx'
 import type {
   AfterCallback,

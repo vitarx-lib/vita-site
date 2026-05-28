@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import type { MarkdownParseEnvContext, MdParseResult } from '../../../types/index.js'
 import type { DocPageMetaData } from '../../../types/page.js'
-import type { VitaPressApp } from '../../app/index.js'
+import type { VitaSiteApp } from '../../app/index.js'
 import { invokeParallel, invokePipe } from '../../common/hooks.js'
 import { getVersion } from '../../common/utils.js'
 import { CacheManager } from '../cache/index.js'
@@ -17,7 +17,7 @@ import { extractImportNames, getCommitInfo, parseFrontMatter } from '../utils/in
  * 内置缓存机制，避免重复解析相同内容，提升构建性能。
  */
 export class MdParser {
-  private readonly app: VitaPressApp
+  private readonly app: VitaSiteApp
   private readonly injectCode: string
   private readonly availableComponents: Set<string>
   public readonly md: MarkdownIt
@@ -26,9 +26,9 @@ export class MdParser {
    * 创建 Markdown 解析器实例
    *
    * @param md - MarkdownIt 实例，用于渲染 Markdown 内容
-   * @param app - VitaPressApp 实例，包含解析器配置选项
+   * @param app - VitaSiteApp 实例，包含解析器配置选项
    */
-  constructor(md: MarkdownIt, app: VitaPressApp) {
+  constructor(md: MarkdownIt, app: VitaSiteApp) {
     this.md = md
     this.app = app
     this.injectCode = this.app.config.injectCode.length
@@ -130,7 +130,7 @@ export class MdParser {
     const { html, meta, filePath, alias } = parseResult
     const injectCodeBlock = this.injectCode
 
-    return `// 此文件由vita-press自动生成
+    return `// 此文件由vita-site自动生成
 import { RouterLink } from 'vitarx-router'
 ${injectCodeBlock}
 definePage({${alias ? `\nalias:${JSON.stringify(alias)},` : ''}

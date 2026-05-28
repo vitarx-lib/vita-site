@@ -12,7 +12,7 @@ import { clientBuildPlugin } from '../../build/plugin-vite/clientBuild.js'
 import { devPlugin } from '../../build/plugin-vite/dev.js'
 import { serverBuildPlugin } from '../../build/plugin-vite/serverBuild.js'
 import { virtualModulePlugin } from '../../build/plugin-vite/virtual.js'
-import { type CommandName, mergeConfig, VitaPressApp } from '../../server/index.js'
+import { type CommandName, mergeConfig, VitaSiteApp } from '../../server/index.js'
 
 export interface ServerOptions {
   /**
@@ -105,11 +105,11 @@ async function getVitarxPlugin(plugins: PluginOption[] | undefined): Promise<Plu
 
 /**
  * 处理预览服务器
- * @param app - VitaPress 应用实例
+ * @param app - VitaSite 应用实例
  * @param serverConfig - 服务器配置
  */
 async function handlePreview(
-  app: VitaPressApp,
+  app: VitaSiteApp,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
   const server = await preview(
@@ -123,11 +123,11 @@ async function handlePreview(
 
 /**
  * 处理开发服务器
- * @param app - VitaPress 应用实例
+ * @param app - VitaSite 应用实例
  * @param serverConfig - 服务器配置
  */
 async function handleDev(
-  app: VitaPressApp,
+  app: VitaSiteApp,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
   const vitarxPlugin = await getVitarxPlugin(app.config.vite.plugins)
@@ -145,11 +145,11 @@ async function handleDev(
 
 /**
  * 处理构建命令
- * @param app - VitaPress 应用实例
+ * @param app - VitaSite 应用实例
  * @param serverConfig - 服务器配置
  */
 async function handleBuild(
-  app: VitaPressApp,
+  app: VitaSiteApp,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
   const vitarxPlugin = await getVitarxPlugin(app.config.vite.plugins)
@@ -181,7 +181,7 @@ export function createServerCommandHandler(
   return async (options: ServerOptions): Promise<void> => {
     if (options.debug) setDebugEnabled(true)
 
-    const app = await VitaPressApp.create(process.cwd(), command, options.config)
+    const app = await VitaSiteApp.create(process.cwd(), command, options.config)
     const serverConfig = createServerConfig(options)
     if (options.force) {
       app.mdParser.cache.clear()

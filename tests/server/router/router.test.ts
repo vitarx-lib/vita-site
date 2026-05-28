@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import type { RouteNode } from 'vitarx-router/file-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { VitaPressPlugin } from '../../../src/server/index.js'
+import type { VitaSitePlugin } from '../../../src/server/index.js'
 import { createTestApp } from '../../testUtils.js'
 
 vi.mock('vitarx-router/file-router', async importOriginal => {
@@ -13,7 +13,7 @@ vi.mock('vitarx-router/file-router', async importOriginal => {
   }
 })
 
-describe('VitaPressRouter', () => {
+describe('VitaSiteRouter', () => {
   let tempDir: string
 
   beforeEach(() => {
@@ -112,7 +112,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
       const extendRouteMock = vi.fn()
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         extendRoute: extendRouteMock
       }
@@ -130,7 +130,7 @@ describe('VitaPressRouter', () => {
 
       let capturedRoute: RouteNode | null = null
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         extendRoute: route => {
           capturedRoute = route
@@ -148,7 +148,7 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'error-plugin',
         extendRoute: () => {
           throw new Error('Plugin error')
@@ -168,7 +168,7 @@ describe('VitaPressRouter', () => {
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
       const callOrder: string[] = []
-      const plugins: VitaPressPlugin[] = [
+      const plugins: VitaSitePlugin[] = [
         {
           name: 'plugin-1',
           extendRoute: () => {
@@ -636,7 +636,7 @@ describe('VitaPressRouter', () => {
       mkdirSync(docsDir, { recursive: true })
       writeFileSync(join(docsDir, 'index.md'), '# Home')
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'plugin-without-extend'
       }
 

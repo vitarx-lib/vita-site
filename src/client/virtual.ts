@@ -1,4 +1,4 @@
-declare module 'virtual:vitapress/runtime/config' {
+declare module 'virtual:vita-site/runtime/config' {
   type ClientConfig = import('./config').ClientConfig
 
   export type { ClientConfig }
@@ -8,7 +8,7 @@ declare module 'virtual:vitapress/runtime/config' {
   export default config
 }
 
-declare module 'virtual:vitapress/runtime/locales' {
+declare module 'virtual:vita-site/runtime/locales' {
   type Locale = import('../types/config').Locale
 
   const locales: Locale[]
@@ -16,7 +16,7 @@ declare module 'virtual:vitapress/runtime/locales' {
   export default locales
 }
 
-declare module 'virtual:vitapress/runtime/nav' {
+declare module 'virtual:vita-site/runtime/nav' {
   type NavTree = import('../types/nav').NavTree
 
   const navTree: NavTree
@@ -24,7 +24,7 @@ declare module 'virtual:vitapress/runtime/nav' {
   export default navTree
 }
 
-declare module 'virtual:vitapress/runtime/site-data' {
+declare module 'virtual:vita-site/runtime/site-data' {
   type SiteData = import('./siteData').SiteData
 
   const siteData: SiteData
@@ -32,7 +32,7 @@ declare module 'virtual:vitapress/runtime/site-data' {
   export default siteData
 }
 
-declare module 'virtual:vitapress/runtime/i18n-messages' {
+declare module 'virtual:vita-site/runtime/i18n-messages' {
   type I18nMessages = import('./i18n').I18nMessages
 
   const i18nMessages: I18nMessages

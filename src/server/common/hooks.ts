@@ -1,5 +1,5 @@
 import { warn } from 'vitarx-router/file-router'
-import type { VitaPressPlugin } from '../../types/plugin.js'
+import type { VitaSitePlugin } from '../../types/plugin.js'
 
 /**
  * 并行调用插件钩子（异步）
@@ -12,8 +12,8 @@ import type { VitaPressPlugin } from '../../types/plugin.js'
  * @param args - 传递给钩子函数的参数
  */
 export async function invokeParallel(
-  plugins: readonly VitaPressPlugin[],
-  hookName: keyof VitaPressPlugin,
+  plugins: readonly VitaSitePlugin[],
+  hookName: keyof VitaSitePlugin,
   ...args: unknown[]
 ): Promise<void> {
   const results: (void | Promise<void>)[] = []
@@ -44,8 +44,8 @@ export async function invokeParallel(
  * @returns 最终处理后的值
  */
 export function invokePipe<T>(
-  plugins: readonly VitaPressPlugin[],
-  hookName: keyof VitaPressPlugin,
+  plugins: readonly VitaSitePlugin[],
+  hookName: keyof VitaSitePlugin,
   initialValue: T,
   ...args: unknown[]
 ): T {

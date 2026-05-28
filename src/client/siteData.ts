@@ -1,4 +1,4 @@
-import siteData from 'virtual:vitapress/runtime/site-data'
+import siteData from 'virtual:vita-site/runtime/site-data'
 
 export type SiteData = Record<string, any>
 

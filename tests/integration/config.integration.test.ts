@@ -28,7 +28,7 @@ describe('配置系统端到端集成测试', () => {
   })
 
   function createConfigFile(content: string, filename = 'config.ts'): void {
-    const configDir = join(tempDir, '.vitapress')
+    const configDir = join(tempDir, '.vita-site')
     mkdirSync(configDir, { recursive: true })
     writeFileSync(join(configDir, filename), content)
   }

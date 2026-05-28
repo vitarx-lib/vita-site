@@ -16,14 +16,14 @@ export interface LoadConfigResult {
  * 支持的配置文件名称
  */
 const CONFIG_FILES = [
-  '.vitapress/config.ts',
-  '.vitapress/config.js',
-  '.vitapress/config.mjs',
-  '.vitapress/config.mts',
-  '.vitapress/config.server.ts',
-  '.vitapress/config.server.js',
-  '.vitapress/config.server.mjs',
-  '.vitapress/config.server.mts'
+  '.vita-site/config.ts',
+  '.vita-site/config.js',
+  '.vita-site/config.mjs',
+  '.vita-site/config.mts',
+  '.vita-site/config.server.ts',
+  '.vita-site/config.server.js',
+  '.vita-site/config.server.mjs',
+  '.vita-site/config.server.mts'
 ]
 
 /**

@@ -14,7 +14,7 @@ export type I18nMessages = Record<string, Record<string, string>>
 /**
  * i18n 注入键
  */
-export const __I18N_INJECT_KEY__ = Symbol.for('__vitapress_i18n__')
+export const __I18N_INJECT_KEY__ = Symbol.for('__vita-site_i18n__')
 
 export interface PageLocale extends Locale {
   /**
@@ -237,12 +237,12 @@ export class I18n {
 export function useI18n(): I18n {
   const app = getApp()
   if (!app) {
-    throw new Error('[vitapress] useI18n must be called in the context of the VitarxApp.')
+    throw new Error('[vita-site] useI18n must be called in the context of the VitarxApp.')
   } else {
     const instance = app.inject(__I18N_INJECT_KEY__)
     if (!(instance instanceof I18n)) {
       throw new Error(
-        '[vitapress] failing to get an i18n instance from the app context, have you already called app.use(i18n)?'
+        '[vita-site] failing to get an i18n instance from the app context, have you already called app.use(i18n)?'
       )
     }
     return instance

@@ -34,7 +34,7 @@ describe('ConfigManager', () => {
   })
 
   function createConfigFile(content: string): void {
-    const configDir = join(tempDir, '.vitapress')
+    const configDir = join(tempDir, '.vita-site')
     mkdirSync(configDir, { recursive: true })
     writeFileSync(join(configDir, 'config.ts'), content)
   }

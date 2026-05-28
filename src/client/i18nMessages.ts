@@ -1,4 +1,4 @@
-import i18nMessages from 'virtual:vitapress/runtime/i18n-messages'
+import i18nMessages from 'virtual:vita-site/runtime/i18n-messages'
 import type { I18nMessages } from './i18n.js'
 
 export type { I18nMessages }

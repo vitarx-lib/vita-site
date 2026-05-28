@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { VitaPressPlugin } from '../../src/server/index.js'
+import type { VitaSitePlugin } from '../../src/server/index.js'
 import { createTestApp } from '../testUtils.js'
 
 describe('Markdown 解析端到端集成测试', () => {
@@ -438,7 +438,7 @@ lang: en-US
 
   describe('插件集成', () => {
     it('应调用插件的 beforeParse 钩子', async () => {
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         beforeParse: (content: string) => {
           return content.replace('# Test', '# Modified')
@@ -456,7 +456,7 @@ lang: en-US
 
     it('应调用插件的 afterParse 钩子', async () => {
       const afterParseMock = vi.fn()
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         afterParse: afterParseMock
       }

@@ -1,4 +1,4 @@
-import * as _locales from 'virtual:vitapress/runtime/locales'
+import * as _locales from 'virtual:vita-site/runtime/locales'
 import type { Locale } from '../server/index.js'
 
 export type { Locale } from '../server/index.js'

@@ -86,8 +86,8 @@ describe('DEFAULT_CONFIG', () => {
   })
 
   describe('vite 配置', () => {
-    it('publicDir 应为 .vitapress/public', () => {
-      expect(DEFAULT_CONFIG.vite.publicDir).toBe('.vitapress/public')
+    it('publicDir 应为 .vita-site/public', () => {
+      expect(DEFAULT_CONFIG.vite.publicDir).toBe('.vita-site/public')
     })
   })
 

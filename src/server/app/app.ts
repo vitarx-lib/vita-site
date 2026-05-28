@@ -2,13 +2,13 @@ import MarkdownIt from 'markdown-it'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { CommandName, ConfigEnv, ResolvedConfig, UserConfig } from '../../types/index.js'
-import type { VitaPressPlugin } from '../../types/plugin.js'
+import type { VitaSitePlugin } from '../../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { ConfigManager } from '../config/index.js'
 import { createMarkdownIt, MdParser } from '../markdown/index.js'
-import { VitaPressRouter } from '../router/index.js'
+import { VitaSiteRouter } from '../router/index.js'
 
-export interface VitaPressAppOptions {
+export interface VitaSiteAppOptions {
   /** 根目录 */
   root: string
   /** 命令模式 */
@@ -24,13 +24,13 @@ export interface VitaPressAppOptions {
   /**
    * 插件列表
    */
-  plugins: VitaPressPlugin[]
+  plugins: VitaSitePlugin[]
 }
 
 /**
- * VitaPress 应用实例
+ * VitaSite 应用实例
  */
-export class VitaPressApp {
+export class VitaSiteApp {
   /**
    * 根目录
    */
@@ -58,7 +58,7 @@ export class VitaPressApp {
   /**
    * 插件列表
    */
-  public readonly plugins: readonly VitaPressPlugin[]
+  public readonly plugins: readonly VitaSitePlugin[]
   /**
    * 解析后的配置
    */
@@ -74,20 +74,20 @@ export class VitaPressApp {
   /**
    * 路由器实例
    */
-  public readonly router: VitaPressRouter
+  public readonly router: VitaSiteRouter
   /**
-   * 创建一个 VitaPressApp 实例
+   * 创建一个 VitaSiteApp 实例
    * @param options
    */
-  private constructor(options: VitaPressAppOptions) {
+  private constructor(options: VitaSiteAppOptions) {
     this.root = options.root
-    this.cacheDir = path.resolve(this.root, '.vitapress/.cache')
-    this.tempDir = path.resolve(this.root, '.vitapress/.temp')
+    this.cacheDir = path.resolve(this.root, '.vita-site/.cache')
+    this.tempDir = path.resolve(this.root, '.vita-site/.temp')
     this.command = options.command
     this.config = Object.freeze(options.config)
     this.plugins = Object.freeze(options.plugins)
-    const configTsPath = path.resolve(this.root, '.vitapress/config.client.ts')
-    const configJsPath = path.resolve(this.root, '.vitapress/config.client.js')
+    const configTsPath = path.resolve(this.root, '.vita-site/config.client.ts')
+    const configJsPath = path.resolve(this.root, '.vita-site/config.client.js')
     this.clientConfigPath = existsSync(configTsPath)
       ? configTsPath
       : existsSync(configJsPath)
@@ -115,14 +115,14 @@ export class VitaPressApp {
     return new MdParser(markdownIt, this)
   }
   /**
-   * 创建一个 VitaPressServerRouter 实例
+   * 创建一个 VitaSiteServerRouter 实例
    * @private
    */
-  private createRouter(): VitaPressRouter {
-    return new VitaPressRouter(this)
+  private createRouter(): VitaSiteRouter {
+    return new VitaSiteRouter(this)
   }
   /**
-   * 创建一个 VitaPressApp 实例
+   * 创建一个 VitaSiteApp 实例
    *
    * @param root - 根目录
    * @param command - 命令模式
@@ -132,7 +132,7 @@ export class VitaPressApp {
     root: string,
     command: CommandName,
     config?: string | UserConfig
-  ): Promise<VitaPressApp> {
+  ): Promise<VitaSiteApp> {
     const env: ConfigEnv = {
       command,
       isDev: command === 'dev',
@@ -144,7 +144,7 @@ export class VitaPressApp {
 
     await invokeParallel(configManager.plugins, 'markdownIt', markdownIt)
 
-    const app = new VitaPressApp({
+    const app = new VitaSiteApp({
       root,
       command,
       markdownIt,

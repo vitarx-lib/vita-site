@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { PageDirOptions } from 'vitarx-router/file-router'
 import type { UserConfig } from '../../types/config.js'
-import type { VitaPressPlugin } from '../../types/index.js'
+import type { VitaSitePlugin } from '../../types/index.js'
 
 /**
  * 配置验证错误
@@ -370,7 +370,7 @@ function validateDts(config: UserConfig): void {
  * @param config
  * @param field
  */
-function validatePlugins(config: { plugins?: VitaPressPlugin[] }, field: 'theme' | 'plugins') {
+function validatePlugins(config: { plugins?: VitaSitePlugin[] }, field: 'theme' | 'plugins'): void {
   if (config.plugins === undefined) return
   if (!Array.isArray(config.plugins)) {
     throw new ConfigValidationError(

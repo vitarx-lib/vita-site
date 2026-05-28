@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('virtual:vitapress/runtime/site-data', () => ({
+vi.mock('virtual:vita-site/runtime/site-data', () => ({
   default: { version: '1.0.0', author: 'Alice', repo: 'https://example.com' }
 }))
 

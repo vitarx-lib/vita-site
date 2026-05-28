@@ -1,4 +1,4 @@
-# VitaPress
+# VitaSite
 
 一个基于 Vitarx 框架的静态站点生成器，专为编写技术文档而设计。
 
@@ -20,13 +20,13 @@
 
 ```bash
 # 使用 pnpm
-pnpm add -D vitapress
+pnpm add -D vita-site
 
 # 使用 npm
-npm install -D vitapress
+npm install -D vita-site
 
 # 使用 yarn
-yarn add -D vitapress
+yarn add -D vita-site
 ```
 
 ## 快速开始
@@ -47,31 +47,31 @@ my-docs/
 │   └── _layout.tsx # 文档布局组件
 ├── pages/
 │   └── index.tsx
-└── .vitapress/
+└── .vita-site/
     ├── config.ts
     └── config.client.ts
 ```
 
 ### 2. 创建服务端配置文件
 
-在项目根目录创建 `.vitapress/config.ts`：
+在项目根目录创建 `.vita-site/config.ts`：
 
 ```typescript
-import { defineConfig } from 'vitapress/server'
+import { defineConfig } from 'vita-site/server'
 
 export default defineConfig({
   title: '我的文档',
-  description: '一个基于 VitaPress 的文档站点',
+  description: '一个基于 VitaSite 的文档站点',
   locales: [{ id: 'zh-CN', name: '简体中文' }]
 })
 ```
 
 ### 3. 创建客户端配置文件
 
-创建 `.vitapress/config.client.ts`：
+创建 `.vita-site/config.client.ts`：
 
 ```tsx
-import { defineConfig } from 'vitapress'
+import { defineConfig } from 'vita-site'
 
 export default defineConfig({
   layout: () => <CustomLayout />
@@ -81,17 +81,17 @@ export default defineConfig({
 ### 4. 启动开发服务器
 
 ```bash
-npx vitapress dev
+npx vita-site dev
 ```
 
 ## CLI 命令
 
-### `vitapress dev`
+### `vita-site dev`
 
 启动开发服务器。
 
 ```bash
-vitapress dev [options]
+vita-site dev [options]
 
 选项:
   -d, --debug          启用调试模式
@@ -102,49 +102,49 @@ vitapress dev [options]
   -f, --force          强制清空缓存
 ```
 
-### `vitapress build`
+### `vita-site build`
 
 构建生产版本。
 
 ```bash
-vitapress build [options]
+vita-site build [options]
 ```
 
-### `vitapress preview`
+### `vita-site preview`
 
 预览生产版本。
 
 ```bash
-vitapress preview [options]
+vita-site preview [options]
 ```
 
-### `vitapress clean`
+### `vita-site clean`
 
 清除缓存。
 
 ```bash
-vitapress clean
+vita-site clean
 ```
 
 ## 配置
 
 ### 配置文件
 
-VitaPress 支持以下配置文件格式：
+VitaSite 支持以下配置文件格式：
 
-- `.vitapress/config.ts`
-- `.vitapress/config.js`
-- `.vitapress/config.mjs`
-- `.vitapress/config.mts`
-- `.vitapress/config.server.ts`
-- `.vitapress/config.server.js`
-- `.vitapress/config.server.mjs`
-- `.vitapress/config.server.mts`
+- `.vita-site/config.ts`
+- `.vita-site/config.js`
+- `.vita-site/config.mjs`
+- `.vita-site/config.mts`
+- `.vita-site/config.server.ts`
+- `.vita-site/config.server.js`
+- `.vita-site/config.server.mjs`
+- `.vita-site/config.server.mts`
 
 ### 服务端配置选项
 
 ```typescript
-import { defineConfig } from 'vitapress/server'
+import { defineConfig } from 'vita-site/server'
 
 export default defineConfig({
   // 网站信息
@@ -207,10 +207,10 @@ export default defineConfig({
 
 ### 客户端配置
 
-创建 `.vitapress/config.client.ts` 配置客户端应用：
+创建 `.vita-site/config.client.ts` 配置客户端应用：
 
 ```tsx
-import { defineConfig } from 'vitapress'
+import { defineConfig } from 'vita-site'
 import Loading from './components/Loading.tsx'
 
 export default defineConfig({
@@ -243,48 +243,48 @@ export default defineConfig({
 
 ## 虚拟模块
 
-VitaPress 通过虚拟模块在客户端访问构建时生成的数据：
+VitaSite 通过虚拟模块在客户端访问构建时生成的数据：
 
-### `virtual:vitapress/runtime/config`
+### `virtual:vita-site/runtime/config`
 
 运行时配置，合并了所有主题配置和用户配置。
 
 ```tsx
-import config from 'virtual:vitapress/runtime/config'
+import config from 'virtual:vita-site/runtime/config'
 // config: RuntimeConfig
 ```
 
-### `virtual:vitapress/runtime/locales`
+### `virtual:vita-site/runtime/locales`
 
 多语言配置列表。
 
 ```tsx
-import locales from 'virtual:vitapress/runtime/locales'
+import locales from 'virtual:vita-site/runtime/locales'
 // locales: Locale[]
 ```
 
-### `virtual:vitapress/runtime/nav`
+### `virtual:vita-site/runtime/nav`
 
 导航树数据，按语言分组。
 
 ```tsx
-import navTree from 'virtual:vitapress/runtime/nav'
+import navTree from 'virtual:vita-site/runtime/nav'
 // navTree: Record<string, NavEntry[]>
 ```
 
-### `virtual:vitapress/runtime/site-data`
+### `virtual:vita-site/runtime/site-data`
 
 站点数据，由插件通过 `siteData` 字段提供，多个插件的数据浅合并。
 
 ```tsx
-import siteData from 'virtual:vitapress/runtime/site-data'
+import siteData from 'virtual:vita-site/runtime/site-data'
 // siteData: Record<string, unknown>
 ```
 
 也可使用 `useSiteData()` API 获取：
 
 ```tsx
-import { useSiteData } from 'vitapress'
+import { useSiteData } from 'vita-site'
 
 const siteData = useSiteData()
 console.log(siteData.version)
@@ -292,7 +292,7 @@ console.log(siteData.version)
 
 ## 导航树
 
-VitaPress 自动从文档目录结构生成导航树，供侧边栏等组件消费。
+VitaSite 自动从文档目录结构生成导航树，供侧边栏等组件消费。
 
 ### 目录结构与导航的对应关系
 
@@ -313,51 +313,51 @@ docs/
 
 ```json
 {
-  "zh-CN": [
-    {
-      "type": "group",
-      "title": "指南",
-      "path": "/guide",
-      "order": 10,
-      "items": [
-        {
-          "type": "item",
-          "path": "/guide/getting-started",
-          "title": "快速开始",
-          "tocList": [],
-          "order": 1
-        },
-        {
-          "type": "item",
-          "path": "/guide/advanced",
-          "title": "进阶",
-          "tocList": [],
-          "order": 2
-        }
-      ]
-    },
-    {
-      "type": "group",
-      "title": "API",
-      "order": 20,
-      "items": [
-        {
-          "type": "item",
-          "path": "/api/rest",
-          "title": "REST API",
-          "tocList": [],
-          "order": 1
-        }
-      ]
-    },
-    {
-      "type": "item",
-      "path": "/changelog",
-      "title": "更新日志",
-      "tocList": [],
-      "order": 0
-    }
-  ]
+  "zh-CN": {
+    "/docs": [
+      {
+        "type": "group",
+        "title": "指南",
+        "path": "/docs/guide",
+        "order": 10,
+        "indexPath": "/docs/guide",
+        "items": [
+          {
+            "type": "item",
+            "path": "/docs/guide/getting-started",
+            "title": "快速开始",
+            "order": 1
+          },
+          {
+            "type": "item",
+            "path": "/docs/guide/advanced",
+            "title": "进阶",
+            "order": 2
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "title": "API",
+        "path": "/docs/api",
+        "order": 20,
+        "items": [
+          {
+            "type": "item",
+            "path": "/docs/api/rest",
+            "title": "REST API",
+            "order": 1
+          }
+        ]
+      },
+      {
+        "type": "item",
+        "path": "/docs/changelog",
+        "title": "更新日志",
+        "order": 0
+      }
+    ]
+  }
 }
 ```
 
@@ -368,20 +368,20 @@ interface NavItem {
   type: 'item'
   path: string
   title: string
-  tocList: TocTree[]
   order: number
 }
 
 interface NavGroup {
   type: 'group'
+  path: string
   title: string
-  path?: string       // 有 index 页面时存在，可点击跳转
   order: number
+  indexPath?: string  // 有 index 页面时存在，可点击跳转
   items: NavItem[]
 }
 
 type NavEntry = NavGroup | NavItem
-type NavTree = Record<string, NavEntry[]>
+type NavTree = Record<string, Record<string, NavEntry[]>>
 ```
 
 ### 导航配置
@@ -495,7 +495,7 @@ navHidden: false
 
 ### 自动路由生成
 
-VitaPress 会自动扫描文档目录并生成路由：
+VitaSite 会自动扫描文档目录并生成路由：
 
 ```text
 docs/
@@ -505,6 +505,42 @@ docs/
 │   ├── _config.ts → 目录级路由配置
 │   └── quick-start.md → /guide/quick-start
 ```
+
+### 多语言文件命名
+
+当 `locales` 配置了多种语言时，通过文件名后缀 `.{langId}` 标识非默认语言的文档。
+
+**命名规则**：`{baseName}.{langId}.{ext}`
+
+- 默认语言（`locales` 数组第一项）的文件**不带语言后缀**
+- 非默认语言的文件在扩展名前添加 `.{langId}` 后缀
+- `langId` 遵循 IETF BCP 47 标准（如 `zh-CN`、`en-US`、`ja-JP`），必须在 `locales` 中声明
+- 文件名中的 `.` 如果最后一部分不匹配已注册语言 ID，则视为普通分隔符
+
+假设配置 `locales: [{ id: 'zh-CN' }, { id: 'en-US' }]`：
+
+```text
+docs/
+├── index.md                → /                    (zh-CN 首页)
+├── index.en-US.md          → /index-en-us         (en-US 首页)
+├── guide/
+│   ├── index.md            → /guide               (zh-CN)
+│   ├── index.en-US.md      → /guide/index-en-us   (en-US)
+│   ├── quick-start.md      → /guide/quick-start   (zh-CN)
+│   └── quick-start.en-US.md → /guide/quick-start-en-us (en-US)
+├── api.rest.md             → /api-rest            (点号不匹配语言ID，视为普通分隔符)
+└── changelog.md            → /changelog           (zh-CN)
+```
+
+**文件名 → 路由路径映射规则**：
+
+| 文件名              | 语言后缀匹配         | 解析后 path      | lang    |
+|------------------|----------------|---------------|---------|
+| `index.md`       | 无              | `""` (空)      | `zh-CN` |
+| `index.en-US.md` | ✅ `en-US`      | `index-en-US` | `en-US` |
+| `guide.md`       | 无              | `guide`       | `zh-CN` |
+| `guide.en-US.md` | ✅ `en-US`      | `guide-en-US` | `en-US` |
+| `api.rest.md`    | ❌ `rest` 非语言ID | `api-rest`    | `zh-CN` |
 
 ### 路由元数据
 
@@ -565,12 +601,12 @@ definePage({
 
 ## 插件系统
 
-VitaPress 提供了强大的插件系统，可以通过插件扩展功能。
+VitaSite 提供了强大的插件系统，可以通过插件扩展功能。
 
 ### 插件接口
 
 ```typescript
-interface VitaPressPlugin {
+interface VitaSitePlugin {
   /** 插件名称 */
   name: string
   /** 插件优先级 */
@@ -586,35 +622,35 @@ interface VitaPressPlugin {
   configResolved?(config: ResolvedConfig): void | Promise<void>
 
   // 应用钩子
-  appCreated?(app: VitaPressApp): void | Promise<void>
+  appCreated?(app: VitaSiteApp): void | Promise<void>
 
   // Markdown 钩子
   markdownIt?(md: MarkdownIt): void | Promise<void>
 
-  beforeParse?(content: string, file: string, app: VitaPressApp): string | void
+  beforeParse?(content: string, file: string, app: VitaSiteApp): string | void
 
-  afterParse?(res: MdParseResult, app: VitaPressApp): void
+  afterParse?(res: MdParseResult, app: VitaSiteApp): void
 
   // 路由钩子
-  extendRoute?(route: RouteNode, app: VitaPressApp): void
+  extendRoute?(route: RouteNode, app: VitaSiteApp): void
 
-  beforeWriteRoutes?(routes: RouteNode[], app: VitaPressApp): RouteNode[] | void
+  beforeWriteRoutes?(routes: RouteNode[], app: VitaSiteApp): RouteNode[] | void
 
   // 构建钩子
-  buildEnd?(app: VitaPressApp): void | Promise<void>
+  buildEnd?(app: VitaSiteApp): void | Promise<void>
 }
 ```
 
 ### 钩子调用时序
 
 ```
-VitaPressApp.create()
+VitaSiteApp.create()
   │
   ├── config()              // 配置解析前，可返回新配置
   ├── configResolved()      // 配置解析完成
   ├── markdownIt()           // MarkdownIt 实例创建后
   │
-  ├── new VitaPressApp()    // 构造应用实例（路由器延迟扫描）
+  ├── new VitaSiteApp()    // 构造应用实例（路由器延迟扫描）
   ├── appCreated()          // 应用实例创建完成，可记录 app 引用
   ├── router.reload()       // 触发路由扫描
   │   ├── beforeParse()     // 每个 Markdown 文件解析前
@@ -629,9 +665,9 @@ VitaPressApp.create()
 ### 插件示例
 
 ```typescript
-import type { VitaPressPlugin } from 'vitapress/server'
+import type { VitaSitePlugin } from 'vita-site/server'
 
-const myPlugin: VitaPressPlugin = {
+const myPlugin: VitaSitePlugin = {
   name: 'my-plugin',
 
   siteData: {
@@ -674,7 +710,7 @@ export default myPlugin
 ### 使用插件
 
 ```typescript
-import { defineConfig } from 'vitapress/server'
+import { defineConfig } from 'vita-site/server'
 import myPlugin from './plugins/my-plugin'
 
 export default defineConfig({
@@ -687,7 +723,7 @@ export default defineConfig({
 插件通过 `clientConfig` 字段提供客户端配置，构建时自动与用户配置合并：
 
 ```typescript
-const myThemePlugin: VitaPressPlugin = {
+const myThemePlugin: VitaSitePlugin = {
   name: 'my-theme',
   clientConfig: 'my-theme/client.ts'
 }
@@ -709,9 +745,9 @@ export default {
 
 ## 缓存机制
 
-VitaPress 使用智能缓存机制提升性能：
+VitaSite 使用智能缓存机制提升性能：
 
-- 缓存目录：`.vitapress/.cache`
+- 缓存目录：`.vita-site/.cache`
 - 基于文件内容和配置生成缓存键
 - 支持强制清除缓存（`--force` 选项）
 

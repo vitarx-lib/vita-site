@@ -5,7 +5,7 @@ import type { I18n } from './i18n.js'
 /**
  * 应用插件
  *
- * @description VitaPress 内部挂载到应用实例上的插件
+ * @description VitaSite 内部挂载到应用实例上的插件
  */
 export interface AppPlugins {
   router: Router
@@ -17,7 +17,7 @@ export type EnhanceApp = (app: App, plugins: AppPlugins) => void
 /**
  * 插件客户端配置
  *
- * 插件/主题通过此接口向客户端注入配置，由 VitaPressPlugin.clientConfig 字段声明模块路径，
+ * 插件/主题通过此接口向客户端注入配置，由 VitaSitePlugin.clientConfig 字段声明模块路径，
  * 构建时自动加载并合并，优先级低于用户 ClientConfig。
  */
 export interface PluginClientConfig {
@@ -51,7 +51,7 @@ export interface PluginClientConfig {
 /**
  * 运行时配置
  *
- * 由虚拟模块 virtual:vitapress/runtime/config 提供，
+ * 由虚拟模块 virtual:vita-site/runtime/config 提供，
  * 已合并所有插件的主题配置，无需手动处理 theme 字段。
  */
 export interface ClientConfig {
@@ -68,8 +68,8 @@ export interface ClientConfig {
    *
    * @example
    * ```ts
-   * // .vitapress/config.client.ts
-   * import { defineConfig } from 'vitapress'
+   * // .vita-site/config.client.ts
+   * import { defineConfig } from 'vita-site'
    * import Loading from './components/Loading.tsx'
    *
    * export default defineConfig({
@@ -105,7 +105,7 @@ export interface ClientConfig {
 /**
  * 定义客户端运行时配置
  *
- * 注意：此辅助函数仅限于客户端配置文件使用，在服务端配置文件中使用导入路径，请使用 `import { defineConfig } from 'vitapress/server'`。
+ * 注意：此辅助函数仅限于客户端配置文件使用，在服务端配置文件中使用导入路径，请使用 `import { defineConfig } from 'vita-site/server'`。
  *
  * @param config - 运行时配置
  * @returns {ClientConfig} 运行时配置

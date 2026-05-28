@@ -24,8 +24,8 @@ describe('loadUserConfig', () => {
       expect(result.configFile).toBeUndefined()
     })
 
-    it('应正确加载 .vitapress/config.ts 配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+    it('应正确加载 .vita-site/config.ts 配置文件', async () => {
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.ts'), `export default { title: 'Test Site' }`)
 
@@ -34,8 +34,8 @@ describe('loadUserConfig', () => {
       expect(result.configFile).toContain('config.ts')
     })
 
-    it('应正确加载 .vitapress/config.js 配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+    it('应正确加载 .vita-site/config.js 配置文件', async () => {
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.js'), `module.exports = { title: 'JS Config' }`)
 
@@ -44,8 +44,8 @@ describe('loadUserConfig', () => {
       expect(result.configFile).toContain('config.js')
     })
 
-    it('应正确加载 .vitapress/config.mjs 配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+    it('应正确加载 .vita-site/config.mjs 配置文件', async () => {
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.mjs'), `export default { title: 'MJS Config' }`)
 
@@ -54,8 +54,8 @@ describe('loadUserConfig', () => {
       expect(result.configFile).toContain('config.mjs')
     })
 
-    it('应正确加载 .vitapress/config.mts 配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+    it('应正确加载 .vita-site/config.mts 配置文件', async () => {
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.mts'), `export default { title: 'MTS Config' }`)
 
@@ -95,7 +95,7 @@ describe('loadUserConfig', () => {
 
   describe('配置文件内容', () => {
     it('应正确加载包含多种配置项的文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(
         join(configDir, 'config.ts'),
@@ -117,7 +117,7 @@ describe('loadUserConfig', () => {
     })
 
     it('应正确加载空配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.ts'), `export default {}`)
 
@@ -126,7 +126,7 @@ describe('loadUserConfig', () => {
     })
 
     it('应正确加载包含函数导出的配置文件', async () => {
-      const configDir = join(tempDir, '.vitapress')
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(
         join(configDir, 'config.ts'),
@@ -142,7 +142,7 @@ describe('loadUserConfig', () => {
 
   describe('错误处理', () => {
     it('当配置文件有语法错误时应抛出错误', async () => {
-      const configDir = join(tempDir, '.vitapress')
+      const configDir = join(tempDir, '.vita-site')
       mkdirSync(configDir, { recursive: true })
       writeFileSync(join(configDir, 'config.ts'), `export default { title: 'Invalid`)
 

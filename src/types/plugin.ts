@@ -1,6 +1,6 @@
 import type MarkdownItInstance from 'markdown-it'
 import type { RouteNode } from 'vitarx-router/file-router'
-import { VitaPressApp } from '../server/app/index.js'
+import { VitaSiteApp } from '../server/app/index.js'
 import type { ResolvedConfig, UserConfig } from './config.js'
 import type { MdParseResult } from './markdown.js'
 
@@ -38,21 +38,21 @@ export interface PluginHooks {
   /**
    * 应用实例创建完成后调用
    *
-   * 在 VitaPressApp 实例完全构造后、路由扫描前调用。
+   * 在 VitaSiteApp 实例完全构造后、路由扫描前调用。
    * 插件可在此钩子中记录 app 实例引用，供后续钩子使用。
    *
-   * @param app - VitaPress 应用实例
+   * @param app - VitaSite 应用实例
    */
-  appCreated?: (app: VitaPressApp) => void | Promise<void>
+  appCreated?: (app: VitaSiteApp) => void | Promise<void>
   /**
    * 在解析 Markdown 文件之前调用
    *
    * @param content - 文件内容
    * @param file - 文件路径
-   * @param app - VitaPress 应用实例
+   * @param app - VitaSite 应用实例
    * @returns 修改后的内容或 void
    */
-  beforeParse?: (content: string, file: string, app: VitaPressApp) => string | void
+  beforeParse?: (content: string, file: string, app: VitaSiteApp) => string | void
   /**
    * 在解析 Markdown 文件之后调用（通知钩子）
    *
@@ -61,32 +61,32 @@ export interface PluginHooks {
    * 即使缓存命中也会调用此钩子，确保插件能收集到所有文档数据。
    *
    * @param res - 解析结果（只读，不应修改）
-   * @param app - VitaPress 应用实例
+   * @param app - VitaSite 应用实例
    */
-  afterParse?: (res: MdParseResult, app: VitaPressApp) => void
+  afterParse?: (res: MdParseResult, app: VitaSiteApp) => void
   /**
    * 扩展路由节点
    */
-  extendRoute?: (route: RouteNode, app: VitaPressApp) => void
+  extendRoute?: (route: RouteNode, app: VitaSiteApp) => void
   /**
    * 写入路由之前
    */
-  beforeWriteRoutes?: (routes: RouteNode[], app: VitaPressApp) => RouteNode[] | void
+  beforeWriteRoutes?: (routes: RouteNode[], app: VitaSiteApp) => RouteNode[] | void
   /**
    * 构建结束时调用
    *
    * 在客户端构建完成且所有 HTML 文件已生成后调用。
    * 适用于搜索索引生成、站点地图输出等需要在构建产物上操作的场景。
    *
-   * @param app - VitaPress 应用实例
+   * @param app - VitaSite 应用实例
    */
-  buildEnd?: (app: VitaPressApp) => void | Promise<void>
+  buildEnd?: (app: VitaSiteApp) => void | Promise<void>
 }
 
 /**
- * VitaPress 插件接口
+ * VitaSite 插件接口
  */
-export interface VitaPressPlugin extends PluginHooks {
+export interface VitaSitePlugin extends PluginHooks {
   /** 插件名称 */
   name: string
   /** 插件优先级，数字越大优先级越高 */

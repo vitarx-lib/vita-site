@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { FileRouter, findRoute, type PageParseResult } from 'vitarx-router/file-router'
 import type { NavTree } from '../../types/nav.js'
-import type { VitaPressApp } from '../app/index.js'
+import type { VitaSiteApp } from '../app/index.js'
 import { invokeParallel, invokePipe } from '../common/hooks.js'
 import { buildNavTree } from './nav.js'
 
@@ -32,7 +32,7 @@ function parseOrderPrefix(name: string): OrderParseResult {
  *
  * 继承自 FileRouter，负责扫描文档目录和页面目录，生成路由配置
  */
-export class VitaPressRouter extends FileRouter {
+export class VitaSiteRouter extends FileRouter {
   /**
    * 文档入口路径集合
    */
@@ -49,7 +49,7 @@ export class VitaPressRouter extends FileRouter {
     return this._navTree
   }
 
-  constructor(app: VitaPressApp) {
+  constructor(app: VitaSiteApp) {
     const docEnters = new Set<string>()
     const docLayout = new Map<string, string>()
     const docDirs = app.config.docDirs.map(docDir => {
@@ -70,7 +70,7 @@ export class VitaPressRouter extends FileRouter {
         pages: [...docDirs, ...app.config.pageDirs],
         injectImports: [
           `import { lazy } from "vitarx"`,
-          `import __runtimeConfig from "virtual:vitapress/runtime/config"`
+          `import __runtimeConfig from "virtual:vita-site/runtime/config"`
         ],
         importMode: ({ importPath, filePath }) => {
           if (filePath.endsWith('.md')) {

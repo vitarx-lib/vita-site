@@ -1,15 +1,15 @@
 import type { ServerResponse } from 'http'
 import { type Connect, type ViteDevServer } from 'vite'
-import { VitaPressApp } from '../../server/index.js'
+import { VitaSiteApp } from '../../server/index.js'
 import { generateIndexHtml } from '../common/generate.js'
 
 /**
  * Handle request index.html
  *
  * @param server - Vite Dev Server
- * @param app - VitaPress App
+ * @param app - VitaSite App
  */
-export function requestIndex(server: ViteDevServer, app: VitaPressApp): Connect.NextHandleFunction {
+export function requestIndex(server: ViteDevServer, app: VitaSiteApp): Connect.NextHandleFunction {
   return async (req: Connect.IncomingMessage, res: ServerResponse, next: Connect.NextFunction) => {
     const url = req.url ?? '/'
     const pathname = url.split('?')[0]

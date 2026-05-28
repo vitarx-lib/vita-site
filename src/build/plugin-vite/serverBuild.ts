@@ -1,6 +1,6 @@
 import { builtinModules } from 'node:module'
 import { type Plugin, type UserConfig, version } from 'vite'
-import { VitaPressApp } from '../../server/index.js'
+import { VitaSiteApp } from '../../server/index.js'
 import { VIRTUAL_RUNTIME_ENTER_ID } from '../common/constant.js'
 
 /**
@@ -8,9 +8,9 @@ import { VIRTUAL_RUNTIME_ENTER_ID } from '../common/constant.js'
  *
  * @param app
  */
-export function serverBuildPlugin(app: VitaPressApp): Plugin {
+export function serverBuildPlugin(app: VitaSiteApp): Plugin {
   return {
-    name: 'vite-plugin-vita-press-server-build',
+    name: 'vite-plugin-vita-site-server-build',
     config(): UserConfig {
       return {
         resolve: {

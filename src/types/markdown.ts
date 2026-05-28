@@ -6,7 +6,7 @@ import type {
 } from 'markdown-it'
 import type Renderer from 'markdown-it/lib/renderer.mjs'
 import type Token from 'markdown-it/lib/token.mjs'
-import { VitaPressApp } from '../server/app/index.js'
+import { VitaSiteApp } from '../server/app/index.js'
 import type { TocTree } from '../server/markdown/plugins/tocTree.js'
 import type { DocPageMetaData, PageMetaData } from './page.js'
 import type { ShikiConfig } from './shik.js'
@@ -75,9 +75,9 @@ export interface MarkdownItConfig {
  */
 export interface MarkdownParseEnvContext {
   /**
-   * VitaPress应用实例
+   * VitaSite应用实例
    */
-  readonly app: VitaPressApp
+  readonly app: VitaSiteApp
   /**
    * 文件路径
    */

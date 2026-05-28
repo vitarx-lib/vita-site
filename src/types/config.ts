@@ -3,7 +3,7 @@ import type { PageDirOptions } from 'vitarx-router/file-router'
 import type { UserConfig as ViteUserConfig } from 'vite'
 import type { I18nMessages } from '../client/index.js'
 import type { MarkdownItConfig } from './markdown.js'
-import type { VitaPressPlugin } from './plugin.js'
+import type { VitaSitePlugin } from './plugin.js'
 
 export interface InjectOptions {
   /**
@@ -69,7 +69,7 @@ export interface PluginOptions {
   /**
    * 插件列表
    */
-  plugins?: VitaPressPlugin[]
+  plugins?: VitaSitePlugin[]
 }
 
 export interface Locale {
@@ -124,7 +124,7 @@ interface DocDirOptions extends Omit<PageDirOptions, 'group'> {
 }
 
 /**
- * VitaPress用户配置
+ * VitaSite用户配置
  */
 export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions, PluginOptions {
   /**
@@ -140,7 +140,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
   /**
    * 文档布局组件文件路径
    *
-   * 通常由插件提供（如：@vitapress/theme-default 提供了默认的文档布局组件），
+   * 通常由插件提供（如：@vita-site/theme-default 提供了默认的文档布局组件），
    * 优先级低于 'docDir/_layout.{tsx,jsx}'
    *
    * 注意：必须是绝对路径，否则会抛出异常
@@ -151,7 +151,7 @@ export interface UserConfig extends SiteOptions, InjectOptions, MarkdownOptions,
   /**
    * 首页组件文件路径
    *
-   * 通常由插件提供（如：@vitapress/theme-default 提供了默认的首页组件），
+   * 通常由插件提供（如：@vita-site/theme-default 提供了默认的首页组件），
    * 优先级低于 'pageDir/index.{tsx,jsx}'
    *
    * 注意：必须是绝对路径，否则会抛出异常

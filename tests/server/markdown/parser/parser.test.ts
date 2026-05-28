@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { VitaPressPlugin } from '../../../../src/server/index.js'
+import type { VitaSitePlugin } from '../../../../src/server/index.js'
 import { MdParser } from '../../../../src/server/markdown/index.js'
 import { createTestApp } from '../../../testUtils.js'
 
@@ -75,7 +75,7 @@ describe('MdParser', () => {
 
       const result = parser.parse(filePath, content)
 
-      expect(result).toContain('// 此文件由vita-press自动生成')
+      expect(result).toContain('// 此文件由vita-site自动生成')
       expect(result).toContain('import { RouterLink }')
       expect(result).toContain('<article class="v-doc-content">')
       expect(result).toContain('<h1>Hello World</h1>')
@@ -279,7 +279,7 @@ describe('MdParser', () => {
         return content.replace('# Test', '# Modified')
       })
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         beforeParse: beforeParseMock
       }
@@ -296,7 +296,7 @@ describe('MdParser', () => {
     it('应调用插件的 afterParse 钩子', async () => {
       const afterParseMock = vi.fn()
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         afterParse: afterParseMock
       }
@@ -321,7 +321,7 @@ describe('MdParser', () => {
         return
       })
 
-      const plugin: VitaPressPlugin = {
+      const plugin: VitaSitePlugin = {
         name: 'test-plugin',
         beforeParse: beforeParseMock
       }
@@ -340,7 +340,7 @@ describe('MdParser', () => {
       const warnMock = vi.mocked(warn)
       warnMock.mockClear()
 
-      const errorPlugin: VitaPressPlugin = {
+      const errorPlugin: VitaSitePlugin = {
         name: 'error-plugin',
         beforeParse: vi.fn(() => {
           throw new Error('Plugin error')

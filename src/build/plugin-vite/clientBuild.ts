@@ -3,7 +3,7 @@ import path from 'node:path'
 import { type Plugin, type UserConfig, version } from 'vite'
 import { invokeParallel } from '../../server/common/hooks.js'
 import { writeCacheFileSync } from '../../server/common/utils.js'
-import { VitaPressApp } from '../../server/index.js'
+import { VitaSiteApp } from '../../server/index.js'
 import { BODY_CONTENT_PLACEHOLDER } from '../common/constant.js'
 import { HtmlPatcher } from '../common/htmlPatcher.js'
 
@@ -16,10 +16,10 @@ interface ServerRenderModule {
  * Client build plugin
  * @param app
  */
-export function clientBuildPlugin(app: VitaPressApp): Plugin {
+export function clientBuildPlugin(app: VitaSiteApp): Plugin {
   let distDir = ''
   return {
-    name: 'vite-plugin-vita-press-client-build',
+    name: 'vite-plugin-vita-site-client-build',
     config(): UserConfig {
       return {
         build: {

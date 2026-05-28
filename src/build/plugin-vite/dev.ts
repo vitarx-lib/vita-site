@@ -1,18 +1,18 @@
 import { info, warn } from 'vitarx-router/file-router'
 import { invalidateVirtualModule, setupWatcher, VIRTUAL_ROUTES_ID } from 'vitarx-router/vite'
 import type { Plugin, ViteDevServer } from 'vite'
-import { VitaPressApp } from '../../server/index.js'
+import { VitaSiteApp } from '../../server/index.js'
 import { RESOLVED_CLIENT_CONFIG_ID, VIRTUAL_NAV_ID } from '../common/constant.js'
 import { requestIndex } from '../middlewares/requestIndex.js'
 
 /**
- * Dev plugin for VitaPress
+ * Dev plugin for VitaSite
  *
- * @param app - VitaPress app instance
+ * @param app - VitaSite app instance
  */
-export function devPlugin(app: VitaPressApp): Plugin {
+export function devPlugin(app: VitaSiteApp): Plugin {
   return {
-    name: 'vite-plugin-vita-press-dev',
+    name: 'vite-plugin-vita-site-dev',
     configureServer(server: ViteDevServer) {
       const router = app.router
       if (app.clientConfigPath) {

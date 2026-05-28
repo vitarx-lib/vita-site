@@ -87,16 +87,16 @@ export function mergeConfig<T = any>(
 }
 
 /**
- * 定义VitaPress配置对象 - 用于类型推断辅助
+ * 定义VitaSite配置对象 - 用于类型推断辅助
  *
- * @param config - VitaPress配置对象
+ * @param config - VitaSite配置对象
  * @returns 原样返回的配置对象
  *
  * @example
  * ```ts
- * // .vitapress/config.ts
+ * // .vita-site/config.ts
  * export default defineConfig({
- *   title: 'VitaPress',
+ *   title: 'VitaSite',
  *   description: 'A framework for building tech docs with Vitarx 4',
  *   // 其他配置项...
  * })

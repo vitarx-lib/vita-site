@@ -1,5 +1,5 @@
 import type { ConfigEnv, ResolvedConfig, UserConfig } from '../../types/index.js'
-import type { VitaPressPlugin } from '../../types/plugin.js'
+import type { VitaSitePlugin } from '../../types/plugin.js'
 import { invokeParallel } from '../common/hooks.js'
 import { isPlainObject } from '../common/utils.js'
 import { DEFAULT_CONFIG } from './constant.js'
@@ -16,7 +16,7 @@ export class ConfigManager {
    * 插件列表
    * @private
    */
-  #plugins: VitaPressPlugin[] = []
+  #plugins: VitaSitePlugin[] = []
   /**
    * 解析后的配置
    * @private
@@ -49,11 +49,11 @@ export class ConfigManager {
    * @param plugins - 插件列表
    * @returns 排序后的插件列表
    */
-  private sortPlugins(plugins: VitaPressPlugin[]): VitaPressPlugin[] {
-    const prePlugins: VitaPressPlugin[] = []
-    const postPlugins: VitaPressPlugin[] = []
-    const numericPlugins: VitaPressPlugin[] = []
-    const normalPlugins: VitaPressPlugin[] = []
+  private sortPlugins(plugins: VitaSitePlugin[]): VitaSitePlugin[] {
+    const prePlugins: VitaSitePlugin[] = []
+    const postPlugins: VitaSitePlugin[] = []
+    const numericPlugins: VitaSitePlugin[] = []
+    const normalPlugins: VitaSitePlugin[] = []
 
     for (const plugin of plugins) {
       if (plugin.enforce === 'pre') {
@@ -80,8 +80,8 @@ export class ConfigManager {
    * @param plugin - 插件
    * @private
    */
-  private registerPlugins(plugin: VitaPressPlugin | VitaPressPlugin[]): VitaPressPlugin[] {
-    const registered: VitaPressPlugin[] = []
+  private registerPlugins(plugin: VitaSitePlugin | VitaSitePlugin[]): VitaSitePlugin[] {
+    const registered: VitaSitePlugin[] = []
     if (Array.isArray(plugin)) {
       for (const p of plugin) {
         registered.push(...this.registerPlugins(p))
@@ -195,7 +195,7 @@ export class ConfigManager {
   /**
    * 获取插件列表（已排序）
    */
-  public get plugins(): VitaPressPlugin[] {
+  public get plugins(): VitaSitePlugin[] {
     return this.#plugins
   }
   /**

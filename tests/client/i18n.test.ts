@@ -22,7 +22,7 @@ function mockComputed<T>(fn: (prev?: T) => T): { value: T } {
   }
 }
 
-vi.mock('virtual:vitapress/runtime/locales', () => ({
+vi.mock('virtual:vita-site/runtime/locales', () => ({
   default: [
     { id: 'zh-CN', name: '中文' },
     { id: 'en', name: 'English' },
@@ -30,7 +30,7 @@ vi.mock('virtual:vitapress/runtime/locales', () => ({
   ]
 }))
 
-vi.mock('virtual:vitapress/runtime/i18n-messages', () => ({
+vi.mock('virtual:vita-site/runtime/i18n-messages', () => ({
   default: {
     'zh-CN': {
       welcome: '欢迎',
@@ -359,13 +359,13 @@ describe('useI18n()', () => {
   it('当不在应用上下文中时应抛出错误', () => {
     mockGetApp.mockReturnValue(null)
     expect(() => useI18n()).toThrow(
-      '[vitapress] useI18n must be called in the context of the VitarxApp.'
+      '[vita-site] useI18n must be called in the context of the VitarxApp.'
     )
   })
 
   it('当 i18n 未安装时应抛出错误', () => {
     mockGetApp.mockReturnValue({ inject: vi.fn().mockReturnValue(null) })
-    expect(() => useI18n()).toThrow('[vitapress] failing to get an i18n instance')
+    expect(() => useI18n()).toThrow('[vita-site] failing to get an i18n instance')
   })
 
   it('当 i18n 已安装时应返回实例', () => {

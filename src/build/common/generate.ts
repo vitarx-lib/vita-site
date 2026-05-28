@@ -5,7 +5,7 @@ import { VIRTUAL_RUNTIME_ENTER_ID } from './constant.js'
  * 生成客户端入口代码
  */
 export function generateClientEnterCode(): string {
-  return `import { createApp } from "vitapress"\n\ncreateApp()`
+  return `import { createApp } from "vita-site"\n\ncreateApp()`
 }
 
 /**
@@ -14,7 +14,7 @@ export function generateClientEnterCode(): string {
  * @returns {string} 服务器入口代码
  */
 export function generateServerEnterCode(): string {
-  return `import { createApp } from "vitapress"
+  return `import { createApp } from "vita-site"
 import { renderToString } from "vitarx"
 import { __ROUTER_KEY__ } from "vitarx-router"
 /**

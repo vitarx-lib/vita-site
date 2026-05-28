@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { warn } from 'vitarx-router/file-router'
 import { RESOLVED_ROUTES_ID, VIRTUAL_ROUTES_ID } from 'vitarx-router/vite'
 import type { Plugin } from 'vite'
-import { VitaPressApp } from '../../server/index.js'
+import { VitaSiteApp } from '../../server/index.js'
 import {
   BODY_CONTENT_PLACEHOLDER,
   RESOLVED_CLIENT_CONFIG_ID,
@@ -77,7 +77,7 @@ export function generateClientConfigCode(
   clientConfigs: string[]
 ): string {
   const lines: string[] = []
-  lines.push("import { resolveClientConfig } from 'vitapress'")
+  lines.push("import { resolveClientConfig } from 'vita-site'")
 
   for (let i = 0; i < clientConfigs.length; i++) {
     lines.push(`import __theme_${i} from '${clientConfigs[i]}'`)
@@ -102,13 +102,13 @@ export function generateClientConfigCode(
 }
 
 /**
- * Virtual module plugin for VitaPress
+ * Virtual module plugin for VitaSite
  * @param app
  */
-export function virtualModulePlugin(app: VitaPressApp): Plugin {
+export function virtualModulePlugin(app: VitaSiteApp): Plugin {
   let isBuild = false
   return {
-    name: 'vite-plugin-vitapress-virtual-module',
+    name: 'vite-plugin-vita-site-virtual-module',
     configResolved(config) {
       isBuild = config.command === 'build'
     },

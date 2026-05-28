@@ -103,7 +103,7 @@ describe('collectSiteData', () => {
 describe('generateClientConfigCode', () => {
   it('无主题无用户配置时应生成仅 merge 空对象的代码', () => {
     const code = generateClientConfigCode(null, [])
-    expect(code).toContain("import { resolveClientConfig } from 'vitapress'")
+    expect(code).toContain("import { resolveClientConfig } from 'vita-site'")
     expect(code).toContain('export default resolveClientConfig([], {})')
   })
 
@@ -162,7 +162,7 @@ describe('generateClientConfigCode', () => {
 
 describe('i18nMessages 虚拟模块常量', () => {
   it('VIRTUAL_I18N_MESSAGES_ID 应为正确的虚拟模块 ID', () => {
-    expect(VIRTUAL_I18N_MESSAGES_ID).toBe('virtual:vitapress/runtime/i18n-messages')
+    expect(VIRTUAL_I18N_MESSAGES_ID).toBe('virtual:vita-site/runtime/i18n-messages')
   })
 
   it('RESOLVED_I18N_MESSAGES_ID 应以 \\0 前缀开头', () => {

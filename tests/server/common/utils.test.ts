@@ -66,7 +66,7 @@ describe('writeCacheFileSync', () => {
   let testDir: string
 
   beforeEach(() => {
-    testDir = join(tmpdir(), `vitapress-test-${Date.now()}`)
+    testDir = join(tmpdir(), `vita-site-test-${Date.now()}`)
   })
 
   afterEach(() => {

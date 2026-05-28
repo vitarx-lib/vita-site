@@ -2,13 +2,13 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { VitaPressApp } from '../../src/server/index.js'
+import { VitaSiteApp } from '../../src/server/index.js'
 
-describe('VitaPressApp 端到端集成测试', () => {
+describe('VitaSiteApp 端到端集成测试', () => {
   let tempDir: string
 
   beforeEach(() => {
-    tempDir = join(tmpdir(), `vitapress-app-test-${Date.now()}`)
+    tempDir = join(tmpdir(), `vita-site-app-test-${Date.now()}`)
     mkdirSync(tempDir, { recursive: true })
   })
 
@@ -28,15 +28,15 @@ describe('VitaPressApp 端到端集成测试', () => {
   }
 
   describe('应用初始化', () => {
-    it('应成功创建最小化的 VitaPressApp 实例', async () => {
+    it('应成功创建最小化的 VitaSiteApp 实例', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Welcome'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app).toBeInstanceOf(VitaPressApp)
+      expect(app).toBeInstanceOf(VitaSiteApp)
       expect(app.root).toBe(tempDir)
       expect(app.command).toBe('dev')
       expect(app.isDev).toBe(true)
@@ -44,53 +44,53 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确初始化所有核心属性', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           title: 'Test Site',
           description: 'Test Description'
         }`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'build')
+      const app = await VitaSiteApp.create(tempDir, 'build')
 
       expect(app.config.title).toBe('Test Site')
       expect(app.config.description).toBe('Test Description')
-      expect(app.cacheDir).toBe(join(tempDir, '.vitapress/.cache'))
-      expect(app.tempDir).toBe(join(tempDir, '.vitapress/.temp'))
+      expect(app.cacheDir).toBe(join(tempDir, '.vita-site/.cache'))
+      expect(app.tempDir).toBe(join(tempDir, '.vita-site/.temp'))
       expect(app.lang).toBe('zh-CN')
     })
 
     it('应正确识别客户端配置文件（TypeScript）', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
-        '.vitapress/config.client.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
+        '.vita-site/config.client.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app.clientConfigPath).toBe(join(tempDir, '.vitapress/config.client.ts'))
+      expect(app.clientConfigPath).toBe(join(tempDir, '.vita-site/config.client.ts'))
     })
 
     it('应正确识别客户端配置文件（JavaScript）', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
-        '.vitapress/config.client.js': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
+        '.vita-site/config.client.js': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app.clientConfigPath).toBe(join(tempDir, '.vitapress/config.client.js'))
+      expect(app.clientConfigPath).toBe(join(tempDir, '.vita-site/config.client.js'))
     })
 
     it('应在没有客户端配置时返回 null', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.clientConfigPath).toBeNull()
     })
@@ -99,11 +99,11 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('命令模式', () => {
     it('应正确识别开发模式', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.command).toBe('dev')
       expect(app.isDev).toBe(true)
@@ -111,11 +111,11 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确识别构建模式', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'build')
+      const app = await VitaSiteApp.create(tempDir, 'build')
 
       expect(app.command).toBe('build')
       expect(app.isDev).toBe(false)
@@ -123,11 +123,11 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确识别预览模式', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'preview')
+      const app = await VitaSiteApp.create(tempDir, 'preview')
 
       expect(app.command).toBe('preview')
       expect(app.isDev).toBe(false)
@@ -137,11 +137,11 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('Markdown 解析器初始化', () => {
     it('应成功初始化 Markdown 解析器', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.mdParser).toBeDefined()
       expect(typeof app.mdParser.parse).toBe('function')
@@ -149,11 +149,11 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确解析 Markdown 文件', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/guide.md': '# Guide\n\nThis is a guide.'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
       const mdPath = join(tempDir, 'docs/guide.md')
       const result = app.mdParser.parse(mdPath)
 
@@ -166,7 +166,7 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应支持自定义 MarkdownIt 配置', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           markdownIt: {
             html: true,
             linkify: true
@@ -175,7 +175,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Test'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.mdParser).toBeDefined()
     })
@@ -184,11 +184,11 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('路由器初始化', () => {
     it('应成功初始化路由器', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.router).toBeDefined()
       expect(typeof app.router.generate).toBe('function')
@@ -196,13 +196,13 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确生成路由代码', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home',
         'docs/guide.md': '# Guide',
         'docs/api/intro.md': '# API Intro'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
       const { code } = app.router.generate()
 
       expect(code).toContain('export default')
@@ -215,18 +215,18 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('插件系统', () => {
     it('应正确加载空插件列表', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.plugins).toEqual([])
     })
 
     it('应正确加载插件', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `
+        '.vita-site/config.ts': `
           const testPlugin = {
             name: 'test-plugin',
             setup() {
@@ -240,7 +240,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.plugins).toHaveLength(1)
       expect(app.plugins[0]!.name).toBe('test-plugin')
@@ -248,7 +248,7 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确执行插件的 markdownIt 钩子', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `
+        '.vita-site/config.ts': `
           const markdownPlugin = {
             name: 'markdown-plugin',
             markdownIt(md) {
@@ -264,7 +264,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.mdParser).toBeDefined()
     })
@@ -273,31 +273,31 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('多语言支持', () => {
     it('应正确设置默认语言', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.lang).toBe('zh-CN')
     })
 
     it('应支持自定义默认语言', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           locales: [{ id: 'en-US', name: 'English' }]
         }`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.lang).toBe('en-US')
     })
 
     it('应正确配置多语言', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           locales: [
             { id: 'zh-CN', name: '简体中文' },
             { id: 'en-US', name: 'English' }
@@ -307,7 +307,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.en-US.md': '# English'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.langs).toEqual(['zh-CN', 'en-US'])
     })
@@ -316,11 +316,11 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('配置合并', () => {
     it('应正确合并默认配置', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.config.dts).toBe(false)
       expect(app.config.locales).toEqual([{ id: 'zh-CN', name: '简体中文' }])
@@ -328,7 +328,7 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('用户配置应覆盖默认配置', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           title: 'Custom Title',
           description: 'Custom Description',
           locales: [{ id: 'en-US', name: 'English' }],
@@ -337,7 +337,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.config.title).toBe('Custom Title')
       expect(app.config.description).toBe('Custom Description')
@@ -347,7 +347,7 @@ describe('VitaPressApp 端到端集成测试', () => {
 
     it('应正确处理嵌套配置', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           vite: {
             base: '/docs/',
             server: {
@@ -358,7 +358,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.config.vite.base).toBe('/docs/')
       expect(app.config.vite.server?.port).toBe(3000)
@@ -368,11 +368,11 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('文档目录配置', () => {
     it('应使用默认文档目录', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {}`,
+        '.vita-site/config.ts': `export default {}`,
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.config.docDirs).toEqual([
         { dir: 'docs', include: ['**/*.{md,jsx,tsx}'], exclude: ['**/.*'] }
@@ -380,7 +380,7 @@ describe('VitaPressApp 端到端集成测试', () => {
     })
     it('应支持文档目录配置对象', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           docDirs: [{
             dir: 'content',
             prefix: '/docs'
@@ -389,7 +389,7 @@ describe('VitaPressApp 端到端集成测试', () => {
         'content/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
       expect(app.config.docDirs[0]!.dir).toBe('content')
     })
@@ -401,21 +401,21 @@ describe('VitaPressApp 端到端集成测试', () => {
         'docs/index.md': '# Home'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app).toBeInstanceOf(VitaPressApp)
+      expect(app).toBeInstanceOf(VitaSiteApp)
       expect(app.config).toBeDefined()
     })
 
     it('应正确处理空文档目录', async () => {
       createProjectStructure({
         'docs/index.md': '# Home',
-        '.vitapress/config.ts': `export default {}`
+        '.vita-site/config.ts': `export default {}`
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app).toBeInstanceOf(VitaPressApp)
+      expect(app).toBeInstanceOf(VitaSiteApp)
       expect(app.router).toBeDefined()
     })
   })
@@ -423,7 +423,7 @@ describe('VitaPressApp 端到端集成测试', () => {
   describe('完整工作流', () => {
     it('应完成完整的初始化流程', async () => {
       createProjectStructure({
-        '.vitapress/config.ts': `export default {
+        '.vita-site/config.ts': `export default {
           title: 'Integration Test',
           description: 'Testing full workflow',
           plugins: [
@@ -434,15 +434,15 @@ describe('VitaPressApp 端到端集成测试', () => {
             }
           ]
         }`,
-        '.vitapress/config.client.ts': `export default {}`,
+        '.vita-site/config.client.ts': `export default {}`,
         'docs/index.md': '# Welcome\n\nThis is the home page.',
         'docs/guide/getting-started.md': '# Getting Started\n\nQuick start guide.',
         'docs/api/overview.md': '# API Overview\n\nAPI documentation.'
       })
 
-      const app = await VitaPressApp.create(tempDir, 'dev')
+      const app = await VitaSiteApp.create(tempDir, 'dev')
 
-      expect(app).toBeInstanceOf(VitaPressApp)
+      expect(app).toBeInstanceOf(VitaSiteApp)
       expect(app.config.title).toBe('Integration Test')
       expect(app.plugins).toHaveLength(1)
       expect(app.mdParser).toBeDefined()

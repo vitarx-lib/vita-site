@@ -5,7 +5,7 @@ import { getVersion } from '../server/index.js'
 import { cleanCommandHandler } from './commands/clean.js'
 import { createServerCommandHandler } from './commands/server.js'
 
-setLogPrefix('vita-press')
+setLogPrefix('vita-site')
 
 const commands = [
   { name: 'dev', description: '启动开发服务器' },
@@ -14,7 +14,7 @@ const commands = [
 ] as const
 
 program
-  .name('vita-press')
+  .name('vita-site')
   .description('Static site generator for Vitarx framework')
   .usage('[command] [options]')
   .version(getVersion(), '-v, --version', '显示版本号')
@@ -24,10 +24,10 @@ program
     'after',
     `
 示例:
-  $ vitapress dev          启动开发服务器
-  $ vitapress build        构建生产版本
-  $ vitapress preview      预览生产版本
-  $ vitapress clean        清除缓存
+  $ vita-site dev          启动开发服务器
+  $ vita-site build        构建生产版本
+  $ vita-site preview      预览生产版本
+  $ vita-site clean        清除缓存
 `
   )
 

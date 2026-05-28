@@ -1,4 +1,4 @@
-import navTree from 'virtual:vitapress/runtime/nav'
+import navTree from 'virtual:vita-site/runtime/nav'
 import type { NavTree } from '../types/index.js'
 
 /**
@@ -27,7 +27,7 @@ export function onNavTreeChange(cb: (navTree: NavTree) => void): void {
   // 检查是否处于热更新模式
   if (import.meta.hot) {
     if (import.meta.hot) {
-      import.meta.hot.accept('virtual:vitapress/runtime/nav', newModule => {
+      import.meta.hot.accept('virtual:vita-site/runtime/nav', newModule => {
         if (!newModule) return
         // 调用回调函数，传入默认导出的导航树数据
         cb(newModule['default'])
