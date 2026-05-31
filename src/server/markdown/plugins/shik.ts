@@ -7,7 +7,7 @@ import { mergeConfig } from '../../config/index.js'
 
 // 默认配置
 const DEFAULT_CONFIG: ShikiConfig = {
-  langs: ['javascript', 'typescript', 'jsx', 'tsx', 'bash', 'shell'],
+  langs: ['javascript', 'typescript', 'jsx', 'tsx', 'bash', 'shell', 'html'],
   options: {
     themes: {
       dark: 'github-dark',
@@ -19,12 +19,14 @@ const DEFAULT_CONFIG: ShikiConfig = {
 }
 
 export type PartialShikiConfig = Partial<ShikiConfig>
+
 // 获取 shiki 所有语言模块的路径
 function loadLangs(langs: string[]) {
   return langs.map(lang => {
     return bundledLanguages[lang as BundledLanguage] || import(`shiki/langs/${lang}.mjs`)
   })
 }
+
 // 加载主题
 function loadThemes(themes: string[]) {
   return themes.map(theme => import(`shiki/themes/${theme}.mjs`))
