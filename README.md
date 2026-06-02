@@ -410,6 +410,16 @@ definePage({
 })
 ```
 
+#### 文件排序规则
+
+支持通过 number.filename 的方式对文件进行排序，例如：
+```text
+- 1.group
+  - 1.filename.md
+  - 2.filename.md
+  - 3.filename.md
+```
+
 #### 页面级配置（frontmatter）
 
 ```yaml
