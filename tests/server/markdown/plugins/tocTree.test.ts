@@ -183,7 +183,9 @@ describe('tocTree', () => {
       const tokens = md.parse('## title <Badge type="vip" />', env)
 
       const headingOpen = tokens.find(t => t.type === 'heading_open')
-      expect(env.tocList[0].hash).toBe(headingOpen?.attrGet('id'))
+      // hash 与 name 相同时省略 hash，消费端应使用 name 作为回退
+      const effectiveHash = env.tocList[0].hash ?? env.tocList[0].name
+      expect(effectiveHash).toBe(headingOpen?.attrGet('id'))
     })
 
     it('应处理标题中包含多个行内组件的情况', () => {

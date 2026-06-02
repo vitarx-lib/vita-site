@@ -17,13 +17,15 @@ export interface TocTree {
    */
   name: string
   /**
-   * 子级
+   * 子级，无子级时不设置以节省内存
    */
-  children: TocTree[]
+  children?: TocTree[]
   /**
    * hash值，不带前缀#
+   *
+   * 当 hash 与 name 相同时可省略，消费端应使用 name 作为回退
    */
-  hash: string
+  hash?: string
 }
 
 const MIN_HEADING_LEVEL = 1
@@ -56,12 +58,15 @@ function processTokens(tokens: Token[], env: TocParseEnvContext): void {
 
     if (headingLevel < TOC_MIN_LEVEL || headingLevel > TOC_MAX_LEVEL) continue
 
-    rawItems.push({
+    const tocItem: TocTree = {
       level: headingLevel,
-      name: content,
-      hash,
-      children: []
-    })
+      name: content
+    }
+    if (hash !== content) {
+      tocItem.hash = hash
+    }
+
+    rawItems.push(tocItem)
   }
 
   if (env.tocList) {
@@ -154,7 +159,8 @@ function buildTocTree(items: TocTree[]): TocTree[] {
     if (stack.length === 0) {
       root.push(item)
     } else {
-      stack[stack.length - 1]!.children.push(item)
+      const parent = stack[stack.length - 1]!
+      ;(parent.children ??= []).push(item)
     }
 
     stack.push(item)
