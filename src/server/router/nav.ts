@@ -212,11 +212,13 @@ function extractNavEntries(
         ? child.meta['navTitle']
         : resolveNavTitle(indexChild?.meta, child.path)
       const hasIndex = !!indexChild && !indexChild.meta?.['navHidden']
+      const selfOrder = child.meta?.['navOrder']
+      const order = selfOrder ?? (hasIndex ? indexChild!.meta?.['navOrder'] : 0)
       const groupEntry: NavGroup = {
         type: 'group',
         title,
         path: child.fullPath,
-        order: (child.meta?.['navOrder'] as number | undefined) ?? 0,
+        order,
         items: buildNavItems(child.children, lang, defaultLang, indexPath)
       }
       if (hasIndex) {
