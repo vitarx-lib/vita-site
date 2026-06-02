@@ -24,6 +24,7 @@ export async function createMarkdownIt(config: MarkdownItConfig = {}): Promise<M
   const md = new MarkdownIt(
     Object.assign({ html: true, linkify: true, typographer: true, xhtmlOut: true }, options)
   )
+  md.block.ruler.disable('code')
   // 创建shiki插件
   const shikiPlugin = await createShikiHighlighter(shikiConfig)
   const builtinPlugins = [
