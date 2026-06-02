@@ -94,7 +94,7 @@ export class VitaSiteRouter extends FileRouter {
           const { name, order } = parseOrderPrefix(dirName)
           return {
             path: name,
-            options: { meta: { order } }
+            options: { meta: { navOrder: order } }
           }
         },
         pageParser: basename => {
@@ -116,7 +116,7 @@ export class VitaSiteRouter extends FileRouter {
           }
 
           result.options = {
-            meta: { lang, order }
+            meta: { lang, navOrder: order }
           }
           return result
         },
