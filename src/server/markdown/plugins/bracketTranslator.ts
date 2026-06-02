@@ -36,4 +36,14 @@ export function bracketTranslator(md: MarkdownIt): void {
 
     return escapeSpecialChars(content)
   }
+
+  md.renderer.rules.code_inline = function (tokens, idx, _options, _env, slf): string {
+    const token = tokens[idx]
+    if (!token) return ''
+
+    let content = md.utils.escapeHtml(token.content)
+    content = escapeSpecialChars(content)
+
+    return '<code' + slf.renderAttrs(token) + '>' + content + '</code>'
+  }
 }

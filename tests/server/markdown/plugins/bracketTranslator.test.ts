@@ -143,6 +143,75 @@ describe('bracketTranslator', () => {
     })
   })
 
+  describe('行内代码转义', () => {
+    it('应转义行内代码中的花括号', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`{code}`')
+
+      expect(html).toContain('<code>')
+      expect(html).toContain('&#123;')
+      expect(html).toContain('&#125;')
+      expect(html).not.toMatch(/<code>[^<]*\{[^<]*<\/code>/)
+    })
+
+    it('应转义行内代码中的左花括号', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`{name`')
+
+      expect(html).toContain('&#123;')
+    })
+
+    it('应转义行内代码中的右花括号', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`name}`')
+
+      expect(html).toContain('&#125;')
+    })
+
+    it('应转义行内代码中的尖括号', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`<Component>`')
+
+      expect(html).toContain('&lt;')
+      expect(html).toContain('&gt;')
+    })
+
+    it('应转义行内代码中的反引号', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`` ` ``')
+
+      expect(html).toContain('&#96;')
+    })
+
+    it('应转义行内代码中混合特殊字符', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`const {a} = <b>`')
+
+      expect(html).toContain('&#123;')
+      expect(html).toContain('&#125;')
+      expect(html).toContain('&lt;')
+      expect(html).toContain('&gt;')
+    })
+
+    it('应转义行内代码中的双花括号模板语法', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`{{ message }}`')
+
+      const leftBraces = (html.match(/&#123;/g) || []).length
+      const rightBraces = (html.match(/&#125;/g) || []).length
+
+      expect(leftBraces).toBe(2)
+      expect(rightBraces).toBe(2)
+    })
+
+    it('应保留行内代码中的普通字符', () => {
+      const md = createMarkdownWithPlugin(bracketTranslator)
+      const html = renderMarkdown(md, '`hello world`')
+
+      expect(html).toContain('<code>hello world</code>')
+    })
+  })
+
   describe('与其他 Markdown 语法共存', () => {
     it('应在标题中正确转义', () => {
       const md = createMarkdownWithPlugin(bracketTranslator)
