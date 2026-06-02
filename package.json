@@ -1,6 +1,6 @@
 {
   "name": "vita-site",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A simple static site generator for writing technical documentation with markdown.",
   "keywords": [
     "vita-site"

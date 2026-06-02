@@ -1,10 +1,17 @@
-## [1.0.1](https://github.com/vitarx-lib/vita-site/compare/v1.0.0...v1.0.1) (2026-06-02)
+## [1.0.2](https://github.com/vitarx-lib/vita-site/compare/v1.0.1...v1.0.2) (2026-06-02)
 
 
 ### Bug Fixes
 
 * **markdown:** 修复内联代码的特殊字符转译问题 ([652ae5d](https://github.com/vitarx-lib/vita-site/commit/652ae5d2ccfdc5a7c469a089bd5c6b8e0be09f88))
 * **markdown:** 禁用markdown-it中的code块解析规则 ([96d6e1f](https://github.com/vitarx-lib/vita-site/commit/96d6e1fadf603647e36dc9034f251d9f02d4fd57))
+* **router:** 修改排序元数据字段名称为 navOrder ([630e581](https://github.com/vitarx-lib/vita-site/commit/630e581d9c32bf9ca67fcf08066abb5c9e44583f))
+
+# [1.0.0](https://github.com/vitarx-lib/vita-site/compare/v1.0.0-alpha.0...v1.0.0) (2026-06-01)
+
+
+### Bug Fixes
+
 * **repo:** 修正仓库URL地址 ([f9cb803](https://github.com/vitarx-lib/vita-site/commit/f9cb803218f94b5bac278a73f7ef54fafa9736c9))
 * **tsconfig:** 修复注释丢失问题 ([3bf3ae2](https://github.com/vitarx-lib/vita-site/commit/3bf3ae261b840c36c5d7b4303486b0deff8b73b1))
 
