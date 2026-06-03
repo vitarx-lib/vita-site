@@ -7,12 +7,14 @@ import {
   type Plugin,
   type PluginOption,
   preview,
+  type UserConfig,
   type UserConfig as ViteUserConfig
 } from 'vite'
 import { clientBuildPlugin } from '../../build/plugin-vite/clientBuild.js'
 import { devPlugin } from '../../build/plugin-vite/dev.js'
 import { serverBuildPlugin } from '../../build/plugin-vite/serverBuild.js'
 import { virtualModulePlugin } from '../../build/plugin-vite/virtual.js'
+import { ConfigManager } from '../../server/config/index.js'
 import { type CommandName, VitaSiteApp } from '../../server/index.js'
 
 export interface ServerOptions {
@@ -106,15 +108,15 @@ async function getVitarxPlugin(plugins: PluginOption[] | undefined): Promise<Plu
 
 /**
  * 处理预览服务器
- * @param app - VitaSite 应用实例
+ * @param config - Vite 配置
  * @param serverConfig - 服务器配置
  */
 async function handlePreview(
-  app: VitaSiteApp,
+  config: UserConfig,
   serverConfig: Exclude<ViteUserConfig['server'], undefined>
 ): Promise<void> {
   const server = await preview(
-    mergeConfig(app.config.vite, {
+    mergeConfig(config, {
       server: serverConfig
     })
   )
@@ -184,16 +186,21 @@ export function createServerCommandHandler(
 ): (options: ServerOptions) => Promise<void> {
   return async (options: ServerOptions): Promise<void> => {
     if (options.debug) setDebugEnabled(true)
-
-    const app = await VitaSiteApp.create(process.cwd(), command, options.config)
     const serverConfig = createServerConfig(options)
+    if (command === 'preview') {
+      const configManager = await ConfigManager.create(process.cwd(), options.config, {
+        command,
+        isDev: false,
+        isBuild: false,
+        isPreview: command === 'preview'
+      })
+      return await handlePreview(configManager.config.vite, serverConfig)
+    }
+    const app = await VitaSiteApp.create(process.cwd(), command, options.config)
     if (options.force) {
       app.mdParser.cache.clear()
     }
     switch (command) {
-      case 'preview':
-        await handlePreview(app, serverConfig)
-        break
       case 'dev':
         await handleDev(app, serverConfig)
         break
