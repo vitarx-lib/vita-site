@@ -26,13 +26,13 @@ export async function renderPages() {
     const app = await createApp()
   const router = app.inject(__ROUTER_KEY__)
 
-  const pages: Record<string, RenderPageResult> = {}
+  const pages = {}
 
-  const renderRoute = async (url: string) => {
+  const renderRoute = async (url) => {
     await router.replace({ index: url })
     await router.resolveComponents()
 
-    const context: Record<string, any> = {}
+    const context = {}
     const body = await renderToString(app, context)
 
     pages[url] = {
