@@ -1,11 +1,19 @@
-## [1.0.2](https://github.com/vitarx-lib/vita-site/compare/v1.0.1...v1.0.2) (2026-06-02)
+## [1.0.3](https://github.com/vitarx-lib/vita-site/compare/v1.0.2...v1.0.3) (2026-06-03)
+
+
+### Bug Fixes
+
+* **build:** 修复服务端入口模块中存在类型声明BUG ([c8ae1b2](https://github.com/vitarx-lib/vita-site/commit/c8ae1b27f5a1991a6509bb130a3bd051e1779274))
+* **router:** 修改排序元数据字段名称为 navOrder ([630e581](https://github.com/vitarx-lib/vita-site/commit/630e581d9c32bf9ca67fcf08066abb5c9e44583f))
+* **server:** 修复服务端构建配置合并问题 ([ca05aa0](https://github.com/vitarx-lib/vita-site/commit/ca05aa0e2542f8c680678c82c2227ae3f29c8dfd))
+
+## [1.0.1](https://github.com/vitarx-lib/vita-site/compare/v1.0.0...v1.0.1) (2026-06-02)
 
 
 ### Bug Fixes
 
 * **markdown:** 修复内联代码的特殊字符转译问题 ([652ae5d](https://github.com/vitarx-lib/vita-site/commit/652ae5d2ccfdc5a7c469a089bd5c6b8e0be09f88))
 * **markdown:** 禁用markdown-it中的code块解析规则 ([96d6e1f](https://github.com/vitarx-lib/vita-site/commit/96d6e1fadf603647e36dc9034f251d9f02d4fd57))
-* **router:** 修改排序元数据字段名称为 navOrder ([630e581](https://github.com/vitarx-lib/vita-site/commit/630e581d9c32bf9ca67fcf08066abb5c9e44583f))
 
 # [1.0.0](https://github.com/vitarx-lib/vita-site/compare/v1.0.0-alpha.0...v1.0.0) (2026-06-01)
 
