@@ -3,6 +3,7 @@ import { setDebugEnabled } from 'vitarx-router/file-router'
 import {
   build,
   createServer,
+  mergeConfig,
   type Plugin,
   type PluginOption,
   preview,
@@ -12,7 +13,7 @@ import { clientBuildPlugin } from '../../build/plugin-vite/clientBuild.js'
 import { devPlugin } from '../../build/plugin-vite/dev.js'
 import { serverBuildPlugin } from '../../build/plugin-vite/serverBuild.js'
 import { virtualModulePlugin } from '../../build/plugin-vite/virtual.js'
-import { type CommandName, mergeConfig, VitaSiteApp } from '../../server/index.js'
+import { type CommandName, VitaSiteApp } from '../../server/index.js'
 
 export interface ServerOptions {
   /**
@@ -158,7 +159,10 @@ async function handleBuild(
     mergeConfig(app.config.vite, {
       server: serverConfig,
       plugins: [virtualModulePlugin(app), serverBuildPlugin(app), vitarxPlugin],
-      logLevel: 'warn'
+      logLevel: 'warn',
+      build: {
+        ssr: true
+      }
     })
   )
 
