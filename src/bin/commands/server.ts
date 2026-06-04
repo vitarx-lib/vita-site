@@ -16,6 +16,7 @@ import { serverBuildPlugin } from '../../build/plugin-vite/serverBuild.js'
 import { virtualModulePlugin } from '../../build/plugin-vite/virtual.js'
 import { ConfigManager } from '../../server/config/index.js'
 import { type CommandName, VitaSiteApp } from '../../server/index.js'
+import { cleanCommandHandler } from './clean.js'
 
 export interface ServerOptions {
   /**
@@ -187,6 +188,7 @@ export function createServerCommandHandler(
   return async (options: ServerOptions): Promise<void> => {
     if (options.debug) setDebugEnabled(true)
     const serverConfig = createServerConfig(options)
+    if (options.force) cleanCommandHandler(true)
     if (command === 'preview') {
       const configManager = await ConfigManager.create(process.cwd(), options.config, {
         command,
@@ -197,15 +199,12 @@ export function createServerCommandHandler(
       return await handlePreview(configManager.config.vite, serverConfig)
     }
     const app = await VitaSiteApp.create(process.cwd(), command, options.config)
-    if (options.force) {
-      app.mdParser.cache.clear()
-    }
-    switch (command) {
-      case 'dev':
-        await handleDev(app, serverConfig)
-        break
-      default:
-        await handleBuild(app, serverConfig)
+    if (command === 'dev') {
+      await handleDev(app, serverConfig)
+    } else if (command === 'build') {
+      await handleBuild(app, serverConfig)
+    } else {
+      throw new Error(`Unknown command: ${command}`)
     }
   }
 }
