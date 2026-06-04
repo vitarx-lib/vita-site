@@ -7,7 +7,7 @@ import { mergeConfig } from '../../config/index.js'
 
 // 默认配置
 const DEFAULT_CONFIG: ShikiConfig = {
-  langs: ['javascript', 'typescript', 'jsx', 'tsx', 'bash', 'shell', 'html'],
+  langs: ['javascript', 'typescript', 'jsx', 'tsx', 'bash', 'shell', 'html', 'json'],
   options: {
     themes: {
       dark: 'github-dark',
