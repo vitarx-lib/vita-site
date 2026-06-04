@@ -44,6 +44,9 @@ for (const command of commands) {
     .action(createServerCommandHandler(command.name))
 }
 
-program.command('clean').description('清除缓存').action(cleanCommandHandler)
+program
+  .command('clean')
+  .description('清除缓存')
+  .action(() => cleanCommandHandler(false))
 
 program.parse()
