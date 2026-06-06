@@ -46,8 +46,8 @@
   "packageManager": "pnpm@10.33.0",
   "peerDependencies": {
     "vitarx": "^4.0.1",
-    "vitarx-router": "^4.0.3",
-    "@vitarx/plugin-vite": "^1.0.1",
+    "vitarx-router": "^4.0.4",
+    "@vitarx/plugin-vite": "^1.0.2",
     "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
   },
   "dependencies": {
@@ -72,16 +72,16 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.8",
     "vitest": "^4.1.4",
-    "vitarx": "4.0.0",
-    "@vitarx/plugin-vite": "1.0.1",
-    "vitarx-router": "4.0.3"
+    "vitarx": "4.0.1",
+    "@vitarx/plugin-vite": "1.0.2",
+    "vitarx-router": "4.0.4"
   },
   "pnpm": {
     "overrides": {
       "vite": "8.0.8",
-      "vitarx": "4.0.0",
-      "vitarx-router": "4.0.3",
-      "@vitarx/plugin-vite": "1.0.1"
+      "vitarx": "4.0.1",
+      "vitarx-router": "4.0.4",
+      "@vitarx/plugin-vite": "1.0.2"
     }
   }
 }
